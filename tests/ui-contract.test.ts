@@ -32,11 +32,17 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(review).not.toMatch(/vault\.(?:create|modify|delete|rename)/);
   });
 
-  it("registers one scan command and cancels active ownership on unload", async () => {
+  it("registers one ribbon control and one command for the guarded scan workflow", async () => {
     const main = await source("src/main.ts");
+    expect(main.match(/this\.addRibbonIcon\(/g)).toHaveLength(1);
+    expect(main).toContain('this.addRibbonIcon("waves", "Scan vault for transcripts"');
     expect(main.match(/this\.addCommand\(/g)).toHaveLength(1);
     expect(main).toContain('id: "scan-vault-for-transcripts"');
+    expect(main.match(/void this\.scanAndReview\(\)/g)).toHaveLength(2);
+    expect(main).toContain("if (this.runs.isActive)");
+    expect(main).toContain('new Notice("Soundings is already scanning or converting.")');
     expect(main).toContain("onunload(): void");
     expect(main).toContain("this.runs.cancel()");
+    expect(main).not.toContain("ribbonIcon.remove()");
   });
 });

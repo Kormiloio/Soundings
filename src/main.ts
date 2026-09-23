@@ -14,6 +14,9 @@ export default class SoundingsPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.loadSettings();
     this.addSettingTab(new SoundingsSettingTab(this.app, this));
+    this.addRibbonIcon("waves", "Scan vault for transcripts", () => {
+      void this.scanAndReview();
+    });
     this.addCommand({
       id: "scan-vault-for-transcripts",
       name: "Scan vault for transcripts",

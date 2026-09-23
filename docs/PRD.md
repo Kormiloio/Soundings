@@ -44,7 +44,7 @@ Without automation, the user must repeatedly rename, copy, clean, structure, and
 ## 5. Primary workflow
 
 1. The user places transcript files in the appropriate vault folders using their normal file workflow.
-2. The user runs **Soundings: Scan vault for transcripts**.
+2. The user starts **Scan vault for transcripts** from the Soundings ribbon control or runs **Soundings: Scan vault for transcripts** from the command palette.
 3. Soundings inventories supported files and classifies each as eligible, already converted, excluded, unsupported, unreadable, or blocked by a destination collision.
 4. Soundings shows a reviewable plan and selects no blocked item.
 5. The user chooses the eligible transcripts to convert.
@@ -115,6 +115,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-18 | The foundation plugin makes no network requests and collects no telemetry. | Must |
 | FR-19 | The plugin provides settings for supported formats, exclusions, maximum source size, and project inference without exposing unsafe overwrite behavior. | Must |
 | FR-20 | A user can inspect the source path and intended destination for every planned conversion. | Must |
+| FR-21 | Obsidian desktop exposes one labeled Soundings ribbon control and retains the command-palette command; both start the same reviewed scan without selecting or converting candidates automatically. | Must |
 
 ## 8. Safety, privacy, and security requirements
 
@@ -132,7 +133,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 - **Correctness:** UTF-8, UTF-8 with BOM, CRLF, repeated VTT cues, cue settings, speaker tags, malformed VTT, empty files, mixed-case extensions, safe Unicode names, rejected filename punctuation, unusable basenames, and post-normalization collisions have automated coverage.
 - **Resilience:** one unreadable or malformed transcript does not abort unrelated conversions.
 - **Performance:** a 5,000-file disposable desktop vault scan remains responsive and cancelable; parsing and conversion use a documented conservative source-size limit.
-- **Accessibility:** commands, review controls, statuses, and errors are keyboard-accessible and do not rely on color alone.
+- **Accessibility:** the labeled ribbon control, commands, review controls, statuses, and errors are keyboard-accessible and do not rely on color alone.
 - **Testability:** discovery, exclusion, planning, parsing, rendering, path derivation, and execution are independently testable.
 
 ## 10. Delivery phases
@@ -176,3 +177,5 @@ The foundation plugin, pure conversion core, reviewed create-only executor, sett
 The desktop foundation acceptance gate passed in a disposable vault using Obsidian 1.13.7 on macOS 26.6.2 arm64. Manual keyboard validation exposed textual errors without relying on color; real create/read-back succeeded; an existing destination and a destination introduced after preview were preserved; and all source hashes remained unchanged. The first release is desktop-only, with Obsidian 1.13.7 pinned as the verified minimum. Android, iOS, and iPadOS support and acceptance are deferred to a separate future change. The 5 MB source limit remains a conservative desktop default.
 
 Work-vault testing later exposed that Obsidian refused Markdown creation when a source basename contained `:`. The `support-safe-destination-filenames` change now derives and previews a deterministic safe destination without changing the source name. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and a repeated 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed the exact reviewed safe destination, successful create/read-back, sanitized collision refusal, close-without-conversion behavior, and unchanged source hashes. After explicit confirmation, the accepted build was installed in the work vault with matching plugin-file hashes. A controlled conversion then created the reviewed safe destination with correct source metadata while preserving the original transcript hash; the other 25 candidates were skipped and no existing Markdown was overwritten.
+
+The `add-scan-ribbon-icon` change registers one built-in waves control labeled **Scan vault for transcripts** and retains the command-palette entry, with both routed to the existing guarded review workflow. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed one correctly labeled waves icon after disable/re-enable, an unselected review plan on activation, and the retained command-palette entry. After explicit confirmation, the hash-matched build was installed in the work vault; the ribbon opened the same unselected plan, and a repeated close-without-conversion check left the reference transcript and Markdown note hashes unchanged.
