@@ -60,4 +60,47 @@ describe("mixed reviewed batch", () => {
     const report = JSON.stringify(outcomes);
     for (const body of Object.values(originals)) expect(report).not.toContain(body);
   });
+
+  it("creates a reviewed safe destination for a colon-bearing source without changing source identity", async () => {
+    const sourcePath = "Meetings/1:1: Charles : Mario.txt";
+    const destinationPath = "Meetings/1 - 1 - Charles - Mario.md";
+    const body = "private transcript body";
+    const sourceBytes = encoder.encode(body);
+    const plan = buildPlan([await discovered(sourcePath, body)], new Set(), DEFAULT_SETTINGS, new Date(0), () => "safe-name");
+    expect(plan.items[0]).toMatchObject({ sourcePath, destinationPath, classification: "eligible" });
+
+    const vault = new Vault();
+    vault.files.set(sourcePath, sourceBytes);
+    const beforeHash = await sha256(sourceBytes);
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set([sourcePath]),
+      settings: DEFAULT_SETTINGS,
+      now: () => new Date(0)
+    });
+
+    expect(outcomes).toEqual([{ sourcePath, destinationPath, status: "created", reason: "Markdown note created and verified." }]);
+    expect(await sha256(vault.files.get(sourcePath)!)).toBe(beforeHash);
+    const created = new TextDecoder().decode(vault.files.get(destinationPath));
+    expect(created).toContain('source_file: "1:1: Charles : Mario.txt"');
+    expect(created).toContain("# 1:1: Charles : Mario");
+    expect(created).toContain(body);
+  });
+
+  it("preserves an existing sanitized destination byte-for-byte", async () => {
+    const sourcePath = "1:1 Meeting.txt";
+    const destinationPath = "1 - 1 Meeting.md";
+    const plan = buildPlan([await discovered(sourcePath, "source")], new Set([destinationPath]), DEFAULT_SETTINGS, new Date(0), () => "collision");
+    const vault = new Vault();
+    vault.files.set(sourcePath, encoder.encode("source"));
+    vault.files.set(destinationPath, encoder.encode("existing note"));
+
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set([sourcePath]),
+      settings: DEFAULT_SETTINGS
+    });
+
+    expect(outcomes[0]).toMatchObject({ destinationPath, status: "blocked" });
+    expect(new TextDecoder().decode(vault.files.get(destinationPath))).toBe("existing note");
+    expect(new TextDecoder().decode(vault.files.get(sourcePath))).toBe("source");
+  });
 });

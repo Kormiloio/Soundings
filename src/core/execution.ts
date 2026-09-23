@@ -21,7 +21,7 @@ export interface ExecuteOptions {
 }
 
 function outcome(item: PlanItem, status: ExecutionOutcome["status"], reason: string): ExecutionOutcome {
-  return Object.freeze({ sourcePath: item.sourcePath, destinationPath: item.destinationPath, status, reason });
+  return Object.freeze({ sourcePath: item.sourcePath, destinationPath: item.destinationPath ?? "", status, reason });
 }
 
 async function executeItem(
@@ -29,7 +29,7 @@ async function executeItem(
   adapter: PublicationAdapter,
   options: ExecuteOptions
 ): Promise<ExecutionOutcome> {
-  if (item.classification !== "eligible" || !item.evidence || !item.format || !item.title) {
+  if (item.classification !== "eligible" || !item.destinationPath || !item.evidence || !item.format || !item.title) {
     return outcome(item, "blocked", item.reason);
   }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");

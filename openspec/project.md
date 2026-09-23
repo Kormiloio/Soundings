@@ -28,7 +28,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 
 ## Active focus
 
-1. Review and archive `define-transcript-conversion-foundation` now that desktop acceptance is complete.
+1. Review and archive `support-safe-destination-filenames` now that desktop and controlled work-vault acceptance are complete.
 2. Prepare desktop release packaging and catalog work through a separate approved change.
 3. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
@@ -37,6 +37,8 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 The TypeScript plugin, discovery and planning core, strict text/WebVTT parsers, inert Markdown renderer, create-only executor, review UI, settings, and cancellation lifecycle are implemented. The production build and 60 automated tests pass. A temporary 5,000-file desktop rehearsal completed in 4.1 ms for the recorded scan phase and recorded zero source mutations. The runtime audit found no network, telemetry, Node filesystem, credential, or destructive vault APIs, and npm reports no production dependency vulnerabilities.
 
 Desktop acceptance passed in a disposable vault using Obsidian 1.13.7 on macOS 26.6.2 arm64. Keyboard-visible validation, create/read-back, planning-time collision refusal, execution-time destination-race refusal, and source-byte preservation were verified. The first release is desktop-only; mobile support and acceptance are deferred.
+
+The safe-destination change performs deterministic basename normalization in the pure planner, exposes the final path before selection, and applies all collision checks to that reviewed path. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and a repeated 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed the exact reviewed safe destination, successful create/read-back, sanitized collision refusal, close-without-conversion behavior, and unchanged source hashes. After explicit confirmation, the accepted build was installed in the work vault with matching plugin-file hashes. A controlled conversion then created the reviewed safe destination with correct source metadata while preserving the original transcript hash; the other 25 candidates were skipped and no existing Markdown was overwritten.
 
 ## Definition of done
 

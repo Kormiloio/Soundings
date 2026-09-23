@@ -8,6 +8,7 @@ const classifications: Record<PlanClassification, true> = {
   unreadable: true,
   empty: true,
   oversize: true,
+  "destination-invalid": true,
   "destination-exists": true,
   "destination-ambiguous": true
 };
@@ -22,6 +23,6 @@ const statuses: Record<ExecutionStatus, true> = {
 };
 
 describe("domain unions", () => {
-  it("enumerates all plan classifications", () => expect(Object.keys(classifications)).toHaveLength(8));
+  it("enumerates all plan classifications", () => expect(Object.keys(classifications)).toHaveLength(9));
   it("enumerates all execution outcomes", () => expect(Object.keys(statuses)).toHaveLength(7));
 });

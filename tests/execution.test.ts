@@ -61,12 +61,14 @@ describe("safe execution", () => {
 
   it("refuses changed and missing sources as stale", async () => {
     const vault = new MemoryPublicationAdapter();
-    vault.files.set("changed.txt", encoder.encode("new private body"));
-    const plan = buildPlan([await item("changed.txt", "old private body"), await item("missing.txt", "gone")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    vault.files.set("changed: transcript.txt", encoder.encode("new private body"));
+    const plan = buildPlan([await item("changed: transcript.txt", "old private body"), await item("missing: transcript.txt", "gone")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["changed.txt", "missing.txt"]), settings: DEFAULT_SETTINGS
+      selectedSourcePaths: new Set(["changed: transcript.txt", "missing: transcript.txt"]), settings: DEFAULT_SETTINGS
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["stale", "stale"]);
+    expect(vault.files.has("changed - transcript.md")).toBe(false);
+    expect(vault.files.has("missing - transcript.md")).toBe(false);
     expect(JSON.stringify(outcomes)).not.toContain("private body");
   });
 
@@ -83,12 +85,12 @@ describe("safe execution", () => {
 
   it("preserves a destination that wins the create race", async () => {
     const vault = new MemoryPublicationAdapter();
-    vault.files.set("one.txt", encoder.encode("one"));
+    vault.files.set("one: review.txt", encoder.encode("one"));
     vault.createHook = (path) => { vault.files.set(path, encoder.encode("winner")); };
-    const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
-    const outcomes = await executePlan(plan, vault, { selectedSourcePaths: new Set(["one.txt"]), settings: DEFAULT_SETTINGS });
+    const plan = buildPlan([await item("one: review.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    const outcomes = await executePlan(plan, vault, { selectedSourcePaths: new Set(["one: review.txt"]), settings: DEFAULT_SETTINGS });
     expect(outcomes[0].status).toBe("blocked");
-    expect(new TextDecoder().decode(vault.files.get("one.md"))).toBe("winner");
+    expect(new TextDecoder().decode(vault.files.get("one - review.md"))).toBe("winner");
   });
 
   it("reports mismatched or unreadable final bytes as needs-attention without deletion", async () => {
@@ -105,27 +107,44 @@ describe("safe execution", () => {
   it("settles an indivisible create then cancels later items", async () => {
     const controller = new AbortController();
     const vault = new MemoryPublicationAdapter();
-    vault.files.set("one.txt", encoder.encode("one"));
-    vault.files.set("two.txt", encoder.encode("two"));
+    vault.files.set("one: first.txt", encoder.encode("one"));
+    vault.files.set("two: second.txt", encoder.encode("two"));
     vault.createHook = () => controller.abort();
-    const plan = buildPlan([await item("one.txt", "one"), await item("two.txt", "two")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    const plan = buildPlan([await item("one: first.txt", "one"), await item("two: second.txt", "two")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["one.txt", "two.txt"]), settings: DEFAULT_SETTINGS, signal: controller.signal
+      selectedSourcePaths: new Set(["one: first.txt", "two: second.txt"]), settings: DEFAULT_SETTINGS, signal: controller.signal
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["created", "canceled"]);
-    expect(vault.files.has("two.md")).toBe(false);
+    expect(vault.files.has("one - first.md")).toBe(true);
+    expect(vault.files.has("two - second.md")).toBe(false);
   });
 
   it("isolates parse failure and continues a valid item", async () => {
     const vault = new MemoryPublicationAdapter();
     const malformed = "not webvtt";
-    vault.files.set("bad.vtt", encoder.encode(malformed));
+    vault.files.set("bad: transcript.vtt", encoder.encode(malformed));
     vault.files.set("good.txt", encoder.encode("good"));
-    const plan = buildPlan([await item("bad.vtt", malformed), await item("good.txt", "good")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    const plan = buildPlan([await item("bad: transcript.vtt", malformed), await item("good.txt", "good")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["bad.vtt", "good.txt"]), settings: DEFAULT_SETTINGS
+      selectedSourcePaths: new Set(["bad: transcript.vtt", "good.txt"]), settings: DEFAULT_SETTINGS
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["failed", "created"]);
+    expect(vault.files.has("bad - transcript.md")).toBe(false);
+  });
+
+  it("reports a normalized destination create failure without a partial note", async () => {
+    const vault = new MemoryPublicationAdapter();
+    const sourcePath = "cannot: create.txt";
+    const destinationPath = "cannot - create.md";
+    vault.files.set(sourcePath, encoder.encode("source"));
+    vault.createHook = () => { throw new Error("create failed"); };
+    const plan = buildPlan([await item(sourcePath, "source")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set([sourcePath]), settings: DEFAULT_SETTINGS
+    });
+    expect(outcomes[0]).toMatchObject({ destinationPath, status: "failed", reason: "Destination could not be created." });
+    expect(vault.files.has(destinationPath)).toBe(false);
+    expect(new TextDecoder().decode(vault.files.get(sourcePath))).toBe("source");
   });
 });
 

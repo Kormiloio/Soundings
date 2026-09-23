@@ -29,7 +29,7 @@ export class ReviewModal extends Modal {
       const row = new Setting(contentEl)
         .setClass("soundings-review__item")
         .setName(item.sourcePath)
-        .setDesc(`${item.destinationPath} — ${item.classification}: ${item.reason}`);
+        .setDesc(`${item.destinationPath ?? "No safe destination"} — ${item.classification}: ${item.reason}`);
       if (item.classification === "eligible") {
         row.addToggle((toggle) => {
           toggle.toggleEl.setAttr("aria-label", `Select ${item.sourcePath} for conversion`);

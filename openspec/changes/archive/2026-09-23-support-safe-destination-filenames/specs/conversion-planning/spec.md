@@ -1,10 +1,6 @@
-# conversion-planning Specification
+# Spec Delta
 
-## Purpose
-
-Produce a complete, non-mutating conversion preview that makes destinations, collisions, source evidence, exclusions, and user selection explicit before execution.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Deterministic destination derivation
 For each supported source, Soundings SHALL derive an Obsidian-safe destination in the source folder by preserving an already-safe basename, replacing each run of control characters or `\`, `:`, `*`, `?`, `"`, `<`, `>`, or `|` together with adjacent whitespace in the basename with a single ` - ` separator, trimming unsafe trailing spaces and periods, and appending `.md`. Soundings SHALL expose this exact destination during review and SHALL NOT rename or otherwise mutate the source.
@@ -50,45 +46,3 @@ Soundings SHALL classify a candidate as blocked when its final sanitized destina
 - **GIVEN** the review plan shows a sanitized destination for an eligible source
 - **WHEN** the user closes the plan without execution
 - **THEN** Soundings creates no destination and leaves the source unchanged
-
-### Requirement: Stable source evidence
-Each eligible planned conversion SHALL record evidence sufficient to detect a missing or content-changed source before execution without retaining transcript content in diagnostics.
-
-#### Scenario: Eligible candidate records evidence
-- **GIVEN** a readable supported transcript with no destination collision
-- **WHEN** Soundings builds the plan
-- **THEN** the plan marks it eligible and records its path, format, byte length, and a content identity value
-
-### Requirement: Reviewable plan and explicit selection
-Soundings SHALL show each candidate's source, intended destination, classification, and reason, and SHALL execute only eligible items the user explicitly selects from the current plan.
-
-#### Scenario: User reviews nested candidates
-- **GIVEN** a scan finds eligible, excluded, unreadable, and colliding transcripts in different folders
-- **WHEN** Soundings presents the conversion plan
-- **THEN** the user can distinguish every classification and inspect the vault-relative source and destination for each actionable item
-
-#### Scenario: Eligible item is not selected
-- **GIVEN** an eligible conversion appears in the current plan
-- **WHEN** the user starts execution without selecting that item
-- **THEN** Soundings performs no write for that item
-
-### Requirement: Conservative project inference
-When project inference is enabled, Soundings SHALL derive a project value only from the configured vault-relative project-root rule and SHALL omit the value when the path does not identify exactly one project segment.
-
-#### Scenario: Project inferred below configured root
-- **GIVEN** the project root is `Projects/` and a source is `Projects/ProMBA/Meetings/Planning.txt`
-- **WHEN** Soundings plans the note metadata
-- **THEN** the proposed project value is `ProMBA`
-
-#### Scenario: Source is outside configured project root
-- **GIVEN** the project root is `Projects/` and a source is `Meetings/Planning.txt`
-- **WHEN** Soundings plans the note metadata
-- **THEN** the proposed metadata omits the project value
-
-### Requirement: Planning is non-mutating
-Building, refreshing, filtering, selecting, or canceling a conversion plan SHALL NOT mutate vault files.
-
-#### Scenario: Plan is canceled
-- **GIVEN** the user is reviewing a populated conversion plan
-- **WHEN** the user cancels or closes the plan without execution
-- **THEN** Soundings leaves every source and destination unchanged

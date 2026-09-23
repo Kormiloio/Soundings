@@ -1,12 +1,31 @@
 import type { DiscoveryItem } from "./discovery";
 import { settingsFingerprint, type SoundingsSettings } from "./settings";
-import type { ConversionPlan, PlanItem } from "./types";
+import type { ConversionPlan, PlanItem, Result } from "./types";
 
-export function destinationFor(sourcePath: string): string {
+export type DestinationError = "source-has-no-extension" | "destination-basename-invalid";
+
+const UNSAFE_BASENAME_RUN = /\s*[\u0000-\u001f\\:*?"<>|]+\s*/g;
+
+export function normalizeDestinationBasename(basename: string): Result<string, "destination-basename-invalid"> {
+  const normalized = basename
+    .split(UNSAFE_BASENAME_RUN)
+    .filter((part) => part.length > 0)
+    .join(" - ")
+    .replace(/[ .]+$/u, "");
+  return normalized.length > 0
+    ? { ok: true, value: normalized }
+    : { ok: false, error: "destination-basename-invalid" };
+}
+
+export function destinationFor(sourcePath: string): Result<string, DestinationError> {
   const slash = sourcePath.lastIndexOf("/");
   const dot = sourcePath.lastIndexOf(".");
-  if (dot <= slash) throw new Error("source-has-no-extension");
-  return `${sourcePath.slice(0, dot)}.md`;
+  if (dot <= slash) return { ok: false, error: "source-has-no-extension" };
+  const basename = sourcePath.slice(slash + 1, dot);
+  const normalized = normalizeDestinationBasename(basename);
+  if (!normalized.ok || normalized.value === undefined) return normalized;
+  const folder = slash >= 0 ? sourcePath.slice(0, slash + 1) : "";
+  return { ok: true, value: `${folder}${normalized.value}.md` };
 }
 
 export function titleFor(sourcePath: string): string {
@@ -32,10 +51,14 @@ export function buildPlan(
   idFactory: () => string = () => globalThis.crypto.randomUUID()
 ): ConversionPlan {
   const draft = discovery.map((item): PlanItem => {
-    const destinationPath = destinationFor(item.sourcePath);
+    const destination = destinationFor(item.sourcePath);
+    const destinationPath = destination.value;
     let classification = item.classification;
     let reason = item.reason;
-    if (classification === "eligible" && existingPaths.has(destinationPath)) {
+    if (classification === "eligible" && (!destination.ok || !destinationPath)) {
+      classification = "destination-invalid";
+      reason = "A safe Markdown destination could not be derived from this filename.";
+    } else if (classification === "eligible" && destinationPath && existingPaths.has(destinationPath)) {
       classification = "destination-exists";
       reason = "Destination already exists.";
     }
@@ -51,12 +74,12 @@ export function buildPlan(
 
   const destinationCounts = new Map<string, number>();
   for (const item of draft) {
-    if (item.classification === "eligible") {
+    if (item.classification === "eligible" && item.destinationPath) {
       destinationCounts.set(item.destinationPath, (destinationCounts.get(item.destinationPath) ?? 0) + 1);
     }
   }
   const items = draft.map((item): PlanItem => Object.freeze(
-    item.classification === "eligible" && (destinationCounts.get(item.destinationPath) ?? 0) > 1
+    item.classification === "eligible" && item.destinationPath && (destinationCounts.get(item.destinationPath) ?? 0) > 1
       ? { ...item, classification: "destination-ambiguous", reason: "Multiple sources resolve to this destination." }
       : item
   ));

@@ -7,6 +7,7 @@ export type PlanClassification =
   | "unreadable"
   | "empty"
   | "oversize"
+  | "destination-invalid"
   | "destination-exists"
   | "destination-ambiguous";
 
@@ -35,7 +36,7 @@ export interface SourceEvidence {
 
 export interface PlanItem {
   readonly sourcePath: string;
-  readonly destinationPath: string;
+  readonly destinationPath?: string;
   readonly format?: TranscriptFormat;
   readonly classification: PlanClassification;
   readonly reason: string;
