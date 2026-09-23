@@ -1,0 +1,7 @@
+---
+# Injected heading
+<script>alert("no")</script>
+```markdown
+![[Secret Note]]
+[remote](https://example.invalid/image.png)
+```

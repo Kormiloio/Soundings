@@ -1,0 +1,9 @@
+{
+  "id": "soundings",
+  "name": "Soundings",
+  "version": "0.1.0",
+  "minAppVersion": "1.13.7",
+  "description": "Turn transcript files into safe, structured Markdown beside their originals.",
+  "author": "Kormilo",
+  "isDesktopOnly": true
+}

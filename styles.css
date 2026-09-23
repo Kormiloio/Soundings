@@ -1,0 +1,13 @@
+.soundings-review__summary {
+  margin-bottom: 1rem;
+}
+
+.soundings-review__item {
+  border-top: 1px solid var(--background-modifier-border);
+  padding: 0.75rem 0;
+}
+
+.soundings-review__reason,
+.soundings-settings__error {
+  color: var(--text-error);
+}

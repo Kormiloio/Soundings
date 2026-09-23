@@ -1,0 +1,32 @@
+schema: spec-driven
+
+context: |
+  Soundings is a greenfield, local-first Obsidian community plugin written in TypeScript.
+  It discovers .txt and .vtt transcript files throughout a vault and creates structured
+  Markdown beside them. Foundation behavior is offline, reviewed, and create-only.
+  Original transcripts and existing Markdown files must never be overwritten, moved,
+  renamed, or deleted. Discovery/planning must be separate from execution, and execution
+  must revalidate source evidence and destination absence. The foundation release is desktop-only,
+  while runtime code must continue using public Obsidian APIs so future mobile support can be
+  evaluated in a separate approved change. AI enrichment is outside the foundation scope and
+  requires a separate approved change.
+
+rules:
+  proposal:
+    - State explicit non-goals and user-data safety boundaries.
+    - Identify any new vault mutations and their failure behavior.
+  specs:
+    - Use observable Given/When/Then scenarios for success, collision, stale evidence, cancellation, and failure cases.
+    - Do not define overwrite, deletion, rename, or network behavior in the foundation change.
+  design:
+    - Separate pure discovery, planning, parsing, and rendering from vault mutation.
+    - Document alternatives and desktop-platform implications, including explicitly deferred mobile support.
+  tasks:
+    - Pair every mutating capability with automated safety tests and disposable-vault verification.
+    - Include documentation and target-platform acceptance tasks.
+
+operations:
+  apply:
+    guidance:
+      - Implement pure domain logic before Obsidian adapters and vault mutations.
+      - Stop if implementation would weaken the create-only or local-only boundary.

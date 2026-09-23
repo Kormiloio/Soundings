@@ -1,0 +1,43 @@
+# Soundings — Project Context
+
+## Mission
+
+Turn transcripts already organized inside an Obsidian vault into navigable Markdown knowledge without surrendering local control or risking existing content.
+
+## Non-negotiables
+
+1. Preserve original transcript files.
+2. Never overwrite an existing destination note.
+3. Keep discovery/planning separate from execution.
+4. Revalidate evidence immediately before every vault mutation.
+5. Keep foundation processing local, deterministic, and free of network access.
+6. Keep AI enrichment outside the converter core and behind a separately approved capability.
+7. Ship the first release as desktop-only while retaining public Obsidian API boundaries for possible future mobile work.
+8. Test mutations against disposable vaults before personal or work data.
+
+## Initial architecture boundaries
+
+- **Obsidian adapter:** commands, settings, notices, vault events, review UI, and lifecycle.
+- **Discovery and exclusions:** inventories supported candidates without mutation.
+- **Conversion planner:** derives destination paths and classifies eligibility, collisions, exclusions, and errors.
+- **Transcript parsers:** produce a source-neutral transcript model from plain text and WebVTT.
+- **Markdown renderer:** produces versioned frontmatter and deterministic note sections.
+- **Conversion executor:** revalidates evidence and publishes only to an absent destination.
+- **Diagnostics:** content-free outcome records and user-facing summaries.
+- **Enrichment boundary:** future manual, local, or provider-backed enrichment; absent from the foundation runtime.
+
+## Active focus
+
+1. Review and archive `define-transcript-conversion-foundation` now that desktop acceptance is complete.
+2. Prepare desktop release packaging and catalog work through a separate approved change.
+3. Evaluate Android, iOS, and iPadOS only through a separate future change.
+
+## Foundation implementation checkpoint
+
+The TypeScript plugin, discovery and planning core, strict text/WebVTT parsers, inert Markdown renderer, create-only executor, review UI, settings, and cancellation lifecycle are implemented. The production build and 60 automated tests pass. A temporary 5,000-file desktop rehearsal completed in 4.1 ms for the recorded scan phase and recorded zero source mutations. The runtime audit found no network, telemetry, Node filesystem, credential, or destructive vault APIs, and npm reports no production dependency vulnerabilities.
+
+Desktop acceptance passed in a disposable vault using Obsidian 1.13.7 on macOS 26.6.2 arm64. Keyboard-visible validation, create/read-back, planning-time collision refusal, execution-time destination-race refusal, and source-byte preservation were verified. The first release is desktop-only; mobile support and acceptance are deferred.
+
+## Definition of done
+
+A change is complete only when its tasks are checked, automated tests pass, named manual/device checks are recorded, documentation matches actual behavior, and no safety-critical decision is hidden in implementation details.

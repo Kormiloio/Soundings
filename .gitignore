@@ -1,0 +1,11 @@
+node_modules/
+main.js
+*.map
+.DS_Store
+.env
+.env.*
+*.log
+coverage/
+.obsidian/
+test-vault/
+acceptance-vault/
