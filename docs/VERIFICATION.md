@@ -41,7 +41,7 @@ Packaged desktop acceptance passed on 2026-09-23 in `/private/tmp/soundings-0.1.
 
 GitHub release `0.1.1` was published from accepted commit `51c04b76a8a9d94f4e4b23aa090f6497c60967c5` and verified at `https://github.com/Kormiloio/Soundings/releases/tag/0.1.1`. It is neither a draft nor a prerelease. Fresh downloads contain exactly `main.js`, `manifest.json`, and `styles.css`, and their SHA-256 hashes match the accepted staging hashes above. A post-publication query and fresh download also confirmed that release `0.1.0`, its target commit, asset inventory, and all three hashes remain unchanged.
 
-The Community draft remains unpublished pending a clean rescan of `0.1.1`.
+The `0.1.1` Community rescan is recorded below. The draft remains unpublished pending the `0.1.2` correction and a clean completed rescan.
 
 ## Disposable 5,000-file desktop rehearsal
 
@@ -93,6 +93,39 @@ The automated review passed dependency vulnerability and code-obfuscation checks
 The owner requested a Community rescan after corrective release `0.1.1`. The completed review resolved every warning reported against `0.1.0`; network, dependency, code-obfuscation, and byte-for-byte build-reproduction checks passed. The review retained the expected vault-enumeration recommendation and added a non-blocking recommendation for GitHub artifact attestations on `main.js` and `styles.css`.
 
 The `0.1.1` source review reported two new actionable warnings: an unnecessary `SoundingsSettings` assertion in `src/main.ts:65`, and use of `activeWindow.setTimeout()` rather than `window.setTimeout()` in `src/obsidian/vault-adapter.ts:34`. The listing remains unpublished. These warnings require another separately specified corrective release and clean rescan before the owner receives the final Publish handoff.
+
+## Corrective 0.1.2 candidate
+
+The `clear-community-review-followups` change removes only the two `0.1.1` source warnings, adds local source-contract and runtime-audit checks for both patterns, and preserves the accepted settings migration, configuration-directory exclusion, cooperative yielding, and vault safety behavior. Package, manifest, and compatibility metadata now identify `0.1.2`; compatibility entries for `0.1.0` and `0.1.1` remain present.
+
+The automated `0.1.2` candidate gate passed on 2026-09-23:
+
+- Production build and TypeScript checks: passed.
+- Full unit, integration, golden, UI-contract, release-readiness, source-contract, adapter, and 5,000-file suites: 101 passed across 16 suites.
+- The 5,000-file rehearsal recorded a 3.5 ms scan and zero source mutations.
+- Runtime audit: passed with no actionable Community source-warning pattern, including the saved-settings assertion and rejected timer form.
+- Production dependency audit: zero vulnerabilities.
+- Strict validation for both active corrective changes and git diff whitespace validation: passed.
+- Release metadata: package `0.1.2`, manifest `0.1.2`, compatibility minimum `1.13.7`, and exact release tag `0.1.2` agree; the `0.1.0` and `0.1.1` compatibility entries remain present.
+- Staged inventory: exactly `main.js`, `manifest.json`, and `styles.css`.
+- `main.js`: `99c02964ed9e0f53cfedbb17bfb4c32b83ea849ee0ee4a478bd384e914c32c9f`
+- `manifest.json`: `ef2c39e1d6dcb35325614de5a4054047d6825710f21da90aa651d3bd280675bd`
+- `styles.css`: `f924a269f05d7c01a75303fd0490c2ab0baf498ddeb5b03dd3c4e23ce69af144`
+
+Packaged desktop acceptance passed on 2026-09-24 in the existing upgrade vault `/private/tmp/soundings-0.1.1-acceptance.AIQDyO` using Obsidian desktop 1.13.7 on macOS 26.6.2 arm64. Only the three staged `0.1.2` assets were installed over the accepted `0.1.1` plugin inside the active `.soundings-config` directory.
+
+- Soundings loaded and remained enabled as version `0.1.2`; plugin ID `soundings`, minimum Obsidian version `1.13.7`, and `isDesktopOnly: true` remained unchanged.
+- A saved `0.1.1` settings record loaded with both formats enabled, the `Archive` user exclusion, 5 MB maximum, disabled project inference, and `Projects` root. Settings search found `Maximum transcript bytes`; the safety explanation and all six controls appeared; only `Archive` was editable; and the copy named `.soundings-config`.
+- The ribbon and command-palette entry points showed the same four-item unselected plan. `Upgrade/Carol and Dan.txt` was the only eligible source; three existing destinations were blocked; `.soundings-config/Private/Should Not Read.txt` was not offered.
+- Closing the first plan created no destination. Automated cancellation coverage also passed without source mutation or partial publication.
+- Selecting only the eligible upgrade transcript through the command entry produced `created: 1 · skipped: 3` and read the new note back successfully.
+- `Upgrade/Carol and Dan.txt` remained `114eb890b563f1f7d78b7eda43d6af8a86e77ce9fbd4d1d259f21d97aaf97c3d`.
+- `UpgradeCollision/Planning Review.txt` remained `e0ce63ca5869add488effbe23bdf89327db187be8f760ca84359309d8ea76382`.
+- The pre-existing `UpgradeCollision/Planning Review.md` remained `66bcd4e3eea55874046a7154adecddf76cb04931fb71ffa18fdc0e29c5518cbe`.
+- The protected config transcript remained `9e0c795ec7ee95d21fae92cbf61dbd2cd1ae7c78f9b98f05bd616f1daf4a3860`.
+- The created `Upgrade/Carol and Dan.md` hash is `3f056059b0a7f816bea0e178afcf705ca80f93808cfbe8c8803f36929ba28326` and contains the expected structured local transcript.
+
+Immutable-release verification and the owner-controlled Community rescan remain pending.
 
 ## Real Obsidian desktop acceptance
 

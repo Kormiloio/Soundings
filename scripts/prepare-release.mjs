@@ -66,6 +66,7 @@ async function prepareRelease({ root: requestedRoot, output: requestedOutput, ta
   requireValue(typeof manifest.description === "string" && manifest.description.length <= 250 && manifest.description.endsWith("."), "manifest.json description must be no more than 250 characters and end with a period.");
   requireValue(versions[manifest.version] === manifest.minAppVersion, "versions.json must map the release version to manifest.json minAppVersion.");
   requireValue(versions["0.1.0"] === "1.13.7", "versions.json must preserve the published 0.1.0 compatibility entry.");
+  requireValue(versions["0.1.1"] === "1.13.7", "versions.json must preserve the published 0.1.1 compatibility entry.");
   requireValue(packageJson.license === "MIT", "package.json license must be MIT.");
 
   const license = await readFile(join(root, "LICENSE"), "utf8");

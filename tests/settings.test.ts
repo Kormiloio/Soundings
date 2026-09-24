@@ -46,6 +46,14 @@ describe("settings", () => {
     expect(editableExcludedPaths(saved, policy.mandatoryExcludedPaths)).toEqual(["Archive"]);
   });
 
+  it("migrates saved exclusions through the current host policy from only the field the helper reads", () => {
+    const policy = createSettingsPolicy(".soundings-config").policy!;
+    const saved = { excludedPaths: [".obsidian", ".soundings", "Archive"] };
+    const editable = editableExcludedPaths(saved, policy.mandatoryExcludedPaths);
+    const migrated = validateSettings({ excludedPaths: editable }, policy.mandatoryExcludedPaths).settings!;
+    expect(migrated.excludedPaths).toEqual([".soundings-config", ".soundings", ".obsidian", "Archive"]);
+  });
+
   it("rejects settings that could broaden a scan", () => {
     const result = validateSettings({ excludedPaths: [""], projectInferenceEnabled: true, projectRoot: "../Projects" });
     expect(result.settings).toBeUndefined();

@@ -33,7 +33,9 @@ for (const method of ["modify", "delete", "rename", "trash"]) {
 for (const [pattern, name] of [
   [/\bglobalThis\b/u, "globalThis"],
   [/\\u0000-\\u001f/u, "control-character regular expression"],
-  [/\.setWarning\s*\(/u, "deprecated setWarning"]
+  [/\.setWarning\s*\(/u, "deprecated setWarning"],
+  [/\bas\s+SoundingsSettings\b/u, "unnecessary SoundingsSettings assertion"],
+  [/\bactiveWindow\.setTimeout\s*\(/u, "activeWindow timer"]
 ]) {
   if (pattern.test(source)) violations.push(name);
 }

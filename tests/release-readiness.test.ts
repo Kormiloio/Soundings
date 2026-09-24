@@ -17,12 +17,13 @@ async function createCandidate(overrides: {
   isDesktopOnly?: boolean;
   readme?: string;
   gitignore?: string;
+  includePreviousCompatibility?: boolean;
 } = {}): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "soundings-release-test-"));
   temporaryRoots.push(root);
-  const manifestVersion = overrides.manifestVersion ?? "0.1.1";
+  const manifestVersion = overrides.manifestVersion ?? "0.1.2";
   const minAppVersion = overrides.minAppVersion ?? "1.13.7";
-  await writeFile(join(root, "package.json"), JSON.stringify({ name: "soundings", version: overrides.packageVersion ?? "0.1.1", license: "MIT" }));
+  await writeFile(join(root, "package.json"), JSON.stringify({ name: "soundings", version: overrides.packageVersion ?? "0.1.2", license: "MIT" }));
   await writeFile(join(root, "manifest.json"), JSON.stringify({
     id: "soundings",
     name: "Soundings",
@@ -32,7 +33,11 @@ async function createCandidate(overrides: {
     author: "Kormilo",
     isDesktopOnly: overrides.isDesktopOnly ?? true
   }));
-  await writeFile(join(root, "versions.json"), JSON.stringify({ "0.1.0": "1.13.7", [manifestVersion]: minAppVersion }));
+  await writeFile(join(root, "versions.json"), JSON.stringify({
+    "0.1.0": "1.13.7",
+    ...(overrides.includePreviousCompatibility === false ? {} : { "0.1.1": "1.13.7" }),
+    [manifestVersion]: minAppVersion
+  }));
   await writeFile(join(root, ".gitignore"), overrides.gitignore ?? "main.js\nrelease/\n");
   await writeFile(join(root, "README.md"), overrides.readme ?? [
     "# Soundings",
@@ -56,7 +61,7 @@ async function createCandidate(overrides: {
   return root;
 }
 
-async function run(root: string, tag = "0.1.1") {
+async function run(root: string, tag = "0.1.2") {
   return execFileAsync(process.execPath, [script, "--root", root, "--output", join(root, "release", tag), "--tag", tag]);
 }
 
@@ -67,13 +72,13 @@ afterEach(async () => {
 describe("release readiness", () => {
   it("stages exactly the three Obsidian runtime assets", async () => {
     const root = await createCandidate();
-    await mkdir(join(root, "release", "0.1.1"), { recursive: true });
-    await writeFile(join(root, "release", "0.1.1", "stale.txt"), "stale");
+    await mkdir(join(root, "release", "0.1.2"), { recursive: true });
+    await writeFile(join(root, "release", "0.1.2", "stale.txt"), "stale");
 
     const { stdout } = await run(root);
-    expect(stdout).toContain("Release 0.1.1 staged");
-    expect(await readdir(join(root, "release", "0.1.1"))).toEqual(["main.js", "manifest.json", "styles.css"]);
-    expect(await readFile(join(root, "release", "0.1.1", "manifest.json"), "utf8")).toBe(await readFile(join(root, "manifest.json"), "utf8"));
+    expect(stdout).toContain("Release 0.1.2 staged");
+    expect(await readdir(join(root, "release", "0.1.2"))).toEqual(["main.js", "manifest.json", "styles.css"]);
+    expect(await readFile(join(root, "release", "0.1.2", "manifest.json"), "utf8")).toBe(await readFile(join(root, "manifest.json"), "utf8"));
   });
 
   it("fails closed when package and manifest versions differ", async () => {
@@ -84,6 +89,11 @@ describe("release readiness", () => {
   it("fails closed when the release tag differs", async () => {
     const root = await createCandidate();
     await expect(run(root, "v0.1.0")).rejects.toMatchObject({ stderr: expect.stringContaining("Release tag must exactly match") });
+  });
+
+  it("fails closed when the published 0.1.1 compatibility entry is missing", async () => {
+    const root = await createCandidate({ includePreviousCompatibility: false });
+    await expect(run(root)).rejects.toMatchObject({ stderr: expect.stringContaining("published 0.1.1 compatibility entry") });
   });
 
   it("fails closed when required public metadata is missing", async () => {

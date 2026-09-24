@@ -64,7 +64,7 @@ export function createSettingsPolicy(configDir: string): SettingsPolicyValidatio
 }
 
 export function editableExcludedPaths(
-  settings: SoundingsSettings,
+  settings: Pick<SoundingsSettings, "excludedPaths">,
   mandatoryExcludedPaths: readonly string[]
 ): readonly string[] {
   const mandatory = new Set(mandatoryExcludedPaths);

@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Desktop release 0.1.0 published; corrective 0.1.1 Community review patch in progress
+**Document status:** Desktop releases through 0.1.1 published; corrective 0.1.2 Community review follow-up in progress
 **Last updated:** 2026-09-23
 
 ## 1. Product summary
@@ -175,10 +175,10 @@ Soundings may not be enabled in a personal or work vault until a disposable-vaul
 
 ## 13. Community release acceptance gate
 
-Soundings 0.1.1 may not be published in the Obsidian Community directory until:
+Soundings 0.1.2 may not be published in the Obsidian Community directory until:
 
 - the public default branch contains an MIT license and complete user-facing installation, usage, privacy, safety, limitation, support, and licensing guidance;
-- package, manifest, compatibility map, and exact `0.1.1` release tag agree while the published `0.1.0` release remains unchanged;
+- package, manifest, compatibility map, and exact `0.1.2` release tag agree while published releases `0.1.0` and `0.1.1` remain unchanged;
 - a clean staging directory contains only `main.js`, `manifest.json`, and `styles.css` and their hashes are recorded;
 - the complete automated suite, runtime audit, scale rehearsal, strict OpenSpec validation, and diff checks pass;
 - those staged assets pass non-mutating review and explicit create-only conversion checks in a disposable Obsidian desktop vault;
@@ -196,4 +196,6 @@ Work-vault testing later exposed that Obsidian refused Markdown creation when a 
 
 The `add-scan-ribbon-icon` change registers one built-in waves control labeled **Scan vault for transcripts** and retains the command-palette entry, with both routed to the existing guarded review workflow. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed one correctly labeled waves icon after disable/re-enable, an unselected review plan on activation, and the retained command-palette entry. After explicit confirmation, the hash-matched build was installed in the work vault; the ribbon opened the same unselected plan, and a repeated close-without-conversion check left the reference transcript and Markdown note hashes unchanged.
 
-The corrective `0.1.1` implementation now passes the production build, 96 automated tests across 15 suites, the runtime/source-warning audit, zero-vulnerability production dependency audit, strict OpenSpec validation, 5,000-file rehearsal with zero source mutations, release-readiness checks, and exact three-asset staging. Packaged desktop acceptance with a renamed configuration directory, immutable GitHub publication, and the owner-controlled Community rescan remain pending.
+The corrective `0.1.1` implementation passed its automated and packaged desktop gates, was published immutably, and received a completed Community rescan. That rescan cleared every original finding and passed network, dependency, obfuscation, and byte-for-byte build checks, but reported two new source warnings: an unnecessary saved-settings type assertion and `activeWindow.setTimeout()` usage. Vault enumeration and missing GitHub artifact attestations remain recorded recommendations rather than failures.
+
+The `clear-community-review-followups` change prepares immutable release `0.1.2` to remove those two warnings without changing conversion behavior or the desktop-only, local-only, reviewed, and create-only boundaries. The listing remains unpublished pending automated checks, packaged desktop acceptance, immutable release verification, and a clean owner-controlled Community rescan.

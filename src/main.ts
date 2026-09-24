@@ -62,7 +62,7 @@ export default class SoundingsPlugin extends Plugin {
       return;
     }
     const storedExclusions = stored?.excludedPaths
-      ? editableExcludedPaths({ ...DEFAULT_SETTINGS, ...stored, excludedPaths: stored.excludedPaths } as SoundingsSettings, policy.mandatoryExcludedPaths)
+      ? editableExcludedPaths({ excludedPaths: stored.excludedPaths }, policy.mandatoryExcludedPaths)
       : [];
     const validation = validateSettings({ ...(stored ?? {}), excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
     const safeDefaults = validateSettings({}, policy.mandatoryExcludedPaths).settings;

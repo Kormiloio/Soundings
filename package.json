@@ -1,6 +1,6 @@
 {
   "name": "soundings",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Turn transcript files into safe, structured Markdown inside Obsidian.",
   "author": "Kormilo",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "test:watch": "vitest",
     "check": "npm run build && npm run test",
     "audit:runtime": "node scripts/audit-runtime.mjs",
-    "release:prepare": "npm run build && node scripts/prepare-release.mjs --tag 0.1.1"
+    "release:prepare": "npm run build && node scripts/prepare-release.mjs --tag 0.1.2"
   },
   "engines": {
     "node": ">=20"
