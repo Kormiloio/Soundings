@@ -127,7 +127,9 @@ Packaged desktop acceptance passed on 2026-09-24 in the existing upgrade vault `
 
 GitHub release `0.1.2` was published from accepted commit `6e2458ab4c7ae2215d2f47716ca4fad7a9062fc8` and verified at `https://github.com/Kormiloio/Soundings/releases/tag/0.1.2`. It is neither a draft nor a prerelease. A fresh download contains exactly `main.js`, `manifest.json`, and `styles.css`, and all three SHA-256 hashes match the accepted staging directory. Fresh preflight downloads plus post-publication GitHub metadata confirmed that releases `0.1.0` and `0.1.1`, their target commits, asset inventories, and recorded hashes remain unchanged.
 
-The Community draft remains unpublished pending a clean completed rescan of `0.1.2`.
+The owner requested a Community rescan after corrective release `0.1.2`. The completed review passed network-pattern, dependency-vulnerability, code-obfuscation, and byte-for-byte build-reproduction checks and reported no actionable source warning or failure. The review retained the expected vault-enumeration recommendation and the non-blocking recommendation for GitHub artifact attestations on `main.js` and `styles.css`.
+
+The automated Community gate is clean. The listing remains unpublished only until the repository owner performs the final **Publish** action.
 
 ## Real Obsidian desktop acceptance
 
