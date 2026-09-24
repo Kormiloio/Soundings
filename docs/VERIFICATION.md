@@ -129,7 +129,7 @@ GitHub release `0.1.2` was published from accepted commit `6e2458ab4c7ae2215d2f4
 
 The owner requested a Community rescan after corrective release `0.1.2`. The completed review passed network-pattern, dependency-vulnerability, code-obfuscation, and byte-for-byte build-reproduction checks and reported no actionable source warning or failure. The review retained the expected vault-enumeration recommendation and the non-blocking recommendation for GitHub artifact attestations on `main.js` and `styles.css`.
 
-The automated Community gate is clean. The listing remains unpublished only until the repository owner performs the final **Publish** action.
+The automated Community gate is clean. The repository owner performed the final **Publish** action on 2026-09-24. The public Soundings page displayed **Add to Obsidian**, Review **Passed**, Health **Excellent**, the expected author and description, and the desktop 1.13.7 requirement. Soundings is now publicly available in the Obsidian Community directory.
 
 ## Real Obsidian desktop acceptance
 

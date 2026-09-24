@@ -28,7 +28,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 
 ## Active focus
 
-1. Clear the two follow-up Community source warnings through the approved `0.1.2` patch, then publish the corrected listing only after a clean completed rescan.
+1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
 2. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
 ## Foundation implementation checkpoint
@@ -49,7 +49,9 @@ The owner created the Community listing draft and the automated review passed de
 
 The `address-community-review-feedback` patch injected host-window cryptography and identifiers at the Obsidian boundary, replaced the flagged regular expressions with equivalent character transforms, derived mandatory exclusions from `Vault.configDir`, adopted declarative searchable settings, and used supported destructive-button styling. Immutable release `0.1.1` passed packaged desktop acceptance and its Community rescan cleared every original warning. The rescan passed network, dependency, obfuscation, and byte-for-byte build checks while reporting expected vault enumeration and missing artifact attestations as recommendations.
 
-The completed `0.1.1` scan identified two follow-up source warnings: an unnecessary `SoundingsSettings` assertion during saved-settings migration and `activeWindow.setTimeout()` in the vault adapter. The `clear-community-review-followups` patch narrows the exclusion-helper input, uses `window.setTimeout()` at the adapter boundary, adds local contracts for both findings, and prepares immutable release `0.1.2`. It does not change vault mutation, data handling, supported platforms, or conversion output; the Community listing remains unpublished pending a clean completed rescan.
+The completed `0.1.1` scan identified two follow-up source warnings: an unnecessary `SoundingsSettings` assertion during saved-settings migration and `activeWindow.setTimeout()` in the vault adapter. The `clear-community-review-followups` patch narrowed the exclusion-helper input, used `window.setTimeout()` at the adapter boundary, added local contracts for both findings, and prepared immutable release `0.1.2`. It did not change vault mutation, data handling, supported platforms, or conversion output; the Community listing remained unpublished until the clean completed rescan.
+
+Immutable release `0.1.2` passed 101 automated tests across 16 suites, runtime and dependency audits, strict validation, exact three-asset staging, saved-settings upgrade acceptance, custom-config exclusion, non-mutating review, explicit create/read-back, remote hash verification, and a completed Community review with no actionable finding. On 2026-09-24 the repository owner published Soundings in the Obsidian Community directory; the public listing reports Review Passed and Health Excellent.
 
 ## Definition of done
 

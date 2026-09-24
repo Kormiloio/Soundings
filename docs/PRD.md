@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Desktop releases through 0.1.1 published; corrective 0.1.2 Community review follow-up in progress
+**Document status:** Soundings 0.1.2 published in the Obsidian Community directory
 **Last updated:** 2026-09-23
 
 ## 1. Product summary
@@ -198,4 +198,6 @@ The `add-scan-ribbon-icon` change registers one built-in waves control labeled *
 
 The corrective `0.1.1` implementation passed its automated and packaged desktop gates, was published immutably, and received a completed Community rescan. That rescan cleared every original finding and passed network, dependency, obfuscation, and byte-for-byte build checks, but reported two new source warnings: an unnecessary saved-settings type assertion and `activeWindow.setTimeout()` usage. Vault enumeration and missing GitHub artifact attestations remain recorded recommendations rather than failures.
 
-The `clear-community-review-followups` change prepares immutable release `0.1.2` to remove those two warnings without changing conversion behavior or the desktop-only, local-only, reviewed, and create-only boundaries. The listing remains unpublished pending automated checks, packaged desktop acceptance, immutable release verification, and a clean owner-controlled Community rescan.
+The `clear-community-review-followups` change prepared immutable release `0.1.2` to remove those two warnings without changing conversion behavior or the desktop-only, local-only, reviewed, and create-only boundaries. The listing remained unpublished through automated checks, packaged desktop acceptance, immutable release verification, and the owner-controlled Community rescan.
+
+Release `0.1.2` subsequently passed all automated and packaged desktop gates, reproduced byte-for-byte in the completed Community review, and reported no actionable source warning or failure. The repository owner published the listing on 2026-09-24; the public page reports Review Passed and Health Excellent and offers **Add to Obsidian**.
