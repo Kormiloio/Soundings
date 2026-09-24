@@ -125,7 +125,9 @@ Packaged desktop acceptance passed on 2026-09-24 in the existing upgrade vault `
 - The protected config transcript remained `9e0c795ec7ee95d21fae92cbf61dbd2cd1ae7c78f9b98f05bd616f1daf4a3860`.
 - The created `Upgrade/Carol and Dan.md` hash is `3f056059b0a7f816bea0e178afcf705ca80f93808cfbe8c8803f36929ba28326` and contains the expected structured local transcript.
 
-Immutable-release verification and the owner-controlled Community rescan remain pending.
+GitHub release `0.1.2` was published from accepted commit `6e2458ab4c7ae2215d2f47716ca4fad7a9062fc8` and verified at `https://github.com/Kormiloio/Soundings/releases/tag/0.1.2`. It is neither a draft nor a prerelease. A fresh download contains exactly `main.js`, `manifest.json`, and `styles.css`, and all three SHA-256 hashes match the accepted staging directory. Fresh preflight downloads plus post-publication GitHub metadata confirmed that releases `0.1.0` and `0.1.1`, their target commits, asset inventories, and recorded hashes remain unchanged.
+
+The Community draft remains unpublished pending a clean completed rescan of `0.1.2`.
 
 ## Real Obsidian desktop acceptance
 
