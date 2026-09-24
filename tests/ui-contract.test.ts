@@ -19,6 +19,10 @@ describe("Obsidian UI and lifecycle contracts", () => {
 
   it("exposes validation text and ARIA state without color-only errors", async () => {
     const settings = await source("src/obsidian/settings-tab.ts");
+    expect(settings).not.toMatch(/createEl\(["']h[12]["']/);
+    expect(settings).not.toContain("Soundings settings");
+    expect(settings).toContain("Soundings reads transcript files locally");
+    expect(settings.match(/new Setting\(/g)).toHaveLength(5);
     expect(settings).toContain('role: "alert"');
     expect(settings).toContain('"aria-live": "polite"');
     expect(settings).toContain('"aria-invalid"');

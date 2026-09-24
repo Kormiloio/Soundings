@@ -28,7 +28,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 
 ## Active focus
 
-1. Prepare desktop release packaging and catalog work through a separate approved change.
+1. Implement and verify the approved `prepare-community-release` change, then publish immutable `0.1.0` assets and hand off the owner-controlled catalog submission.
 2. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
 ## Foundation implementation checkpoint
@@ -40,6 +40,8 @@ Desktop acceptance passed in a disposable vault using Obsidian 1.13.7 on macOS 2
 The safe-destination change performs deterministic basename normalization in the pure planner, exposes the final path before selection, and applies all collision checks to that reviewed path. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and a repeated 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed the exact reviewed safe destination, successful create/read-back, sanitized collision refusal, close-without-conversion behavior, and unchanged source hashes. After explicit confirmation, the accepted build was installed in the work vault with matching plugin-file hashes. A controlled conversion then created the reviewed safe destination with correct source metadata while preserving the original transcript hash; the other 25 candidates were skipped and no existing Markdown was overwritten.
 
 The ribbon-icon change registers one public-API waves control labeled **Scan vault for transcripts** and keeps the command-palette entry, with both invoking the existing guarded review workflow. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed one correctly labeled waves icon after disable/re-enable, an unselected review plan on activation, and the retained command-palette entry. After explicit confirmation, the hash-matched build was installed in the work vault; the ribbon opened the same unselected plan, and a repeated close-without-conversion check left the reference transcript and Markdown note hashes unchanged.
+
+The approved Community-release change adds MIT licensing, end-user documentation, Obsidian review cleanup, fail-closed release staging, packaged-build acceptance, and immutable GitHub release verification. It introduces no runtime network access, telemetry, external-file access, mobile claim, or new vault mutation. Account linking, listing ownership, policy acceptance, and final Community submission remain explicit repository-owner actions.
 
 ## Definition of done
 

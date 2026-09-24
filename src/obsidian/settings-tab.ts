@@ -17,7 +17,6 @@ export class SoundingsSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Soundings settings" });
     containerEl.createEl("p", {
       text: "Soundings reads transcript files locally, preserves every source, and never overwrites an existing Markdown note."
     });

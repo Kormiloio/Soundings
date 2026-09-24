@@ -6,6 +6,7 @@ main.js
 .env.*
 *.log
 coverage/
+release/
 .obsidian/
 test-vault/
 acceptance-vault/

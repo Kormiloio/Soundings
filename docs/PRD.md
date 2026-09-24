@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Desktop foundation implemented and accepted
+**Document status:** Desktop foundation accepted; Community release preparation active
 **Last updated:** 2026-09-23
 
 ## 1. Product summary
@@ -27,6 +27,7 @@ Without automation, the user must repeatedly rename, copy, clean, structure, and
 - Infer useful context, such as the containing project folder, conservatively and transparently.
 - Work through Obsidian's public APIs while shipping the first release as desktop-only.
 - Make privacy and safe-write behavior understandable and verifiable.
+- Publish a reproducible desktop package whose GitHub release assets and Community listing metadata match the accepted source revision.
 
 ## 4. Foundation non-goals
 
@@ -116,6 +117,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-19 | The plugin provides settings for supported formats, exclusions, maximum source size, and project inference without exposing unsafe overwrite behavior. | Must |
 | FR-20 | A user can inspect the source path and intended destination for every planned conversion. | Must |
 | FR-21 | Obsidian desktop exposes one labeled Soundings ribbon control and retains the command-palette command; both start the same reviewed scan without selecting or converting candidates automatically. | Must |
+| FR-22 | The public release provides an MIT license, complete user guidance, matching version metadata, and exactly the three Obsidian runtime assets under an immutable release tag. | Must |
 
 ## 8. Safety, privacy, and security requirements
 
@@ -135,6 +137,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 - **Performance:** a 5,000-file disposable desktop vault scan remains responsive and cancelable; parsing and conversion use a documented conservative source-size limit.
 - **Accessibility:** the labeled ribbon control, commands, review controls, statuses, and errors are keyboard-accessible and do not rely on color alone.
 - **Testability:** discovery, exclusion, planning, parsing, rendering, path derivation, and execution are independently testable.
+- **Distribution:** release preparation fails closed when repository metadata, versions, tags, or runtime assets are missing or inconsistent; packaged assets pass desktop acceptance before publication.
 
 ## 10. Delivery phases
 
@@ -170,7 +173,19 @@ Soundings may not be enabled in a personal or work vault until a disposable-vaul
 - How a later, explicitly requested reconversion updates a generated note without overwriting user-authored content.
 - Which local model runtimes, if any, can work reliably in Obsidian desktop; mobile runtime evaluation is deferred with mobile support.
 
-## 13. Implementation checkpoint
+## 13. Community release acceptance gate
+
+Soundings 0.1.0 may not be submitted to the Obsidian Community directory until:
+
+- the public default branch contains an MIT license and complete user-facing installation, usage, privacy, safety, limitation, support, and licensing guidance;
+- package, manifest, compatibility map, and exact `0.1.0` release tag agree;
+- a clean staging directory contains only `main.js`, `manifest.json`, and `styles.css` and their hashes are recorded;
+- the complete automated suite, runtime audit, scale rehearsal, strict OpenSpec validation, and diff checks pass;
+- those staged assets pass non-mutating review and explicit create-only conversion checks in a disposable Obsidian desktop vault;
+- the public GitHub release exposes the three accepted assets with matching hashes; and
+- the repository owner explicitly links accounts, chooses listing ownership, accepts Obsidian's developer policies, and submits the listing.
+
+## 14. Implementation checkpoint
 
 The foundation plugin, pure conversion core, reviewed create-only executor, settings, review UI, and lifecycle integration are implemented. The production build, runtime security audit, 60 automated tests, and a temporary 5,000-file desktop rehearsal pass. The rehearsal covered discovery, preview, conversion, destination races, cancellation, restart classification, and source-byte preservation.
 
