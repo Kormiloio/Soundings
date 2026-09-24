@@ -4,6 +4,7 @@ import { sha256 } from "../src/core/hash";
 import { buildPlan } from "../src/core/planning";
 import { DEFAULT_SETTINGS } from "../src/core/settings";
 import type { DiscoveryItem } from "../src/core/discovery";
+import { testDigest } from "./test-crypto";
 
 const encoder = new TextEncoder();
 
@@ -29,7 +30,7 @@ async function discovered(path: string, body: string): Promise<DiscoveryItem> {
     format,
     classification: "eligible",
     reason: "Ready",
-    evidence: { path, format, byteLength: bytes.byteLength, sha256: await sha256(bytes) }
+    evidence: { path, format, byteLength: bytes.byteLength, sha256: await sha256(bytes, testDigest) }
   };
 }
 
@@ -52,7 +53,8 @@ describe("mixed reviewed batch", () => {
     const outcomes = await executePlan(plan, vault, {
       selectedSourcePaths: new Set(["created.txt", "collision.txt", "stale.txt", "malformed.vtt"]),
       settings: DEFAULT_SETTINGS,
-      now: () => new Date(0)
+      now: () => new Date(0),
+      digest: testDigest
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["created", "blocked", "stale", "failed", "skipped"]);
     expect(new TextDecoder().decode(vault.files.get("collision.md"))).toBe("winner");
@@ -71,15 +73,16 @@ describe("mixed reviewed batch", () => {
 
     const vault = new Vault();
     vault.files.set(sourcePath, sourceBytes);
-    const beforeHash = await sha256(sourceBytes);
+    const beforeHash = await sha256(sourceBytes, testDigest);
     const outcomes = await executePlan(plan, vault, {
       selectedSourcePaths: new Set([sourcePath]),
       settings: DEFAULT_SETTINGS,
-      now: () => new Date(0)
+      now: () => new Date(0),
+      digest: testDigest
     });
 
     expect(outcomes).toEqual([{ sourcePath, destinationPath, status: "created", reason: "Markdown note created and verified." }]);
-    expect(await sha256(vault.files.get(sourcePath)!)).toBe(beforeHash);
+    expect(await sha256(vault.files.get(sourcePath)!, testDigest)).toBe(beforeHash);
     const created = new TextDecoder().decode(vault.files.get(destinationPath));
     expect(created).toContain('source_file: "1:1: Charles : Mario.txt"');
     expect(created).toContain("# 1:1: Charles : Mario");
@@ -96,7 +99,8 @@ describe("mixed reviewed batch", () => {
 
     const outcomes = await executePlan(plan, vault, {
       selectedSourcePaths: new Set([sourcePath]),
-      settings: DEFAULT_SETTINGS
+      settings: DEFAULT_SETTINGS,
+      digest: testDigest
     });
 
     expect(outcomes[0]).toMatchObject({ destinationPath, status: "blocked" });

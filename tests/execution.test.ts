@@ -4,6 +4,7 @@ import { sha256 } from "../src/core/hash";
 import { buildPlan } from "../src/core/planning";
 import { DEFAULT_SETTINGS } from "../src/core/settings";
 import type { DiscoveryItem } from "../src/core/discovery";
+import { testDigest } from "./test-crypto";
 
 const encoder = new TextEncoder();
 
@@ -40,7 +41,7 @@ async function item(path: string, body: string): Promise<DiscoveryItem> {
     format,
     classification: "eligible",
     reason: "Ready",
-    evidence: { path, format, byteLength: bytes.byteLength, sha256: await sha256(bytes) }
+    evidence: { path, format, byteLength: bytes.byteLength, sha256: await sha256(bytes, testDigest) }
   };
 }
 
@@ -51,7 +52,7 @@ describe("safe execution", () => {
     vault.files.set("two.txt", encoder.encode("two"));
     const plan = buildPlan([await item("one.txt", "hello"), await item("two.txt", "two")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["one.txt"]), settings: DEFAULT_SETTINGS, now: () => new Date(0)
+      selectedSourcePaths: new Set(["one.txt"]), settings: DEFAULT_SETTINGS, now: () => new Date(0), digest: testDigest
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["created", "skipped"]);
     expect(vault.files.has("one.md")).toBe(true);
@@ -64,7 +65,7 @@ describe("safe execution", () => {
     vault.files.set("changed: transcript.txt", encoder.encode("new private body"));
     const plan = buildPlan([await item("changed: transcript.txt", "old private body"), await item("missing: transcript.txt", "gone")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["changed: transcript.txt", "missing: transcript.txt"]), settings: DEFAULT_SETTINGS
+      selectedSourcePaths: new Set(["changed: transcript.txt", "missing: transcript.txt"]), settings: DEFAULT_SETTINGS, digest: testDigest
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["stale", "stale"]);
     expect(vault.files.has("changed - transcript.md")).toBe(false);
@@ -77,9 +78,20 @@ describe("safe execution", () => {
     vault.files.set("one.txt", encoder.encode("one"));
     const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["one.txt"]), settings: { ...DEFAULT_SETTINGS, maxSourceBytes: 99 }
+      selectedSourcePaths: new Set(["one.txt"]), settings: { ...DEFAULT_SETTINGS, maxSourceBytes: 99 }, digest: testDigest
     });
     expect(outcomes[0].status).toBe("stale");
+    expect(vault.files.has("one.md")).toBe(false);
+  });
+
+  it("fails closed without an injected secure digest", async () => {
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set("one.txt", encoder.encode("one"));
+    const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set(["one.txt"]), settings: DEFAULT_SETTINGS
+    });
+    expect(outcomes[0]).toMatchObject({ status: "failed", reason: "Secure source hashing is unavailable." });
     expect(vault.files.has("one.md")).toBe(false);
   });
 
@@ -88,7 +100,7 @@ describe("safe execution", () => {
     vault.files.set("one: review.txt", encoder.encode("one"));
     vault.createHook = (path) => { vault.files.set(path, encoder.encode("winner")); };
     const plan = buildPlan([await item("one: review.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
-    const outcomes = await executePlan(plan, vault, { selectedSourcePaths: new Set(["one: review.txt"]), settings: DEFAULT_SETTINGS });
+    const outcomes = await executePlan(plan, vault, { selectedSourcePaths: new Set(["one: review.txt"]), settings: DEFAULT_SETTINGS, digest: testDigest });
     expect(outcomes[0].status).toBe("blocked");
     expect(new TextDecoder().decode(vault.files.get("one - review.md"))).toBe("winner");
   });
@@ -98,7 +110,7 @@ describe("safe execution", () => {
     vault.files.set("one.txt", encoder.encode("one"));
     vault.corruptReadback = true;
     const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
-    const outcomes = await executePlan(plan, vault, { selectedSourcePaths: new Set(["one.txt"]), settings: DEFAULT_SETTINGS });
+    const outcomes = await executePlan(plan, vault, { selectedSourcePaths: new Set(["one.txt"]), settings: DEFAULT_SETTINGS, digest: testDigest });
     expect(outcomes[0].status).toBe("needs-attention");
     expect(vault.files.has("one.md")).toBe(true);
     expect(vault.files.has("one.txt")).toBe(true);
@@ -112,7 +124,7 @@ describe("safe execution", () => {
     vault.createHook = () => controller.abort();
     const plan = buildPlan([await item("one: first.txt", "one"), await item("two: second.txt", "two")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["one: first.txt", "two: second.txt"]), settings: DEFAULT_SETTINGS, signal: controller.signal
+      selectedSourcePaths: new Set(["one: first.txt", "two: second.txt"]), settings: DEFAULT_SETTINGS, signal: controller.signal, digest: testDigest
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["created", "canceled"]);
     expect(vault.files.has("one - first.md")).toBe(true);
@@ -126,7 +138,7 @@ describe("safe execution", () => {
     vault.files.set("good.txt", encoder.encode("good"));
     const plan = buildPlan([await item("bad: transcript.vtt", malformed), await item("good.txt", "good")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set(["bad: transcript.vtt", "good.txt"]), settings: DEFAULT_SETTINGS
+      selectedSourcePaths: new Set(["bad: transcript.vtt", "good.txt"]), settings: DEFAULT_SETTINGS, digest: testDigest
     });
     expect(outcomes.map((entry) => entry.status)).toEqual(["failed", "created"]);
     expect(vault.files.has("bad - transcript.md")).toBe(false);
@@ -140,7 +152,7 @@ describe("safe execution", () => {
     vault.createHook = () => { throw new Error("create failed"); };
     const plan = buildPlan([await item(sourcePath, "source")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
-      selectedSourcePaths: new Set([sourcePath]), settings: DEFAULT_SETTINGS
+      selectedSourcePaths: new Set([sourcePath]), settings: DEFAULT_SETTINGS, digest: testDigest
     });
     expect(outcomes[0]).toMatchObject({ destinationPath, status: "failed", reason: "Destination could not be created." });
     expect(vault.files.has(destinationPath)).toBe(false);

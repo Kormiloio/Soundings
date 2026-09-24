@@ -20,9 +20,9 @@ async function createCandidate(overrides: {
 } = {}): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "soundings-release-test-"));
   temporaryRoots.push(root);
-  const manifestVersion = overrides.manifestVersion ?? "0.1.0";
+  const manifestVersion = overrides.manifestVersion ?? "0.1.1";
   const minAppVersion = overrides.minAppVersion ?? "1.13.7";
-  await writeFile(join(root, "package.json"), JSON.stringify({ name: "soundings", version: overrides.packageVersion ?? "0.1.0", license: "MIT" }));
+  await writeFile(join(root, "package.json"), JSON.stringify({ name: "soundings", version: overrides.packageVersion ?? "0.1.1", license: "MIT" }));
   await writeFile(join(root, "manifest.json"), JSON.stringify({
     id: "soundings",
     name: "Soundings",
@@ -32,7 +32,7 @@ async function createCandidate(overrides: {
     author: "Kormilo",
     isDesktopOnly: overrides.isDesktopOnly ?? true
   }));
-  await writeFile(join(root, "versions.json"), JSON.stringify({ [manifestVersion]: minAppVersion }));
+  await writeFile(join(root, "versions.json"), JSON.stringify({ "0.1.0": "1.13.7", [manifestVersion]: minAppVersion }));
   await writeFile(join(root, ".gitignore"), overrides.gitignore ?? "main.js\nrelease/\n");
   await writeFile(join(root, "README.md"), overrides.readme ?? [
     "# Soundings",
@@ -41,7 +41,7 @@ async function createCandidate(overrides: {
     "## Installation",
     "## First use",
     "## Safety and privacy",
-    "No network requests. No client-side or server-side telemetry. Soundings does not access files outside the active vault. Existing notes are never overwritten.",
+    "No network requests. No client-side or server-side telemetry. Soundings does not access files outside the active vault. Soundings enumerates file paths throughout the active vault and reads file content only for eligible candidates. Existing notes are never overwritten.",
     "## Known limitations",
     "## Support",
     "## Development",
@@ -56,8 +56,8 @@ async function createCandidate(overrides: {
   return root;
 }
 
-async function run(root: string, tag = "0.1.0") {
-  return execFileAsync(process.execPath, [script, "--root", root, "--output", join(root, "release", "0.1.0"), "--tag", tag]);
+async function run(root: string, tag = "0.1.1") {
+  return execFileAsync(process.execPath, [script, "--root", root, "--output", join(root, "release", tag), "--tag", tag]);
 }
 
 afterEach(async () => {
@@ -67,17 +67,17 @@ afterEach(async () => {
 describe("release readiness", () => {
   it("stages exactly the three Obsidian runtime assets", async () => {
     const root = await createCandidate();
-    await mkdir(join(root, "release", "0.1.0"), { recursive: true });
-    await writeFile(join(root, "release", "0.1.0", "stale.txt"), "stale");
+    await mkdir(join(root, "release", "0.1.1"), { recursive: true });
+    await writeFile(join(root, "release", "0.1.1", "stale.txt"), "stale");
 
     const { stdout } = await run(root);
-    expect(stdout).toContain("Release 0.1.0 staged");
-    expect(await readdir(join(root, "release", "0.1.0"))).toEqual(["main.js", "manifest.json", "styles.css"]);
-    expect(await readFile(join(root, "release", "0.1.0", "manifest.json"), "utf8")).toBe(await readFile(join(root, "manifest.json"), "utf8"));
+    expect(stdout).toContain("Release 0.1.1 staged");
+    expect(await readdir(join(root, "release", "0.1.1"))).toEqual(["main.js", "manifest.json", "styles.css"]);
+    expect(await readFile(join(root, "release", "0.1.1", "manifest.json"), "utf8")).toBe(await readFile(join(root, "manifest.json"), "utf8"));
   });
 
   it("fails closed when package and manifest versions differ", async () => {
-    const root = await createCandidate({ packageVersion: "0.1.1" });
+    const root = await createCandidate({ packageVersion: "0.1.0" });
     await expect(run(root)).rejects.toMatchObject({ stderr: expect.stringContaining("versions must match") });
   });
 

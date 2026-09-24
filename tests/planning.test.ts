@@ -28,6 +28,16 @@ describe("planning", () => {
     expect(destinationFor("Meetings/:::  .txt")).toEqual({ ok: false, error: "destination-basename-invalid" });
   });
 
+  it.each([
+    ["Review\u0000Final", "Review - Final"],
+    ["Review\\Final", "Review - Final"],
+    ["Review : ? Final", "Review - Final"],
+    ["Željko [sync]", "Željko [sync]"],
+    ["  Review : Final.  ", "  Review - Final"]
+  ])("preserves destination normalization for %j", (source, expected) => {
+    expect(normalizeDestinationBasename(source)).toEqual({ ok: true, value: expected });
+  });
+
   it("blocks an existing destination", () => {
     const plan = buildPlan([eligible("Meeting.txt")], new Set(["Meeting.md"]), DEFAULT_SETTINGS, new Date(0), () => "p1");
     expect(plan.items[0].classification).toBe("destination-exists");

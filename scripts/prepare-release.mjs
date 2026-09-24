@@ -62,9 +62,10 @@ async function prepareRelease({ root: requestedRoot, output: requestedOutput, ta
   requireValue(!manifest.id.includes("obsidian"), "manifest.json plugin id must not contain obsidian.");
   requireValue(manifest.name === "Soundings", "manifest.json plugin name must be Soundings.");
   requireValue(manifest.isDesktopOnly === true, "manifest.json must declare the accepted desktop-only boundary.");
-  requireValue(manifest.minAppVersion === "1.13.7", "manifest.json minimum Obsidian version must remain 1.13.7 for 0.1.0.");
+  requireValue(manifest.minAppVersion === "1.13.7", "manifest.json minimum Obsidian version must remain 1.13.7.");
   requireValue(typeof manifest.description === "string" && manifest.description.length <= 250 && manifest.description.endsWith("."), "manifest.json description must be no more than 250 characters and end with a period.");
   requireValue(versions[manifest.version] === manifest.minAppVersion, "versions.json must map the release version to manifest.json minAppVersion.");
+  requireValue(versions["0.1.0"] === "1.13.7", "versions.json must preserve the published 0.1.0 compatibility entry.");
   requireValue(packageJson.license === "MIT", "package.json license must be MIT.");
 
   const license = await readFile(join(root, "LICENSE"), "utf8");
@@ -75,7 +76,7 @@ async function prepareRelease({ root: requestedRoot, output: requestedOutput, ta
   for (const heading of ["## Requirements", "## Installation", "## First use", "## Safety and privacy", "## Known limitations", "## Support", "## Development", "## License"]) {
     requireValue(readme.includes(heading), `README.md is missing required section: ${heading}.`);
   }
-  for (const disclosure of ["desktop-only", "no network requests", "no client-side or server-side telemetry", "does not access files outside the active vault", "never overwritten", "MIT License"]) {
+  for (const disclosure of ["desktop-only", "no network requests", "no client-side or server-side telemetry", "does not access files outside the active vault", "enumerates file paths throughout the active vault", "reads file content only", "never overwritten", "MIT License"]) {
     requireValue(readme.toLowerCase().includes(disclosure.toLowerCase()), `README.md is missing required disclosure: ${disclosure}.`);
   }
 

@@ -77,7 +77,7 @@ export class ProgressModal extends Modal {
     this.contentEl.createEl("h2", { text: "Converting transcripts" });
     this.progressEl = this.contentEl.createEl("p", { text: "Preparing…", attr: { "aria-live": "polite" } });
     new Setting(this.contentEl).addButton((button) => button
-      .setWarning()
+      .setDestructive()
       .setButtonText("Cancel remaining")
       .onClick(() => {
         this.cancelRun();

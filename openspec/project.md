@@ -47,6 +47,8 @@ The staged `0.1.0` package passed desktop acceptance on Obsidian 1.13.7 and macO
 
 The owner created the Community listing draft and the automated review passed dependency and obfuscation checks. Vault enumeration was identified as expected behavior; source warnings cover `globalThis`, regular-expression lint, configurable vault-directory handling, declarative settings search support, and deprecated destructive-button styling. The draft remains unpublished until a separately approved patch addresses those findings.
 
+The `address-community-review-feedback` patch injects host-window cryptography and identifiers at the Obsidian boundary, replaces the flagged regular expressions with equivalent character transforms, derives mandatory exclusions from `Vault.configDir`, adopts declarative searchable settings, and uses supported destructive-button styling. It preserves desktop-only, local-only, reviewed, and create-only behavior while preparing immutable release `0.1.1`; the owner-controlled Community rescan and Publish action remain pending acceptance.
+
 ## Definition of done
 
 A change is complete only when its tasks are checked, automated tests pass, named manual/device checks are recorded, documentation matches actual behavior, and no safety-critical decision is hidden in implementation details.

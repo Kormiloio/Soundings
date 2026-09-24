@@ -4,8 +4,12 @@ function yamlScalar(value: string | number): string {
   return typeof value === "number" ? String(value) : JSON.stringify(value);
 }
 
+const MARKDOWN_HEADING_PUNCTUATION = new Set(["\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", ".", "!", "|", "<", ">"]);
+
 function safeHeading(value: string): string {
-  return value.replace(/[\r\n]+/g, " ").replace(/([\\`*_{}\[\]()#+.!|<>])/g, "\\$1").trim() || "Untitled";
+  const singleLine = value.replace(/[\r\n]+/g, " ");
+  const escaped = [...singleLine].map((character) => MARKDOWN_HEADING_PUNCTUATION.has(character) ? `\\${character}` : character).join("");
+  return escaped.trim() || "Untitled";
 }
 
 function literalBlock(text: string): string {

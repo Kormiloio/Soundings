@@ -49,4 +49,12 @@ describe("Markdown rendering", () => {
     expect(first).toContain("> Not generated.");
     expect(first).toContain("## Decisions\n\n## Action Items");
   });
+
+  it("escapes every Markdown heading punctuation character without changing Unicode", () => {
+    const title = "Ž [a](b) {c} #+.*_!|<>`\\";
+    const markdown = renderMarkdown({ format: "txt", blocks: [{ speaker: title, text: "Body" }] }, { ...metadata, title });
+    const escaped = "Ž \\[a\\]\\(b\\) \\{c\\} \\#\\+\\.\\*\\_\\!\\|\\<\\>\\`\\\\";
+    expect(markdown).toContain(`# ${escaped}`);
+    expect(markdown).toContain(`### ${escaped}`);
+  });
 });

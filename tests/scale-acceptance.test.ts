@@ -8,6 +8,7 @@ import { executePlan, type PublicationAdapter } from "../src/core/execution";
 import { buildPlan } from "../src/core/planning";
 import { DEFAULT_SETTINGS } from "../src/core/settings";
 import type { VaultFileRef } from "../src/core/types";
+import { testDigest } from "./test-crypto";
 
 const encoder = new TextEncoder();
 
@@ -68,7 +69,7 @@ describe("5,000-file disposable desktop rehearsal", () => {
     for (const path of transcriptPaths) sourceBefore.set(path, digest(await adapter.readBinary(path)));
 
     const started = performance.now();
-    const discovery = await discoverTranscripts(adapter, DEFAULT_SETTINGS, undefined, 2);
+    const discovery = await discoverTranscripts(adapter, DEFAULT_SETTINGS, undefined, 2, testDigest);
     const elapsed = performance.now() - started;
     expect(discovery.items).toHaveLength(10);
     expect(elapsed).toBeLessThan(10_000);
@@ -78,19 +79,19 @@ describe("5,000-file disposable desktop rehearsal", () => {
     const raceDestination = raceSource.replace(/\.txt$/, ".md");
     await adapter.createBinary(raceDestination, encoder.encode("external winner"));
     const outcomes = await executePlan(plan, adapter, {
-      selectedSourcePaths: new Set([transcriptPaths[0], raceSource]), settings: DEFAULT_SETTINGS, now: () => new Date(0)
+      selectedSourcePaths: new Set([transcriptPaths[0], raceSource]), settings: DEFAULT_SETTINGS, now: () => new Date(0), digest: testDigest
     });
     expect(outcomes.find((entry) => entry.sourcePath === transcriptPaths[0])?.status).toBe("created");
     expect(outcomes.find((entry) => entry.sourcePath === raceSource)?.status).toBe("blocked");
     expect(new TextDecoder().decode(await adapter.readBinary(raceDestination))).toBe("external winner");
 
-    const restartDiscovery = await discoverTranscripts(adapter, DEFAULT_SETTINGS);
+    const restartDiscovery = await discoverTranscripts(adapter, DEFAULT_SETTINGS, undefined, 50, testDigest);
     const restartPlan = buildPlan(restartDiscovery.items, new Set(adapter.paths), DEFAULT_SETTINGS, new Date(1), () => "restart");
     expect(restartPlan.items.find((item) => item.sourcePath === transcriptPaths[0])?.classification).toBe("destination-exists");
 
     const controller = new AbortController();
     adapter.yieldHook = () => controller.abort();
-    const canceled = await discoverTranscripts(adapter, DEFAULT_SETTINGS, controller.signal, 1);
+    const canceled = await discoverTranscripts(adapter, DEFAULT_SETTINGS, controller.signal, 1, testDigest);
     expect(canceled.canceled).toBe(true);
     adapter.yieldHook = undefined;
 

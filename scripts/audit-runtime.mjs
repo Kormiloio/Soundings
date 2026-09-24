@@ -10,7 +10,8 @@ async function walk(directory) {
 }
 
 const files = (await walk("src")).filter((path) => path.endsWith(".ts"));
-const source = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
+const sources = new Map(await Promise.all(files.map(async (path) => [path, await readFile(path, "utf8")])));
+const source = [...sources.values()].join("\n");
 const bundle = await readFile("main.js", "utf8");
 const forbidden = [
   [/\bfetch\s*\(/, "fetch"],
@@ -29,8 +30,19 @@ const adapter = await readFile("src/obsidian/vault-adapter.ts", "utf8");
 for (const method of ["modify", "delete", "rename", "trash"]) {
   if (new RegExp(`vault\\.${method}\\s*\\(`).test(adapter)) violations.push(`vault.${method}`);
 }
+for (const [pattern, name] of [
+  [/\bglobalThis\b/u, "globalThis"],
+  [/\\u0000-\\u001f/u, "control-character regular expression"],
+  [/\.setWarning\s*\(/u, "deprecated setWarning"]
+]) {
+  if (pattern.test(source)) violations.push(name);
+}
+const settingsCore = sources.get("src/core/settings.ts") ?? "";
+const settingsTab = sources.get("src/obsidian/settings-tab.ts") ?? "";
+if (/["'`]\.obsidian(?:[\/"'`]|$)/u.test(settingsCore + settingsTab)) violations.push("hardcoded configuration directory");
+if (!settingsTab.includes("getSettingDefinitions")) violations.push("missing declarative settings definitions");
 
 if (violations.length > 0) {
   throw new Error(`Runtime audit failed: ${violations.join(", ")}`);
 }
-process.stdout.write("Runtime audit passed: no network, telemetry, Node filesystem, credential, or destructive vault APIs detected.\n");
+process.stdout.write("Runtime audit passed: no network, telemetry, Node filesystem, credential, destructive vault APIs, or actionable Community source-warning patterns detected.\n");

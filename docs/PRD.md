@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Desktop release 0.1.0 published; Community directory submission pending
+**Document status:** Desktop release 0.1.0 published; corrective 0.1.1 Community review patch in progress
 **Last updated:** 2026-09-23
 
 ## 1. Product summary
@@ -98,7 +98,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | --- | --- | --- |
 | FR-01 | Soundings inventories supported transcript files recursively using Obsidian's public vault API. | Must |
 | FR-02 | The foundation release recognizes `.txt` and valid WebVTT `.vtt` files case-insensitively. | Must |
-| FR-03 | Default exclusions include `.obsidian/`, hidden folders, Soundings state, and user-configured exclusion patterns. | Must |
+| FR-03 | Default exclusions include the active vault's configured Obsidian configuration directory, hidden folders, Soundings state, and user-configured exclusion patterns. | Must |
 | FR-04 | A scan classifies every discovered candidate without mutating the vault. | Must |
 | FR-05 | The user can review and select eligible conversions before execution. | Must |
 | FR-06 | The destination remains beside the source, replaces the final extension with `.md`, and deterministically normalizes basename characters rejected by Obsidian; the exact final path is shown during review and the source name is unchanged. | Must |
@@ -117,7 +117,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-19 | The plugin provides settings for supported formats, exclusions, maximum source size, and project inference without exposing unsafe overwrite behavior. | Must |
 | FR-20 | A user can inspect the source path and intended destination for every planned conversion. | Must |
 | FR-21 | Obsidian desktop exposes one labeled Soundings ribbon control and retains the command-palette command; both start the same reviewed scan without selecting or converting candidates automatically. | Must |
-| FR-22 | The public release provides an MIT license, complete user guidance, matching version metadata, and exactly the three Obsidian runtime assets under an immutable release tag. | Must |
+| FR-22 | Each public release provides an MIT license, complete user guidance including vault-enumeration disclosure, matching version metadata, and exactly the three Obsidian runtime assets under an immutable release tag. | Must |
 
 ## 8. Safety, privacy, and security requirements
 
@@ -175,15 +175,16 @@ Soundings may not be enabled in a personal or work vault until a disposable-vaul
 
 ## 13. Community release acceptance gate
 
-Soundings 0.1.0 may not be submitted to the Obsidian Community directory until:
+Soundings 0.1.1 may not be published in the Obsidian Community directory until:
 
 - the public default branch contains an MIT license and complete user-facing installation, usage, privacy, safety, limitation, support, and licensing guidance;
-- package, manifest, compatibility map, and exact `0.1.0` release tag agree;
+- package, manifest, compatibility map, and exact `0.1.1` release tag agree while the published `0.1.0` release remains unchanged;
 - a clean staging directory contains only `main.js`, `manifest.json`, and `styles.css` and their hashes are recorded;
 - the complete automated suite, runtime audit, scale rehearsal, strict OpenSpec validation, and diff checks pass;
 - those staged assets pass non-mutating review and explicit create-only conversion checks in a disposable Obsidian desktop vault;
 - the public GitHub release exposes the three accepted assets with matching hashes; and
-- the repository owner explicitly links accounts, chooses listing ownership, accepts Obsidian's developer policies, and submits the listing.
+- the Community rescan reports no actionable source warnings; and
+- the repository owner explicitly publishes the already created listing draft.
 
 ## 14. Implementation checkpoint
 
@@ -194,3 +195,5 @@ The desktop foundation acceptance gate passed in a disposable vault using Obsidi
 Work-vault testing later exposed that Obsidian refused Markdown creation when a source basename contained `:`. The `support-safe-destination-filenames` change now derives and previews a deterministic safe destination without changing the source name. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and a repeated 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed the exact reviewed safe destination, successful create/read-back, sanitized collision refusal, close-without-conversion behavior, and unchanged source hashes. After explicit confirmation, the accepted build was installed in the work vault with matching plugin-file hashes. A controlled conversion then created the reviewed safe destination with correct source metadata while preserving the original transcript hash; the other 25 candidates were skipped and no existing Markdown was overwritten.
 
 The `add-scan-ribbon-icon` change registers one built-in waves control labeled **Scan vault for transcripts** and retains the command-palette entry, with both routed to the existing guarded review workflow. The production build, runtime security audit, strict OpenSpec validation, 69 automated tests, and 5,000-file rehearsal with zero source mutations pass. Disposable-vault acceptance on Obsidian desktop 1.13.7 confirmed one correctly labeled waves icon after disable/re-enable, an unselected review plan on activation, and the retained command-palette entry. After explicit confirmation, the hash-matched build was installed in the work vault; the ribbon opened the same unselected plan, and a repeated close-without-conversion check left the reference transcript and Markdown note hashes unchanged.
+
+The corrective `0.1.1` implementation now passes the production build, 96 automated tests across 15 suites, the runtime/source-warning audit, zero-vulnerability production dependency audit, strict OpenSpec validation, 5,000-file rehearsal with zero source mutations, release-readiness checks, and exact three-asset staging. Packaged desktop acceptance with a renamed configuration directory, immutable GitHub publication, and the owner-controlled Community rescan remain pending.

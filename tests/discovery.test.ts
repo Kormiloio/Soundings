@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { discoverTranscripts, formatForPath, type DiscoveryAdapter } from "../src/core/discovery";
 import { DEFAULT_SETTINGS, type SoundingsSettings } from "../src/core/settings";
 import type { VaultFileRef } from "../src/core/types";
+import { testDigest } from "./test-crypto";
 
 const encoder = new TextEncoder();
 
@@ -35,20 +36,20 @@ describe("discovery", () => {
       [file("Projects/A/one.TXT"), file("two.md"), file("Folder.txt", 0, false)],
       { "Projects/A/one.TXT": encoder.encode("hello") }
     );
-    const result = await discoverTranscripts(vault, DEFAULT_SETTINGS);
+    const result = await discoverTranscripts(vault, DEFAULT_SETTINGS, undefined, 50, testDigest);
     expect(result.items.map((item) => item.sourcePath)).toEqual(["Projects/A/one.TXT"]);
     expect(result.items[0].classification).toBe("eligible");
   });
 
   it("excludes hidden and configured paths before reading", async () => {
-    const settings: SoundingsSettings = { ...DEFAULT_SETTINGS, excludedPaths: [".obsidian", ".soundings", "Archive"] };
+    const settings: SoundingsSettings = { ...DEFAULT_SETTINGS, excludedPaths: ["Config", ".soundings", "Archive"] };
     const vault = adapter(
-      [file(".obsidian/private.txt"), file("Archive/old.txt"), file("ok.txt")],
-      { "ok.txt": encoder.encode("ok") }
+      [file("Config/private.txt"), file(".hidden/private.txt"), file(".soundings/private.txt"), file("Archive/old.txt"), file("Nested/ok.txt")],
+      { "Nested/ok.txt": encoder.encode("ok") }
     );
-    const result = await discoverTranscripts(vault, settings);
-    expect(vault.reads).toEqual(["ok.txt"]);
-    expect(result.items.map((item) => item.classification)).toEqual(["excluded", "excluded", "eligible"]);
+    const result = await discoverTranscripts(vault, settings, undefined, 50, testDigest);
+    expect(vault.reads).toEqual(["Nested/ok.txt"]);
+    expect(result.items.map((item) => item.classification)).toEqual(["excluded", "excluded", "excluded", "excluded", "eligible"]);
   });
 
   it("isolates unreadable, empty, and oversize items", async () => {
@@ -57,7 +58,7 @@ describe("discovery", () => {
       [file("bad.txt"), file("empty.txt", 0), file("big.txt", 6), file("good.txt", 2)],
       { "bad.txt": new Error("secret body"), "empty.txt": new Uint8Array(), "good.txt": encoder.encode("ok") }
     );
-    const result = await discoverTranscripts(vault, settings);
+    const result = await discoverTranscripts(vault, settings, undefined, 50, testDigest);
     expect(result.items.map((item) => item.classification)).toEqual(["unreadable", "empty", "oversize", "eligible"]);
     expect(JSON.stringify(result)).not.toContain("secret body");
   });
@@ -75,7 +76,7 @@ describe("discovery", () => {
       { "one.txt": encoder.encode("one"), "two.txt": encoder.encode("two") }
     );
     vault.yieldControl = vi.fn(async () => controller.abort());
-    const result = await discoverTranscripts(vault, DEFAULT_SETTINGS, controller.signal, 1);
+    const result = await discoverTranscripts(vault, DEFAULT_SETTINGS, controller.signal, 1, testDigest);
     expect(result.canceled).toBe(true);
     expect(result.items).toHaveLength(1);
     expect(vault.reads).toEqual(["one.txt"]);

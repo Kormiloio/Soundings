@@ -22,11 +22,14 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(settings).not.toMatch(/createEl\(["']h[12]["']/);
     expect(settings).not.toContain("Soundings settings");
     expect(settings).toContain("Soundings reads transcript files locally");
-    expect(settings.match(/new Setting\(/g)).toHaveLength(5);
-    expect(settings).toContain('role: "alert"');
-    expect(settings).toContain('"aria-live": "polite"');
-    expect(settings).toContain('"aria-invalid"');
-    expect(settings).toContain('"aria-label"');
+    expect(settings).toContain("getSettingDefinitions()");
+    expect(settings).toContain("getControlValue(key: string)");
+    expect(settings).toContain("setControlValue(key: string, value: unknown)");
+    expect(settings).not.toContain("display(): void");
+    expect(settings.match(/type: "(?:toggle|textarea|number|text)"/g)).toHaveLength(5);
+    expect(settings).toContain('this.formatDefinition("txt")');
+    expect(settings).toContain('this.formatDefinition("vtt")');
+    expect(settings).toContain("validate: (value)");
   });
 
   it("keeps blocked review items unselectable and closing non-mutating", async () => {
@@ -34,10 +37,17 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(review).toContain('item.classification === "eligible"');
     expect(review).toContain("this.contentEl.empty()");
     expect(review).not.toMatch(/vault\.(?:create|modify|delete|rename)/);
+    expect(review).toContain(".setDestructive()");
+    expect(review).not.toContain(".setWarning()");
   });
 
   it("registers one ribbon control and one command for the guarded scan workflow", async () => {
     const main = await source("src/main.ts");
+    expect(main).toContain("createSettingsPolicy(this.app.vault.configDir)");
+    expect(main).toContain("if (!this.settingsPolicy)");
+    expect(main.indexOf("if (!this.settingsPolicy)")).toBeLessThan(main.indexOf("const adapter = new ObsidianVaultAdapter"));
+    expect(main).toContain("activeWindow.crypto.randomUUID()");
+    expect(main).toContain("activeWindow.crypto?.subtle");
     expect(main.match(/this\.addRibbonIcon\(/g)).toHaveLength(1);
     expect(main).toContain('this.addRibbonIcon("waves", "Scan vault for transcripts"');
     expect(main.match(/this\.addCommand\(/g)).toHaveLength(1);

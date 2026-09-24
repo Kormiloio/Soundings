@@ -1,89 +1,136 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
-import { DEFAULT_SETTINGS, validateSettings, type SoundingsSettings } from "../core/settings";
+import { App, PluginSettingTab, type SettingDefinitionItem } from "obsidian";
+import { editableExcludedPaths, validateSettings, type SoundingsSettings } from "../core/settings";
 import type { TranscriptFormat } from "../core/types";
+
+type SoundingsSettingKey = "txt" | "vtt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot";
 
 export interface SettingsOwner {
   settings: SoundingsSettings;
+  readonly settingsPolicy?: {
+    readonly configDir: string;
+    readonly mandatoryExcludedPaths: readonly string[];
+  };
   setSettings(settings: SoundingsSettings): Promise<void>;
 }
 
 export class SoundingsSettingTab extends PluginSettingTab {
-  private errorEl?: HTMLElement;
-
   constructor(app: App, private readonly owner: SettingsOwner) {
     super(app, owner as never);
   }
 
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl("p", {
-      text: "Soundings reads transcript files locally, preserves every source, and never overwrites an existing Markdown note."
-    });
-    this.errorEl = containerEl.createDiv({ cls: "soundings-settings__error", attr: { role: "alert", "aria-live": "polite" } });
-
-    for (const format of ["txt", "vtt"] as const) this.addFormatSetting(format);
-
-    new Setting(containerEl)
-      .setName("Excluded folders")
-      .setDesc("One vault-relative folder per line. Hidden folders and .obsidian remain excluded.")
-      .addTextArea((component) => {
-        component.setValue(this.owner.settings.excludedPaths.filter((path) => !DEFAULT_SETTINGS.excludedPaths.includes(path)).join("\n"));
-        component.inputEl.setAttr("aria-label", "Excluded vault folders");
-        component.onChange(async (value) => {
-          const paths = value.split("\n").map((path) => path.trim()).filter(Boolean);
-          await this.trySave({ ...this.owner.settings, excludedPaths: paths }, component.inputEl);
-        });
-      });
-
-    new Setting(containerEl)
-      .setName("Maximum transcript bytes")
-      .setDesc("Files above this limit are reported but never read or converted.")
-      .addText((component) => {
-        component.setValue(String(this.owner.settings.maxSourceBytes));
-        component.inputEl.setAttr("inputmode", "numeric");
-        component.inputEl.setAttr("aria-label", "Maximum transcript bytes");
-        component.onChange(async (value) => this.trySave(
-          { ...this.owner.settings, maxSourceBytes: Number(value) }, component.inputEl
-        ));
-      });
-
-    new Setting(containerEl)
-      .setName("Infer project from folder")
-      .setDesc("Use the first folder below the configured project root as note metadata.")
-      .addToggle((component) => component
-        .setValue(this.owner.settings.projectInferenceEnabled)
-        .onChange(async (value) => this.trySave({ ...this.owner.settings, projectInferenceEnabled: value })));
-
-    new Setting(containerEl)
-      .setName("Project root")
-      .setDesc("A vault-relative folder such as Projects.")
-      .addText((component) => {
-        component.setValue(this.owner.settings.projectRoot);
-        component.inputEl.setAttr("aria-label", "Project root folder");
-        component.onChange(async (value) => this.trySave({ ...this.owner.settings, projectRoot: value }, component.inputEl));
-      });
+  getSettingDefinitions(): SettingDefinitionItem<SoundingsSettingKey>[] {
+    const configDir = this.owner.settingsPolicy?.configDir ?? "the configured Obsidian folder";
+    return [
+      {
+        name: "Soundings safety",
+        searchable: false,
+        render: (setting) => {
+          setting
+            .setName("")
+            .setDesc("Soundings reads transcript files locally, preserves every source, and never overwrites an existing Markdown note.");
+        }
+      },
+      this.formatDefinition("txt"),
+      this.formatDefinition("vtt"),
+      {
+        name: "Excluded folders",
+        desc: `One vault-relative folder per line. Hidden folders and ${configDir} remain excluded.`,
+        control: {
+          type: "textarea",
+          key: "excludedPaths",
+          rows: 4,
+          validate: (value) => this.validateControl("excludedPaths", value)
+        }
+      },
+      {
+        name: "Maximum transcript bytes",
+        desc: "Files above this limit are reported but never read or converted.",
+        control: {
+          type: "number",
+          key: "maxSourceBytes",
+          min: 1,
+          step: 1,
+          validate: (value) => this.validateControl("maxSourceBytes", value)
+        }
+      },
+      {
+        name: "Infer project from folder",
+        desc: "Use the first folder below the configured project root as note metadata.",
+        control: { type: "toggle", key: "projectInferenceEnabled" }
+      },
+      {
+        name: "Project root",
+        desc: "A vault-relative folder such as Projects.",
+        control: {
+          type: "text",
+          key: "projectRoot",
+          validate: (value) => this.validateControl("projectRoot", value)
+        }
+      }
+    ];
   }
 
-  private addFormatSetting(format: TranscriptFormat): void {
-    new Setting(this.containerEl)
-      .setName(`Convert .${format} transcripts`)
-      .setDesc(`Include .${format} files in reviewed scans.`)
-      .addToggle((component) => component
-        .setValue(this.owner.settings.enabledFormats.includes(format))
-        .onChange(async (enabled) => {
-          const formats = enabled
-            ? [...this.owner.settings.enabledFormats, format]
-            : this.owner.settings.enabledFormats.filter((candidate) => candidate !== format);
-          await this.trySave({ ...this.owner.settings, enabledFormats: formats });
-        }));
+  getControlValue(key: string): unknown {
+    const settingKey = key as SoundingsSettingKey;
+    switch (settingKey) {
+      case "txt":
+      case "vtt": return this.owner.settings.enabledFormats.includes(settingKey);
+      case "excludedPaths": return this.editableExclusions().join("\n");
+      case "maxSourceBytes": return this.owner.settings.maxSourceBytes;
+      case "projectInferenceEnabled": return this.owner.settings.projectInferenceEnabled;
+      case "projectRoot": return this.owner.settings.projectRoot;
+    }
   }
 
-  private async trySave(candidate: Partial<SoundingsSettings>, input?: HTMLInputElement | HTMLTextAreaElement): Promise<void> {
-    const validation = validateSettings(candidate);
-    const message = validation.errors.join(" ");
-    this.errorEl?.setText(message);
-    if (input) input.setAttr("aria-invalid", message ? "true" : "false");
-    if (validation.settings) await this.owner.setSettings(validation.settings);
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    const settingKey = key as SoundingsSettingKey;
+    const candidate = this.candidateFor(settingKey, value);
+    const policy = this.owner.settingsPolicy;
+    if (!policy) throw new Error("safe-settings-policy-unavailable");
+    const validation = validateSettings(candidate, policy.mandatoryExcludedPaths);
+    if (!validation.settings) throw new Error(validation.errors.join(" "));
+    await this.owner.setSettings(validation.settings);
+  }
+
+  private formatDefinition(format: TranscriptFormat): SettingDefinitionItem<SoundingsSettingKey> {
+    return {
+      name: `Convert .${format} transcripts`,
+      desc: `Include .${format} files in reviewed scans.`,
+      control: {
+        type: "toggle",
+        key: format,
+        validate: (value) => this.validateControl(format, value)
+      }
+    };
+  }
+
+  private editableExclusions(): readonly string[] {
+    return editableExcludedPaths(this.owner.settings, this.owner.settingsPolicy?.mandatoryExcludedPaths ?? []);
+  }
+
+  private candidateFor(key: SoundingsSettingKey, value: unknown): Partial<SoundingsSettings> {
+    switch (key) {
+      case "txt":
+      case "vtt": {
+        const formats = new Set(this.owner.settings.enabledFormats);
+        if (value === true) formats.add(key);
+        else formats.delete(key);
+        return { ...this.owner.settings, enabledFormats: [...formats], excludedPaths: this.editableExclusions() };
+      }
+      case "excludedPaths": return {
+        ...this.owner.settings,
+        excludedPaths: String(value).split("\n").map((path) => path.trim()).filter(Boolean)
+      };
+      case "maxSourceBytes": return { ...this.owner.settings, excludedPaths: this.editableExclusions(), maxSourceBytes: Number(value) };
+      case "projectInferenceEnabled": return { ...this.owner.settings, excludedPaths: this.editableExclusions(), projectInferenceEnabled: value === true };
+      case "projectRoot": return { ...this.owner.settings, excludedPaths: this.editableExclusions(), projectRoot: String(value) };
+    }
+  }
+
+  private validateControl(key: SoundingsSettingKey, value: unknown): string | undefined {
+    const policy = this.owner.settingsPolicy;
+    if (!policy) return "The vault configuration directory could not be verified.";
+    const validation = validateSettings(this.candidateFor(key, value), policy.mandatoryExcludedPaths);
+    return validation.errors.join(" ") || undefined;
   }
 }

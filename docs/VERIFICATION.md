@@ -5,11 +5,41 @@
 ## Automated verification
 
 - Production build and TypeScript checks: passed.
-- Automated tests: 76 passed across 13 suites, including release-readiness success and fail-closed cases.
-- Runtime audit: passed; no network, telemetry, Node filesystem, credential, or destructive vault APIs detected.
+- Automated tests: 96 passed across 15 suites, including Community source-warning contracts, declarative settings, configurable vault-directory safety, release-readiness success, and fail-closed cases.
+- Runtime audit: passed; no network, telemetry, Node filesystem, credential, destructive vault API, or actionable Community source-warning pattern was detected.
 - npm production dependency audit: zero vulnerabilities reported.
 - Golden conversions: representative UTF-8 plain text and Zoom-style WebVTT passed byte-deterministic output checks.
 - Safety integration: source changes, missing sources, existing destinations, concurrent destination creation, malformed input, mismatched read-back, cancellation, and plugin ownership passed.
+
+## Corrective 0.1.1 automated candidate
+
+The `address-community-review-feedback` automated gate passed on 2026-09-23:
+
+- Production build and TypeScript checks: passed.
+- Full unit, integration, golden, UI-contract, release-readiness, and 5,000-file suites: 96 passed across 15 suites.
+- Runtime audit: passed with no actionable Community source-warning pattern.
+- Production dependency audit: zero vulnerabilities.
+- Strict OpenSpec validation and git diff whitespace validation: passed.
+- Release metadata: package `0.1.1`, manifest `0.1.1`, compatibility minimum `1.13.7`, and exact release tag `0.1.1` agree; the `0.1.0` compatibility entry remains present.
+- Staged inventory: exactly `main.js`, `manifest.json`, and `styles.css`.
+- `main.js`: `9edfd78a0597885fc19bb20ca329a9913739b78cb246da8e013c2aef9f9e18b5`
+- `manifest.json`: `4b4376fddfe510dc8f72506fd577a6d5446a86054b9a9a049c15969d5d8627e6`
+- `styles.css`: `f924a269f05d7c01a75303fd0490c2ab0baf498ddeb5b03dd3c4e23ce69af144`
+- Destination and Markdown-heading characterization vectors passed without changing accepted output or collision behavior.
+
+Packaged desktop acceptance passed on 2026-09-23 in `/private/tmp/soundings-0.1.1-acceptance.AIQDyO` using Obsidian desktop 1.13.7 on macOS 26.6.2 arm64. The vault installed only the three staged `0.1.1` assets listed above and changed Obsidian's configuration directory from `.obsidian` to `.soundings-config`.
+
+- Soundings loaded and remained enabled as version `0.1.1`; the packaged manifest retained plugin ID `soundings`, minimum Obsidian version `1.13.7`, and `isDesktopOnly: true`.
+- Obsidian wrote its active application, appearance, core-plugin, community-plugin, and workspace state beneath `.soundings-config`, confirming that the renamed directory was in use.
+- Searching settings for `Maximum transcript bytes` found and focused the Soundings control. The safety explanation and all six declarative controls were present, and the exclusion copy named `.soundings-config` rather than `.obsidian`.
+- The waves ribbon control and command-palette entry opened the same two-item review plan with no candidate selected: `Successful/Alice and Bob.txt` was eligible and `Collision/Planning Review.txt` reported its existing destination.
+- `.soundings-config/Private/Should Not Read.txt` was neither read nor offered. Its hash remained `9e0c795ec7ee95d21fae92cbf61dbd2cd1ae7c78f9b98f05bd616f1daf4a3860`.
+- Closing the plan without conversion created no destination. The eligible source, collision source, and pre-existing collision destination retained hashes `3dfcb425fc068a64e8700d45b338260ddad51c08d0feea0400e50cc2f717fb5d`, `2df94352050f9765fbbfe0ede4e0a000f5af64aa45da97063c5e93429988498e`, and `0ab81144a8051acd8adf9258e52f943bd14534818fc7d870df07be2cfd240534` respectively.
+- Selecting only the eligible transcript produced `created: 1 · skipped: 1`; Soundings read the new note back successfully, left the collision unselected, and preserved all four protected hashes above.
+- The created `Successful/Alice and Bob.md` hash is `bcd7e1dcbf192d67caec46b527d2ed66abaaf76dc08053d1ff94960351c2fa32` and contains the expected structured local transcript.
+- Saved `0.1.0` preference migration, invalid-settings rejection, and the destination/heading normalization equivalence vectors passed in the automated suite; the fresh disposable vault had no prior saved preferences to migrate manually.
+
+The Community draft remains unpublished pending the immutable `0.1.1` release and a clean rescan.
 
 ## Disposable 5,000-file desktop rehearsal
 

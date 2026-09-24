@@ -15,7 +15,7 @@ The build produces `main.js`. The other runtime files are `manifest.json` and `s
 ## Manual private installation
 
 1. Create or select an Obsidian desktop vault. Use a disposable vault for the first rehearsal.
-2. Create `.obsidian/plugins/soundings/` inside that vault.
+2. Open that vault's configured Obsidian configuration folder (normally `.obsidian`), then create `plugins/soundings/` inside it.
 3. Copy `main.js`, `manifest.json`, and `styles.css` into that folder.
 4. In Obsidian desktop, open **Settings → Community plugins**, reload installed plugins, and enable **Soundings**.
 5. Add synthetic `.txt` and `.vtt` files. Do not use confidential transcripts during acceptance testing.

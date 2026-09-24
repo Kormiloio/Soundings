@@ -4,14 +4,42 @@ import type { ConversionPlan, PlanItem, Result } from "./types";
 
 export type DestinationError = "source-has-no-extension" | "destination-basename-invalid";
 
-const UNSAFE_BASENAME_RUN = /\s*[\u0000-\u001f\\:*?"<>|]+\s*/g;
+const REJECTED_BASENAME_CHARACTERS = new Set(["\\", ":", "*", "?", '"', "<", ">", "|"]);
+
+function isRejectedBasenameCharacter(character: string): boolean {
+  return character.charCodeAt(0) <= 31 || REJECTED_BASENAME_CHARACTERS.has(character);
+}
+
+function removeTrailingWhitespace(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1].trim() === "") end -= 1;
+  return value.slice(0, end);
+}
 
 export function normalizeDestinationBasename(basename: string): Result<string, "destination-basename-invalid"> {
-  const normalized = basename
-    .split(UNSAFE_BASENAME_RUN)
-    .filter((part) => part.length > 0)
-    .join(" - ")
-    .replace(/[ .]+$/u, "");
+  const parts: string[] = [];
+  let current = "";
+  let index = 0;
+  while (index < basename.length) {
+    const character = basename[index];
+    if (!isRejectedBasenameCharacter(character)) {
+      current += character;
+      index += 1;
+      continue;
+    }
+    current = removeTrailingWhitespace(current);
+    if (current.length > 0) parts.push(current);
+    current = "";
+    index += 1;
+    while (index < basename.length) {
+      const next = basename[index];
+      if (!isRejectedBasenameCharacter(next) && next.trim() !== "") break;
+      index += 1;
+    }
+  }
+  current = current.replace(/[ .]+$/u, "");
+  if (current.length > 0) parts.push(current);
+  const normalized = parts.join(" - ");
   return normalized.length > 0
     ? { ok: true, value: normalized }
     : { ok: false, error: "destination-basename-invalid" };
@@ -48,7 +76,7 @@ export function buildPlan(
   existingPaths: ReadonlySet<string>,
   settings: SoundingsSettings,
   now = new Date(),
-  idFactory: () => string = () => globalThis.crypto.randomUUID()
+  idFactory?: () => string
 ): ConversionPlan {
   const draft = discovery.map((item): PlanItem => {
     const destination = destinationFor(item.sourcePath);
@@ -84,7 +112,7 @@ export function buildPlan(
       : item
   ));
   return Object.freeze({
-    id: idFactory(),
+    id: idFactory?.() ?? (() => { throw new Error("secure-id-unavailable"); })(),
     settingsFingerprint: settingsFingerprint(settings),
     createdAt: now.toISOString(),
     items: Object.freeze(items)

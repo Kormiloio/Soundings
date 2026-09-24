@@ -7,7 +7,7 @@ Soundings recursively finds `.txt` and Zoom-style `.vtt` transcripts already sto
 ## Requirements
 
 - Obsidian desktop 1.13.7 or later.
-- macOS, Windows, or Linux desktop. Soundings 0.1.0 does not support Android, iOS, or iPadOS.
+- macOS, Windows, or Linux desktop. Soundings 0.1.1 does not support Android, iOS, or iPadOS.
 - No account, payment, API key, external program, or network service is required.
 
 ## Installation
@@ -52,16 +52,17 @@ For the exact format and parsing rules, see [Supported transcripts](docs/SUPPORT
 - Discovery is non-mutating and conversion requires an explicit reviewed selection.
 - Transcript and note content remains on your device and inside the active vault.
 - Soundings accesses vault content through Obsidian's public vault APIs; it does not access files outside the active vault.
+- To find transcripts in nested folders, Soundings enumerates file paths throughout the active vault. It reads file content only for enabled `.txt` or `.vtt` candidates that remain after configuration-folder, hidden-folder, Soundings-state, user-exclusion, and size checks.
 - Soundings makes no network requests, includes no client-side or server-side telemetry, and contains no advertising.
 - Soundings requires no credentials, account, payment, or external service.
 
 ## Settings
 
-Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-relative folders, limit source size, and optionally infer project metadata from a configured folder root. Hidden folders and Obsidian's configuration folder remain excluded.
+Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-relative folders, limit source size, and optionally infer project metadata from a configured folder root. Hidden folders and the active vault's configured Obsidian configuration folder remain excluded, even when that folder is not named `.obsidian`.
 
 ## Known limitations
 
-- Version 0.1.0 is desktop-only.
+- Version 0.1.1 is desktop-only.
 - Existing `.md` destinations are always blocked, including previous Soundings output.
 - Updating a source does not update an existing generated note.
 - Plain-text transcripts are preserved without speaker inference.

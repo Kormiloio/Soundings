@@ -31,6 +31,6 @@ export class ObsidianVaultAdapter implements DiscoveryAdapter, PublicationAdapte
   }
 
   async yieldControl(): Promise<void> {
-    await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 0));
+    await new Promise<void>((resolve) => activeWindow.setTimeout(resolve, 0));
   }
 }

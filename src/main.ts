@@ -1,17 +1,33 @@
 import { Notice, Plugin } from "obsidian";
 import { discoverTranscripts } from "./core/discovery";
 import { executePlan, RunCoordinator } from "./core/execution";
+import type { DigestFunction } from "./core/hash";
 import { buildPlan } from "./core/planning";
-import { DEFAULT_SETTINGS, validateSettings, type SoundingsSettings } from "./core/settings";
+import {
+  createSettingsPolicy,
+  DEFAULT_SETTINGS,
+  editableExcludedPaths,
+  validateSettings,
+  type SoundingsSettings,
+  type SoundingsSettingsPolicy
+} from "./core/settings";
 import { ObsidianVaultAdapter } from "./obsidian/vault-adapter";
 import { ProgressModal, ResultsModal, ReviewModal } from "./obsidian/review-modal";
 import { SoundingsSettingTab } from "./obsidian/settings-tab";
 
 export default class SoundingsPlugin extends Plugin {
   settings: SoundingsSettings = DEFAULT_SETTINGS;
+  settingsPolicy?: SoundingsSettingsPolicy;
   private readonly runs = new RunCoordinator();
+  private readonly digest: DigestFunction = async (algorithm, data) => {
+    const subtle = activeWindow.crypto?.subtle;
+    if (!subtle) throw new Error("secure-hash-unavailable");
+    return subtle.digest(algorithm, data);
+  };
 
   async onload(): Promise<void> {
+    const policyValidation = createSettingsPolicy(this.app.vault.configDir);
+    this.settingsPolicy = policyValidation.policy;
     await this.loadSettings();
     this.addSettingTab(new SoundingsSettingTab(this.app, this));
     this.addRibbonIcon("waves", "Scan vault for transcripts", () => {
@@ -29,18 +45,36 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   async setSettings(settings: SoundingsSettings): Promise<void> {
-    this.settings = settings;
-    await this.saveData(settings);
+    const policy = this.settingsPolicy;
+    if (!policy) throw new Error("safe-settings-policy-unavailable");
+    const validation = validateSettings(settings, policy.mandatoryExcludedPaths);
+    if (!validation.settings) throw new Error("invalid-soundings-settings");
+    this.settings = validation.settings;
+    await this.saveData(validation.settings);
   }
 
   private async loadSettings(): Promise<void> {
     const stored = await this.loadData() as Partial<SoundingsSettings> | null;
-    const validation = validateSettings(stored ?? DEFAULT_SETTINGS);
-    this.settings = validation.settings ?? DEFAULT_SETTINGS;
+    const policy = this.settingsPolicy;
+    if (!policy) {
+      this.settings = DEFAULT_SETTINGS;
+      new Notice("Soundings could not verify the vault configuration directory. Scanning is disabled.");
+      return;
+    }
+    const storedExclusions = stored?.excludedPaths
+      ? editableExcludedPaths({ ...DEFAULT_SETTINGS, ...stored, excludedPaths: stored.excludedPaths } as SoundingsSettings, policy.mandatoryExcludedPaths)
+      : [];
+    const validation = validateSettings({ ...(stored ?? {}), excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
+    const safeDefaults = validateSettings({}, policy.mandatoryExcludedPaths).settings;
+    this.settings = validation.settings ?? safeDefaults ?? DEFAULT_SETTINGS;
     if (validation.errors.length > 0) new Notice("Soundings ignored invalid saved settings and restored safe defaults.");
   }
 
   private async scanAndReview(): Promise<void> {
+    if (!this.settingsPolicy) {
+      new Notice("Soundings cannot scan until the vault configuration directory is valid.");
+      return;
+    }
     if (this.runs.isActive) {
       new Notice("Soundings is already scanning or converting.");
       return;
@@ -48,13 +82,13 @@ export default class SoundingsPlugin extends Plugin {
     const signal = this.runs.begin();
     const adapter = new ObsidianVaultAdapter(this.app.vault);
     try {
-      const discovery = await discoverTranscripts(adapter, this.settings, signal);
+      const discovery = await discoverTranscripts(adapter, this.settings, signal, 50, this.digest);
       if (discovery.canceled) {
         new Notice("Soundings scan canceled. No files were changed.");
         return;
       }
       const existing = new Set(adapter.listFiles().map((file) => file.path));
-      const plan = buildPlan(discovery.items, existing, this.settings);
+      const plan = buildPlan(discovery.items, existing, this.settings, new Date(), () => activeWindow.crypto.randomUUID());
       new ReviewModal(this.app, plan, {
         refresh: () => this.scanAndReview(),
         convert: (selected) => this.convertPlan(plan, selected)
@@ -79,6 +113,7 @@ export default class SoundingsPlugin extends Plugin {
         selectedSourcePaths: selected,
         settings: this.settings,
         signal,
+        digest: this.digest,
         onProgress: (complete, total) => progress.update(complete, total)
       });
       progress.close();

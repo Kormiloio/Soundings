@@ -1,8 +1,9 @@
-export async function sha256(bytes: Uint8Array): Promise<string> {
-  if (!globalThis.crypto?.subtle) throw new Error("secure-hash-unavailable");
+export type DigestFunction = (algorithm: "SHA-256", data: ArrayBuffer) => Promise<ArrayBuffer>;
+
+export async function sha256(bytes: Uint8Array, digest: DigestFunction): Promise<string> {
   const copy = new Uint8Array(bytes);
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", copy.buffer);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  const result = await digest("SHA-256", copy.buffer);
+  return [...new Uint8Array(result)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export function equalBytes(left: Uint8Array, right: Uint8Array): boolean {

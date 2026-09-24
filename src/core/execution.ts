@@ -1,4 +1,4 @@
-import { equalBytes, sha256 } from "./hash";
+import { equalBytes, sha256, type DigestFunction } from "./hash";
 import { parseTranscript } from "./parsers";
 import { isPlanCurrent } from "./planning";
 import { renderMarkdown } from "./rendering";
@@ -16,7 +16,7 @@ export interface ExecuteOptions {
   readonly settings: SoundingsSettings;
   readonly signal?: AbortSignal;
   readonly now?: () => Date;
-  readonly hasher?: (bytes: Uint8Array) => Promise<string>;
+  readonly digest?: DigestFunction;
   readonly onProgress?: (complete: number, total: number) => void;
 }
 
@@ -44,7 +44,8 @@ async function executeItem(
 
   let currentHash: string;
   try {
-    currentHash = await (options.hasher ?? sha256)(source);
+    if (!options.digest) throw new Error("secure-hash-unavailable");
+    currentHash = await sha256(source, options.digest);
   } catch {
     return outcome(item, "failed", "Secure source hashing is unavailable.");
   }

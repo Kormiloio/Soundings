@@ -1,3 +1,4 @@
+import type { DigestFunction } from "./hash";
 import { sha256 } from "./hash";
 import type { SoundingsSettings } from "./settings";
 import type { PlanClassification, SourceEvidence, TranscriptFormat, VaultFileRef } from "./types";
@@ -45,7 +46,7 @@ export async function discoverTranscripts(
   settings: SoundingsSettings,
   signal?: AbortSignal,
   batchSize = 50,
-  hasher: (bytes: Uint8Array) => Promise<string> = sha256
+  digest?: DigestFunction
 ): Promise<DiscoveryResult> {
   const items: DiscoveryItem[] = [];
   let processed = 0;
@@ -72,13 +73,14 @@ export async function discoverTranscripts(
       } else if (bytes.byteLength === 0) {
         items.push({ sourcePath: file.path, format, classification: "empty", reason: "Source is empty." });
       } else {
-        const digest = await hasher(bytes);
+        if (!digest) throw new Error("secure-hash-unavailable");
+        const sourceHash = await sha256(bytes, digest);
         items.push({
           sourcePath: file.path,
           format,
           classification: "eligible",
           reason: "Ready for review.",
-          evidence: Object.freeze({ path: file.path, format, byteLength: bytes.byteLength, sha256: digest })
+          evidence: Object.freeze({ path: file.path, format, byteLength: bytes.byteLength, sha256: sourceHash })
         });
       }
     } catch {
