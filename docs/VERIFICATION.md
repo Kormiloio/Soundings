@@ -39,7 +39,9 @@ Packaged desktop acceptance passed on 2026-09-23 in `/private/tmp/soundings-0.1.
 - The created `Successful/Alice and Bob.md` hash is `bcd7e1dcbf192d67caec46b527d2ed66abaaf76dc08053d1ff94960351c2fa32` and contains the expected structured local transcript.
 - Saved `0.1.0` preference migration, invalid-settings rejection, and the destination/heading normalization equivalence vectors passed in the automated suite; the fresh disposable vault had no prior saved preferences to migrate manually.
 
-The Community draft remains unpublished pending the immutable `0.1.1` release and a clean rescan.
+GitHub release `0.1.1` was published from accepted commit `51c04b76a8a9d94f4e4b23aa090f6497c60967c5` and verified at `https://github.com/Kormiloio/Soundings/releases/tag/0.1.1`. It is neither a draft nor a prerelease. Fresh downloads contain exactly `main.js`, `manifest.json`, and `styles.css`, and their SHA-256 hashes match the accepted staging hashes above. A post-publication query and fresh download also confirmed that release `0.1.0`, its target commit, asset inventory, and all three hashes remain unchanged.
+
+The Community draft remains unpublished pending a clean rescan of `0.1.1`.
 
 ## Disposable 5,000-file desktop rehearsal
 
@@ -87,6 +89,8 @@ GitHub release `0.1.0` was published from commit `ea959605fdf16638edd83eea16f9db
 The repository owner connected GitHub account `mcamaj`, made the active Kormiloio organization membership public, accepted the developer policies and maintenance commitment, and created the Soundings Community listing draft on 2026-09-23. Obsidian resolved release `0.1.0` at commit `ea95960` and began its automated review.
 
 The automated review passed dependency vulnerability and code-obfuscation checks. It reported vault enumeration as an expected behavior recommendation and returned actionable source warnings for `globalThis`, a control-character regular expression, an unnecessary regular-expression escape, the hardcoded `.obsidian` configuration folder, missing declarative settings definitions, and deprecated `setWarning()` usage. The listing remains in draft mode pending a separately specified patch release; no public-directory publish action was taken.
+
+Corrective release `0.1.1` is available for the owner-controlled Community rescan. The listing remains unpublished until that rescan reports no actionable finding.
 
 ## Real Obsidian desktop acceptance
 
