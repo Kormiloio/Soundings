@@ -2,7 +2,7 @@
 
 ## 1. Public repository readiness
 
-- [ ] 1.1 Add the standard MIT `LICENSE` with a 2026 Kormilo copyright notice and verify GitHub recognizes the repository license
+- [x] 1.1 Add the standard MIT `LICENSE` with a 2026 Kormilo copyright notice and verify GitHub recognizes the repository license
 - [x] 1.2 Rewrite the root README for end users with purpose, desktop requirements, Community/manual installation, first-use instructions, safety and privacy disclosures, limitations, support, development, and licensing; verify every required disclosure is present
 - [x] 1.3 Add release and Community-submission documentation with the exact `0.1.0` asset, tag, ownership, policy, and rollback procedure; verify the instructions match current official Obsidian documentation
 - [x] 1.4 Update `docs/PRD.md` and `openspec/project.md` to reflect release readiness scope and acceptance gates, then verify desktop-only and local/create-only boundaries remain explicit
@@ -32,11 +32,11 @@
 
 ## 6. Immutable GitHub release
 
-- [ ] 6.1 Commit and push the verified release candidate to `main`, then verify the worktree is clean and local `main` matches `origin/main`
-- [ ] 6.2 Recheck that plugin ID `soundings` is available, the public default-branch metadata is correct, and neither tag nor release `0.1.0` already exists; stop for review on any conflict
-- [ ] 6.3 Create exact tag and GitHub release `0.1.0` with `main.js`, `manifest.json`, and `styles.css` as individual assets, then verify remote asset names and hashes match the accepted staging directory
+- [x] 6.1 Commit and push the verified release candidate to `main`, then verify the worktree is clean and local `main` matches `origin/main`
+- [x] 6.2 Recheck that plugin ID `soundings` is available, the public default-branch metadata is correct, and neither tag nor release `0.1.0` already exists; stop for review on any conflict
+- [x] 6.3 Create exact tag and GitHub release `0.1.0` with `main.js`, `manifest.json`, and `styles.css` as individual assets, then verify remote asset names and hashes match the accepted staging directory
 
 ## 7. Owner-controlled Community submission
 
-- [ ] 7.1 Provide the owner with the verified repository URL, release evidence, desktop declaration, and exact `community.obsidian.md` submission steps; verify no account or policy action was automated
+- [x] 7.1 Provide the owner with the verified repository URL, release evidence, desktop declaration, and exact `community.obsidian.md` submission steps; verify no account or policy action was automated
 - [ ] 7.2 Guide the owner through GitHub account linking, listing ownership selection, developer-policy acceptance, and submission, then record the directory confirmation or actionable automated-review feedback
