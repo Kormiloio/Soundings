@@ -90,7 +90,9 @@ The repository owner connected GitHub account `mcamaj`, made the active Kormiloi
 
 The automated review passed dependency vulnerability and code-obfuscation checks. It reported vault enumeration as an expected behavior recommendation and returned actionable source warnings for `globalThis`, a control-character regular expression, an unnecessary regular-expression escape, the hardcoded `.obsidian` configuration folder, missing declarative settings definitions, and deprecated `setWarning()` usage. The listing remains in draft mode pending a separately specified patch release; no public-directory publish action was taken.
 
-Corrective release `0.1.1` is available for the owner-controlled Community rescan. The listing remains unpublished until that rescan reports no actionable finding.
+The owner requested a Community rescan after corrective release `0.1.1`. The completed review resolved every warning reported against `0.1.0`; network, dependency, code-obfuscation, and byte-for-byte build-reproduction checks passed. The review retained the expected vault-enumeration recommendation and added a non-blocking recommendation for GitHub artifact attestations on `main.js` and `styles.css`.
+
+The `0.1.1` source review reported two new actionable warnings: an unnecessary `SoundingsSettings` assertion in `src/main.ts:65`, and use of `activeWindow.setTimeout()` rather than `window.setTimeout()` in `src/obsidian/vault-adapter.ts:34`. The listing remains unpublished. These warnings require another separately specified corrective release and clean rescan before the owner receives the final Publish handoff.
 
 ## Real Obsidian desktop acceptance
 

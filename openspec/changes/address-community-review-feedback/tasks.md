@@ -45,5 +45,5 @@
 - [x] 7.1 Commit and push the accepted candidate to `main`; verify the worktree is clean, local `main` matches `origin/main`, and public default-branch metadata declares `0.1.1`
 - [x] 7.2 Confirm tag and GitHub release `0.1.1` do not exist and re-verify `0.1.0` asset names and hashes; stop for review on any conflict or historical mismatch
 - [x] 7.3 Create immutable GitHub release `0.1.1` with exactly `main.js`, `manifest.json`, and `styles.css`, then verify remote hashes match the accepted staging directory and `0.1.0` remains unchanged
-- [ ] 7.4 Guide the owner to refresh or rescan the existing Community draft against `0.1.1`; record dependency, obfuscation, behavior, and source-review results, and leave the listing unpublished if any actionable finding remains
+- [x] 7.4 Guide the owner to refresh or rescan the existing Community draft against `0.1.1`; record dependency, obfuscation, behavior, and source-review results, and leave the listing unpublished if any actionable finding remains
 - [ ] 7.5 After a clean automated review, hand off the final Community **Publish** action to the owner and record the resulting public-directory confirmation without performing account, policy, ownership, reviewer-response, or publication actions on the owner's behalf
