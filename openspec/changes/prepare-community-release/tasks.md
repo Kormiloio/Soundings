@@ -39,4 +39,4 @@
 ## 7. Owner-controlled Community submission
 
 - [x] 7.1 Provide the owner with the verified repository URL, release evidence, desktop declaration, and exact `community.obsidian.md` submission steps; verify no account or policy action was automated
-- [ ] 7.2 Guide the owner through GitHub account linking, listing ownership selection, developer-policy acceptance, and submission, then record the directory confirmation or actionable automated-review feedback
+- [x] 7.2 Guide the owner through GitHub account linking, listing ownership selection, developer-policy acceptance, and submission, then record the directory confirmation or actionable automated-review feedback

@@ -28,7 +28,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 
 ## Active focus
 
-1. Complete the repository-owner submission of verified release `0.1.0` through the Obsidian Community directory and address any automated review feedback through a patch release.
+1. Address the Community draft's automated source warnings through a separately approved `0.1.1` patch change, then publish the corrected listing.
 2. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
 ## Foundation implementation checkpoint
@@ -44,6 +44,8 @@ The ribbon-icon change registers one public-API waves control labeled **Scan vau
 The approved Community-release change adds MIT licensing, end-user documentation, Obsidian review cleanup, fail-closed release staging, packaged-build acceptance, and immutable GitHub release verification. It introduces no runtime network access, telemetry, external-file access, mobile claim, or new vault mutation. Account linking, listing ownership, policy acceptance, and final Community submission remain explicit repository-owner actions.
 
 The staged `0.1.0` package passed desktop acceptance on Obsidian 1.13.7 and macOS 26.6.2 arm64. Commit `ea95960` is public on `main`; GitHub recognizes the MIT license; plugin ID `soundings` was available at preflight; and immutable release `0.1.0` exposes exactly the three accepted assets with matching SHA-256 hashes. Only the owner-controlled Obsidian Community directory form remains.
+
+The owner created the Community listing draft and the automated review passed dependency and obfuscation checks. Vault enumeration was identified as expected behavior; source warnings cover `globalThis`, regular-expression lint, configurable vault-directory handling, declarative settings search support, and deprecated destructive-button styling. The draft remains unpublished until a separately approved patch addresses those findings.
 
 ## Definition of done
 
