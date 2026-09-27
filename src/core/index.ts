@@ -2,6 +2,7 @@ export * from "./types";
 export * from "./settings";
 export * from "./hash";
 export * from "./discovery";
+export * from "./observation";
 export * from "./planning";
 export * from "./parsers";
 export * from "./rendering";

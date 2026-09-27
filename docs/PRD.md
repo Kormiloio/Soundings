@@ -52,7 +52,7 @@ Without automation, the user must repeatedly rename, copy, clean, structure, and
 6. Soundings revalidates the source and destination, then creates each Markdown note beside its source.
 7. Soundings reports created, skipped, blocked, and failed items without exposing note content in diagnostics.
 
-After the reviewed workflow is proven safe, a later milestone may provide opt-in conversion when a supported file is created while Obsidian is open. Automatic conversion remains disabled by default.
+Optionally, the user may enable transcript observation for selected vault-relative roots. While Obsidian is open, Soundings queues stable newly created candidates in memory and shows a local notice. **Review transcript inbox** replans them into the same unselected workflow; automatic conversion remains unsupported.
 
 ## 6. Generated note contract
 
@@ -112,7 +112,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-14 | Project inference is configurable and uses an explicit folder rule; ambiguous values are omitted. | Should |
 | FR-15 | Results distinguish created, skipped, blocked, unsupported, and failed items with actionable reasons. | Must |
 | FR-16 | Manual scans and active conversions can be cancelled without corrupting or partially publishing a note. | Must |
-| FR-17 | Automatic conversion, when later enabled, is opt-in, runs only while Obsidian is open, and uses the same validation and create-only boundary. | Should |
+| FR-17 | Transcript observation is opt-in, runs only while Obsidian is open, applies the same discovery policy, retains content-free evidence in memory, and hands candidates to an unselected reviewed plan without automatic conversion. | Should |
 | FR-18 | The foundation plugin makes no network requests and collects no telemetry. | Must |
 | FR-19 | The plugin provides settings for supported formats, exclusions, maximum source size, and project inference without exposing unsafe overwrite behavior. | Must |
 | FR-20 | A user can inspect the source path and intended destination for every planned conversion. | Must |
@@ -203,3 +203,5 @@ The `clear-community-review-followups` change prepared immutable release `0.1.2`
 Release `0.1.2` subsequently passed all automated and packaged desktop gates, reproduced byte-for-byte in the completed Community review, and reported no actionable source warning or failure. The repository owner published the listing on 2026-09-24; the public page reports Review Passed and Health Excellent and offers **Add to Obsidian**.
 
 The completed `improve-large-vault-review` change adds pure review projection and selection state without changing immutable plan data or create-only execution. Its review UI exposes textual classification counts, case-insensitive source/destination search, classification filters, visible-eligible bulk selection, hidden-selection accounting, clear-all behavior, safe Return handling in search, and a fresh unselected state for every new or refreshed plan. The isolated implementation passes 113 tests across 18 suites, production build, runtime audit, strict OpenSpec validation, diff checks, and an extended 5,000-file rehearsal with zero mutations before explicit execution. Disposable-vault desktop acceptance confirmed the corrected viewport-constrained layout, large mixed-plan controls, Return-key conversion suppression, close-without-mutation behavior, and one selected create-only conversion with unchanged source, collision, and hidden-file hashes.
+
+The completed `add-reviewed-transcript-inbox` change adds off-by-default create-event observation, validated vault-relative roots, a shared manual/event discovery policy, bounded stability checks, serialized event work, a content-free in-memory inbox, coalesced local notice, and a command that replans current queued files into the standard zero-selection review. It introduces no automatic conversion, persisted transcript content, network access, or background processing while Obsidian is closed. All 135 automated tests, production build, runtime and dependency audits, strict OpenSpec validation, event-storm checks, disposable-vault lifecycle acceptance, dismissal, deduplication, notification, and one explicit create/read-back conversion passed with protected hashes unchanged.

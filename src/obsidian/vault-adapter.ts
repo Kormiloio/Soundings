@@ -15,6 +15,12 @@ export class ObsidianVaultAdapter implements DiscoveryAdapter, PublicationAdapte
     }));
   }
 
+  fileForPath(path: string): VaultFileRef | undefined {
+    const file = this.vault.getAbstractFileByPath(path);
+    if (!(file instanceof TFile)) return undefined;
+    return { path: file.path, extension: file.extension, size: file.stat.size, isFile: true };
+  }
+
   async readBinary(path: string): Promise<Uint8Array> {
     const file = this.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) throw new Error("vault-file-missing");

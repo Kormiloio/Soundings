@@ -25,6 +25,10 @@ class DisposableVaultAdapter implements DiscoveryAdapter, PublicationAdapter {
     return [...this.paths].map((path) => ({ path, extension: path.split(".").pop() ?? "", size: path.endsWith(".txt") ? 13 : 1, isFile: true }));
   }
 
+  fileForPath(path: string): VaultFileRef | undefined {
+    return this.listFiles().find((file) => file.path === path);
+  }
+
   async readBinary(path: string): Promise<Uint8Array> {
     return readFile(this.absolute(path));
   }

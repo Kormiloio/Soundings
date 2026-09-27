@@ -24,6 +24,24 @@ The `improve-large-vault-review` automated gate passed again after desktop accep
 - Strict OpenSpec validation and git diff whitespace validation: passed.
 - Disposable-vault desktop checks and one selected create-only conversion passed as recorded below.
 
+## Reviewed transcript inbox acceptance
+
+The `add-reviewed-transcript-inbox` automated and desktop gates passed on 2026-09-26:
+
+- Production build and TypeScript checks passed with 135 automated tests across 19 suites.
+- Shared manual/event discovery, bounded stability retry, cancellation, identity deduplication, missing-entry removal, collision replanning, lifecycle coordination, and a mixed event storm passed without vault mutation.
+- Runtime audit found no network, telemetry, Node filesystem, credential, destructive vault API, or actionable Community warning pattern; the production dependency audit reported zero vulnerabilities.
+- Strict OpenSpec validation and `git diff --check` passed.
+- Disposable desktop acceptance used Obsidian 1.13.7 and `/private/tmp/soundings-inbox-acceptance.f8k5A5` with the development build.
+- Observation loaded disabled by default. A transcript created while disabled did not enter the inbox. After enabling observation for `Inbox`, the reviewed inbox contained only the two observed paths: one eligible source and one current destination collision. The outside-root and configured Obsidian-directory files were absent, and the plan started with zero selected items.
+- A manual whole-vault scan remained independent from the inbox and correctly enumerated otherwise permitted files outside the observation root.
+- Closing the inbox review without selection left the eligible destination absent. Source and protected collision hashes remained unchanged.
+- Disabling and re-enabling Soundings cleared owned in-memory state; **Review transcript inbox** then reported no current eligible files.
+- Recreating the same synthetic path with identical content retained one unselected inbox entry. A fresh candidate produced one local Soundings notification and did not open a modal automatically.
+- Explicitly selecting only `Inbox/Final Conversion.txt` produced `created: 1`. Its source remained `a0694b156e6565cea0ace0d4a81e827e09a8c3fbf168336d65e039d7e5650bf1`.
+- Protected `Inbox/Observed Collision.txt` remained `d0316935723bcdb5a3c47e7329f1826100077c199053d6354102be0f912e31cd`, and `Inbox/Observed Collision.md` remained `5a9b9ac649ab4dbc19e80d88131bbd0596741fb7362e094912be78131dcaf09b`.
+- The created `Inbox/Final Conversion.md` is 468 bytes with SHA-256 `6554498e7062bde8ced26f427fd379c3522635648de10e603939628ff30f3536`; read-back confirmed the expected source metadata and transcript section without logging note content.
+
 ## Large-vault review desktop acceptance
 
 Acceptance passed on 2026-09-26 in `/private/tmp/soundings-large-review-restart.xjD4pP` using the corrected development build in Obsidian desktop. The vault contained 211 synthetic transcript candidates across nested folders and mixed classifications.

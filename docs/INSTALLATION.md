@@ -22,6 +22,12 @@ The build produces `main.js`. The other runtime files are `manifest.json` and `s
 6. Run **Soundings: Scan vault for transcripts** from the command palette.
 7. Review source and destination paths, select only synthetic eligible files, and convert them.
 
+## Optional observation settings
+
+After the manual workflow is familiar, open **Settings → Soundings** to opt in to **Observe new transcripts**. Observation is disabled by default. Add one vault-relative folder per line under **Observation roots**, or leave the list empty to observe the whole otherwise-permitted vault. Invalid roots are rejected; hidden folders, the configured Obsidian directory, Soundings state, and excluded folders remain unavailable.
+
+Observation runs only while Obsidian and the plugin are open. It queues content-free evidence in memory, shows a local notice, and requires **Soundings: Review transcript inbox** plus an explicit selection before conversion. Disabling the setting or plugin cancels pending checks and clears the inbox.
+
 ## Removal
 
 Disable Soundings, then remove its plugin folder from the disposable vault. Generated Markdown notes are normal vault files and are never deleted automatically; review and remove them manually if desired.

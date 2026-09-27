@@ -5,6 +5,7 @@ import type { PlanClassification, SourceEvidence, TranscriptFormat, VaultFileRef
 
 export interface DiscoveryAdapter {
   listFiles(): readonly VaultFileRef[];
+  fileForPath(path: string): VaultFileRef | undefined;
   readBinary(path: string): Promise<Uint8Array>;
   yieldControl?(): Promise<void>;
 }
@@ -37,8 +38,51 @@ export function isAtOrBelow(path: string, folder: string): boolean {
   return path === folder || path.startsWith(`${folder}/`);
 }
 
-function excluded(path: string, settings: SoundingsSettings): boolean {
+export function isExcludedPath(path: string, settings: SoundingsSettings): boolean {
   return isHiddenPath(path) || settings.excludedPaths.some((folder) => isAtOrBelow(path, folder));
+}
+
+export function isWithinObservationRoots(path: string, roots: readonly string[]): boolean {
+  return roots.length === 0 || roots.some((root) => isAtOrBelow(path, root));
+}
+
+export async function discoverTranscriptFile(
+  adapter: Pick<DiscoveryAdapter, "readBinary">,
+  file: VaultFileRef,
+  settings: SoundingsSettings,
+  digest?: DigestFunction
+): Promise<DiscoveryItem | undefined> {
+  if (!file.isFile) return undefined;
+  const format = formatForPath(file.path);
+  if (!format || !settings.enabledFormats.includes(format)) return undefined;
+
+  if (isExcludedPath(file.path, settings)) {
+    return { sourcePath: file.path, format, classification: "excluded", reason: "Path is excluded." };
+  }
+  if (file.size > settings.maxSourceBytes) {
+    return { sourcePath: file.path, format, classification: "oversize", reason: "Source exceeds the configured size limit." };
+  }
+
+  try {
+    const bytes = await adapter.readBinary(file.path);
+    if (bytes.byteLength > settings.maxSourceBytes) {
+      return { sourcePath: file.path, format, classification: "oversize", reason: "Source exceeds the configured size limit." };
+    }
+    if (bytes.byteLength === 0) {
+      return { sourcePath: file.path, format, classification: "empty", reason: "Source is empty." };
+    }
+    if (!digest) throw new Error("secure-hash-unavailable");
+    const sourceHash = await sha256(bytes, digest);
+    return {
+      sourcePath: file.path,
+      format,
+      classification: "eligible",
+      reason: "Ready for review.",
+      evidence: Object.freeze({ path: file.path, format, byteLength: bytes.byteLength, sha256: sourceHash })
+    };
+  } catch {
+    return { sourcePath: file.path, format, classification: "unreadable", reason: "Source could not be read or hashed." };
+  }
 }
 
 export async function discoverTranscripts(
@@ -53,39 +97,8 @@ export async function discoverTranscripts(
 
   for (const file of adapter.listFiles()) {
     if (signal?.aborted) return { items: Object.freeze(items), canceled: true };
-    if (!file.isFile) continue;
-    const format = formatForPath(file.path);
-    if (!format || !settings.enabledFormats.includes(format)) continue;
-
-    if (excluded(file.path, settings)) {
-      items.push({ sourcePath: file.path, format, classification: "excluded", reason: "Path is excluded." });
-      continue;
-    }
-    if (file.size > settings.maxSourceBytes) {
-      items.push({ sourcePath: file.path, format, classification: "oversize", reason: "Source exceeds the configured size limit." });
-      continue;
-    }
-
-    try {
-      const bytes = await adapter.readBinary(file.path);
-      if (bytes.byteLength > settings.maxSourceBytes) {
-        items.push({ sourcePath: file.path, format, classification: "oversize", reason: "Source exceeds the configured size limit." });
-      } else if (bytes.byteLength === 0) {
-        items.push({ sourcePath: file.path, format, classification: "empty", reason: "Source is empty." });
-      } else {
-        if (!digest) throw new Error("secure-hash-unavailable");
-        const sourceHash = await sha256(bytes, digest);
-        items.push({
-          sourcePath: file.path,
-          format,
-          classification: "eligible",
-          reason: "Ready for review.",
-          evidence: Object.freeze({ path: file.path, format, byteLength: bytes.byteLength, sha256: sourceHash })
-        });
-      }
-    } catch {
-      items.push({ sourcePath: file.path, format, classification: "unreadable", reason: "Source could not be read or hashed." });
-    }
+    const item = await discoverTranscriptFile(adapter, file, settings, digest);
+    if (item) items.push(item);
 
     processed += 1;
     if (processed % batchSize === 0) await (adapter.yieldControl?.() ?? Promise.resolve());

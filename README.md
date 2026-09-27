@@ -40,6 +40,12 @@ Use a disposable vault with synthetic transcripts for your first rehearsal. Back
 
 Soundings creates each note beside its source. If the intended Markdown destination already exists, Soundings reports the collision and leaves that file untouched.
 
+### Optional transcript inbox
+
+In **Settings → Soundings**, you can opt in to **Observe new transcripts** and optionally list vault-relative **Observation roots**, one per line. Empty roots mean the whole otherwise-permitted vault. While Obsidian and Soundings are open, newly created supported files are checked after they stabilize and queued in memory. Soundings shows a coalesced local notice; run **Soundings: Review transcript inbox** to recheck the queued paths in the standard review plan. The plan starts with zero selected items and never converts automatically.
+
+Observation is off by default. It does not run while Obsidian is closed, and disabling Soundings or observation cancels pending checks and clears the in-memory inbox. A later manual vault scan recovers files missed while observation was inactive.
+
 ## What Soundings creates
 
 Each generated Markdown note contains versioned frontmatter, a title, reserved sections for future enrichment, and a deterministic transcript body. Soundings does not claim to generate summaries, decisions, or action items in this release.
@@ -56,10 +62,13 @@ For the exact format and parsing rules, see [Supported transcripts](docs/SUPPORT
 - To find transcripts in nested folders, Soundings enumerates file paths throughout the active vault. It reads file content only for enabled `.txt` or `.vtt` candidates that remain after configuration-folder, hidden-folder, Soundings-state, user-exclusion, and size checks.
 - Soundings makes no network requests, includes no client-side or server-side telemetry, and contains no advertising.
 - Soundings requires no credentials, account, payment, or external service.
+- The optional inbox retains only vault-relative paths, formats, sizes, and content hashes in memory. It does not persist transcript bodies or inbox state.
+
+See [Privacy and data handling](docs/PRIVACY.md) for the complete disclosure.
 
 ## Settings
 
-Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-relative folders, limit source size, and optionally infer project metadata from a configured folder root. Hidden folders and the active vault's configured Obsidian configuration folder remain excluded, even when that folder is not named `.obsidian`.
+Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-relative folders, limit source size, optionally infer project metadata from a configured folder root, and opt in to observation with validated vault-relative roots. Hidden folders, Soundings state, user exclusions, and the active vault's configured Obsidian configuration folder remain excluded from scans and observation, even when that folder is not named `.obsidian`.
 
 ## Known limitations
 
@@ -69,7 +78,7 @@ Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-rela
 - Plain-text transcripts are preserved without speaker inference.
 - WebVTT support is intentionally strict and may reject provider-specific extensions.
 - The default maximum source size is 5 MB.
-- Automatic conversion, AI enrichment, audio transcription, external folders, and mobile platforms are not supported.
+- Automatic conversion, durable/background inbox processing, AI enrichment, audio transcription, external folders, and mobile platforms are not supported.
 
 ## Support
 

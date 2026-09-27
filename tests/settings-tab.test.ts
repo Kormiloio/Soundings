@@ -18,19 +18,22 @@ function controls(items: SettingDefinitionItem[]): SettingDefinition[] {
 }
 
 describe("declarative Soundings settings", () => {
-  it("indexes six controls and retains the non-searchable safety explanation", () => {
+  it("indexes eight controls and retains the non-searchable safety explanation", () => {
     const { tab } = setup();
     const definitions = tab.getSettingDefinitions();
-    expect(controls(definitions)).toHaveLength(6);
+    expect(controls(definitions)).toHaveLength(8);
     expect(controls(definitions).map((item) => item.name)).toEqual([
       "Convert .txt transcripts",
       "Convert .vtt transcripts",
       "Excluded folders",
       "Maximum transcript bytes",
       "Infer project from folder",
-      "Project root"
+      "Project root",
+      "Observe new transcripts",
+      "Observation roots"
     ]);
     expect(definitions[0]).toMatchObject({ name: "Soundings safety", searchable: false });
+    expect(definitions[7]).toMatchObject({ name: "Transcript observation", searchable: false });
   });
 
   it("adapts individual controls through validated effective settings", async () => {
@@ -42,6 +45,10 @@ describe("declarative Soundings settings", () => {
     expect(owner.settings.enabledFormats).toEqual(["vtt"]);
     await tab.setControlValue("maxSourceBytes", 1024);
     expect(owner.settings.maxSourceBytes).toBe(1024);
+    await tab.setControlValue("observationEnabled", true);
+    expect(owner.settings.observationEnabled).toBe(true);
+    await tab.setControlValue("observationRoots", "Meetings\nCalls");
+    expect(owner.settings.observationRoots).toEqual(["Meetings", "Calls"]);
   });
 
   it("returns inline validation text before an unsafe value is persisted", async () => {
@@ -49,7 +56,9 @@ describe("declarative Soundings settings", () => {
     const definitions = controls(tab.getSettingDefinitions());
     const maximum = definitions.find((item) => item.name === "Maximum transcript bytes")!;
     const excluded = definitions.find((item) => item.name === "Excluded folders")!;
+    const obsRoots = definitions.find((item) => item.name === "Observation roots")!;
     expect(await maximum.control?.validate?.(0 as never)).toContain("positive whole number");
     expect(await excluded.control?.validate?.("../outside" as never)).toContain("Invalid excluded path");
+    expect(await obsRoots.control?.validate?.("/absolute" as never)).toContain("Invalid observation root");
   });
 });

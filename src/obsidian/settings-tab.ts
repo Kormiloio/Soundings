@@ -2,7 +2,7 @@ import { App, PluginSettingTab, type SettingDefinitionItem } from "obsidian";
 import { editableExcludedPaths, validateSettings, type SoundingsSettings } from "../core/settings";
 import type { TranscriptFormat } from "../core/types";
 
-type SoundingsSettingKey = "txt" | "vtt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot";
+type SoundingsSettingKey = "txt" | "vtt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot" | "observationEnabled" | "observationRoots";
 
 export interface SettingsOwner {
   settings: SoundingsSettings;
@@ -66,6 +66,30 @@ export class SoundingsSettingTab extends PluginSettingTab {
           key: "projectRoot",
           validate: (value) => this.validateControl("projectRoot", value)
         }
+      },
+      {
+        name: "Transcript observation",
+        searchable: false,
+        render: (setting) => {
+          setting
+            .setName("")
+            .setDesc("When enabled, Soundings notifies you of new transcript files created while Obsidian is open. Conversion remains explicit and reviewed.");
+        }
+      },
+      {
+        name: "Observe new transcripts",
+        desc: "Notify when supported transcript files are created.",
+        control: { type: "toggle", key: "observationEnabled" }
+      },
+      {
+        name: "Observation roots",
+        desc: `One vault-relative folder per line. Leave empty to observe the whole vault. Hidden folders and ${configDir} remain excluded.`,
+        control: {
+          type: "textarea",
+          key: "observationRoots",
+          rows: 3,
+          validate: (value) => this.validateControl("observationRoots", value)
+        }
       }
     ];
   }
@@ -79,6 +103,8 @@ export class SoundingsSettingTab extends PluginSettingTab {
       case "maxSourceBytes": return this.owner.settings.maxSourceBytes;
       case "projectInferenceEnabled": return this.owner.settings.projectInferenceEnabled;
       case "projectRoot": return this.owner.settings.projectRoot;
+      case "observationEnabled": return this.owner.settings.observationEnabled;
+      case "observationRoots": return this.owner.settings.observationRoots.join("\n");
     }
   }
 
@@ -124,6 +150,12 @@ export class SoundingsSettingTab extends PluginSettingTab {
       case "maxSourceBytes": return { ...this.owner.settings, excludedPaths: this.editableExclusions(), maxSourceBytes: Number(value) };
       case "projectInferenceEnabled": return { ...this.owner.settings, excludedPaths: this.editableExclusions(), projectInferenceEnabled: value === true };
       case "projectRoot": return { ...this.owner.settings, excludedPaths: this.editableExclusions(), projectRoot: String(value) };
+      case "observationEnabled": return { ...this.owner.settings, excludedPaths: this.editableExclusions(), observationEnabled: value === true };
+      case "observationRoots": return {
+        ...this.owner.settings,
+        excludedPaths: this.editableExclusions(),
+        observationRoots: String(value).split("\n").map((path) => path.trim()).filter(Boolean)
+      };
     }
   }
 

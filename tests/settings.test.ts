@@ -12,6 +12,8 @@ describe("settings", () => {
   it("uses local-only foundation defaults without automatic conversion", () => {
     expect(DEFAULT_SETTINGS.enabledFormats).toEqual(["txt", "vtt"]);
     expect(DEFAULT_SETTINGS.projectInferenceEnabled).toBe(false);
+    expect(DEFAULT_SETTINGS.observationEnabled).toBe(false);
+    expect(DEFAULT_SETTINGS.observationRoots).toEqual([]);
     expect(DEFAULT_SETTINGS).not.toHaveProperty("automaticConversion");
   });
 
@@ -64,5 +66,38 @@ describe("settings", () => {
     const first = settingsFingerprint({ ...DEFAULT_SETTINGS, excludedPaths: ["A", "B"] });
     const second = settingsFingerprint({ ...DEFAULT_SETTINGS, excludedPaths: ["B", "A"] });
     expect(first).toBe(second);
+  });
+
+  it("includes observation settings in the fingerprint", () => {
+    const base = settingsFingerprint(DEFAULT_SETTINGS);
+    const withObs = settingsFingerprint({ ...DEFAULT_SETTINGS, observationEnabled: true });
+    expect(withObs).not.toBe(base);
+  });
+
+  it("keeps observation disabled by default on migration", () => {
+    const policy = createSettingsPolicy(".obsidian").policy!;
+    const result = validateSettings({}, policy.mandatoryExcludedPaths);
+    expect(result.settings?.observationEnabled).toBe(false);
+    expect(result.settings?.observationRoots).toEqual([]);
+  });
+
+  it("rejects invalid observation roots", () => {
+    const policy = createSettingsPolicy(".obsidian").policy!;
+    const result = validateSettings({ observationRoots: ["/absolute", "../escape"] }, policy.mandatoryExcludedPaths);
+    expect(result.settings).toBeUndefined();
+    expect(result.errors).toHaveLength(2);
+  });
+
+  it("normalizes and de-duplicates valid observation roots", () => {
+    const policy = createSettingsPolicy(".obsidian").policy!;
+    const result = validateSettings({ observationRoots: ["Meetings", "Calls", "Calls"] }, policy.mandatoryExcludedPaths);
+    expect(result.settings?.observationRoots).toEqual(["Meetings", "Calls"]);
+  });
+
+  it("allows empty observation roots to mean whole vault", () => {
+    const policy = createSettingsPolicy(".obsidian").policy!;
+    const result = validateSettings({ observationEnabled: true, observationRoots: [] }, policy.mandatoryExcludedPaths);
+    expect(result.settings?.observationEnabled).toBe(true);
+    expect(result.settings?.observationRoots).toEqual([]);
   });
 });

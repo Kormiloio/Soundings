@@ -26,7 +26,7 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(settings).toContain("getControlValue(key: string)");
     expect(settings).toContain("setControlValue(key: string, value: unknown)");
     expect(settings).not.toContain("display(): void");
-    expect(settings.match(/type: "(?:toggle|textarea|number|text)"/g)).toHaveLength(5);
+    expect(settings.match(/type: "(?:toggle|textarea|number|text)"/g)).toHaveLength(7);
     expect(settings).toContain('this.formatDefinition("txt")');
     expect(settings).toContain('this.formatDefinition("vtt")');
     expect(settings).toContain("validate: (value)");
@@ -66,7 +66,7 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(styles).toContain("width: min(54rem, calc(100vw - 2rem))");
   });
 
-  it("registers one ribbon control and one command for the guarded scan workflow", async () => {
+  it("registers one ribbon control plus guarded scan and inbox commands", async () => {
     const main = await source("src/main.ts");
     expect(main).toContain("createSettingsPolicy(this.app.vault.configDir)");
     expect(main).toContain("if (!this.settingsPolicy)");
@@ -75,13 +75,26 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(main).toContain("activeWindow.crypto?.subtle");
     expect(main.match(/this\.addRibbonIcon\(/g)).toHaveLength(1);
     expect(main).toContain('this.addRibbonIcon("waves", "Scan vault for transcripts"');
-    expect(main.match(/this\.addCommand\(/g)).toHaveLength(1);
+    expect(main.match(/this\.addCommand\(/g)).toHaveLength(2);
     expect(main).toContain('id: "scan-vault-for-transcripts"');
+    expect(main).toContain('id: "review-transcript-inbox"');
     expect(main.match(/void this\.scanAndReview\(\)/g)).toHaveLength(2);
-    expect(main).toContain("if (this.runs.isActive)");
+    expect(main).toContain("if (this.isBusy())");
     expect(main).toContain('new Notice("Soundings is already scanning or converting.")');
     expect(main).toContain("onunload(): void");
     expect(main).toContain("this.runs.cancel()");
     expect(main).not.toContain("ribbonIcon.remove()");
+  });
+
+  it("keeps opt-in observation lifecycle-bound and separate from conversion", async () => {
+    const main = await source("src/main.ts");
+    const observation = await source("src/core/observation.ts");
+    expect(main).toContain('this.app.vault.on("create"');
+    expect(main).toContain("this.app.vault.offref(this.observationEvent)");
+    expect(main).toContain("this.observer?.stop()");
+    expect(main).toContain("if (!this.settingsPolicy || !this.settings.observationEnabled)");
+    expect(main).toContain("canProcess: () => !this.runs.isActive");
+    expect(observation).not.toContain("executePlan");
+    expect(observation).not.toMatch(/createBinary|vault\.(?:create|modify|delete|rename)/);
   });
 });

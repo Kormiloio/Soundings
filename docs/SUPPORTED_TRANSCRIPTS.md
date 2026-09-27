@@ -28,3 +28,9 @@
 ## Size and platform status
 
 The desktop foundation release requires Obsidian 1.13.7 or later and uses a conservative maximum of 5,000,000 bytes per transcript. Real Obsidian desktop vault-API acceptance passed on macOS arm64; see `VERIFICATION.md`. Android, iOS, and iPadOS are outside the first-release support scope.
+
+## Optional observation
+
+Observation applies the same enabled-format, size, hidden-folder, configured Obsidian directory, Soundings-state, and user-exclusion rules as a manual scan. Configured observation roots narrow that policy; they never broaden it. A created file must produce the same readable content identity twice within a bounded retry window before it is queued.
+
+Queued entries contain only the vault-relative path, format, byte length, and content hash in memory. Opening the inbox replans current files and destination collisions in the standard unselected review. No creation event opens a modal or converts a file automatically.

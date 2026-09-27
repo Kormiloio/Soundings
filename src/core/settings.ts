@@ -6,6 +6,8 @@ export interface SoundingsSettings {
   readonly maxSourceBytes: number;
   readonly projectInferenceEnabled: boolean;
   readonly projectRoot: string;
+  readonly observationEnabled: boolean;
+  readonly observationRoots: readonly string[];
 }
 
 export const DEFAULT_MAX_SOURCE_BYTES = 5_000_000;
@@ -16,7 +18,9 @@ export const DEFAULT_SETTINGS: SoundingsSettings = Object.freeze({
   excludedPaths: Object.freeze([SOUNDINGS_STATE_PATH]),
   maxSourceBytes: DEFAULT_MAX_SOURCE_BYTES,
   projectInferenceEnabled: false,
-  projectRoot: "Projects"
+  projectRoot: "Projects",
+  observationEnabled: false,
+  observationRoots: Object.freeze([])
 });
 
 export interface SettingsValidation {
@@ -105,6 +109,15 @@ export function validateSettings(
   if (projectInferenceEnabled && !normalizedProjectRoot) errors.push("Project root must be a valid vault-relative path.");
   const projectRoot = normalizedProjectRoot ?? DEFAULT_SETTINGS.projectRoot;
 
+  const observationEnabled = input.observationEnabled ?? DEFAULT_SETTINGS.observationEnabled;
+  const observationRootsRaw = input.observationRoots ?? DEFAULT_SETTINGS.observationRoots;
+  const observationRoots: string[] = [];
+  for (const raw of observationRootsRaw) {
+    const normalized = normalizeVaultPath(raw);
+    if (!normalized) errors.push(`Invalid observation root: ${raw || "(empty)"}`);
+    else observationRoots.push(normalized);
+  }
+
   if (errors.length > 0) return { errors };
   return {
     settings: Object.freeze({
@@ -112,7 +125,9 @@ export function validateSettings(
       excludedPaths: Object.freeze([...new Set([...mandatoryExclusions, ...exclusions])]),
       maxSourceBytes,
       projectInferenceEnabled,
-      projectRoot
+      projectRoot,
+      observationEnabled,
+      observationRoots: Object.freeze([...new Set(observationRoots)])
     }),
     errors
   };
@@ -124,6 +139,8 @@ export function settingsFingerprint(settings: SoundingsSettings): string {
     excludedPaths: [...settings.excludedPaths].sort(),
     maxSourceBytes: settings.maxSourceBytes,
     projectInferenceEnabled: settings.projectInferenceEnabled,
-    projectRoot: settings.projectRoot
+    projectRoot: settings.projectRoot,
+    observationEnabled: settings.observationEnabled,
+    observationRoots: [...settings.observationRoots].sort()
   });
 }

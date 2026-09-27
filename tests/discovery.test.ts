@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { discoverTranscripts, formatForPath, type DiscoveryAdapter } from "../src/core/discovery";
+import { discoverTranscriptFile, discoverTranscripts, formatForPath, type DiscoveryAdapter } from "../src/core/discovery";
 import { DEFAULT_SETTINGS, type SoundingsSettings } from "../src/core/settings";
 import type { VaultFileRef } from "../src/core/types";
 import { testDigest } from "./test-crypto";
@@ -11,6 +11,7 @@ function adapter(files: VaultFileRef[], contents: Record<string, Uint8Array | Er
   return {
     reads,
     listFiles: () => files,
+    fileForPath: (path) => files.find((entry) => entry.path === path),
     readBinary: async (path) => {
       reads.push(path);
       const value = contents[path];
@@ -61,6 +62,24 @@ describe("discovery", () => {
     const result = await discoverTranscripts(vault, settings, undefined, 50, testDigest);
     expect(result.items.map((item) => item.classification)).toEqual(["unreadable", "empty", "oversize", "eligible"]);
     expect(JSON.stringify(result)).not.toContain("secret body");
+  });
+
+  it.each([
+    ["Config/private.txt", 4, "excluded"],
+    ["large.txt", 6, "oversize"],
+    ["empty.txt", 0, "empty"],
+    ["bad.txt", 4, "unreadable"],
+    ["good.vtt", 4, "eligible"]
+  ] as const)("uses the same single-file policy for %s", async (path, size, classification) => {
+    const settings = { ...DEFAULT_SETTINGS, excludedPaths: ["Config"], maxSourceBytes: 5 };
+    const ref = file(path, size);
+    const content = classification === "unreadable" ? new Error("private") : classification === "empty" ? new Uint8Array() : encoder.encode("body");
+    const vault = adapter([ref], { [path]: content });
+    const scan = await discoverTranscripts(vault, settings, undefined, 50, testDigest);
+    const single = await discoverTranscriptFile(vault, ref, settings, testDigest);
+    expect(single?.classification).toBe(classification);
+    expect(scan.items[0]?.classification).toBe(single?.classification);
+    expect(single?.evidence).toEqual(scan.items[0]?.evidence);
   });
 
   it("fails closed when hashing is unavailable", async () => {

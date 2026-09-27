@@ -1,7 +1,8 @@
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, TFile, type EventRef } from "obsidian";
 import { discoverTranscripts } from "./core/discovery";
 import { executePlan, RunCoordinator } from "./core/execution";
 import type { DigestFunction } from "./core/hash";
+import { ObservationProcessor, planTranscriptInbox } from "./core/observation";
 import { buildPlan } from "./core/planning";
 import {
   createSettingsPolicy,
@@ -19,6 +20,10 @@ export default class SoundingsPlugin extends Plugin {
   settings: SoundingsSettings = DEFAULT_SETTINGS;
   settingsPolicy?: SoundingsSettingsPolicy;
   private readonly runs = new RunCoordinator();
+  private vaultAdapter?: ObsidianVaultAdapter;
+  private observer?: ObservationProcessor;
+  private observationEvent?: EventRef;
+  private inboxNoticeOutstanding = false;
   private readonly digest: DigestFunction = async (algorithm, data) => {
     const subtle = activeWindow.crypto?.subtle;
     if (!subtle) throw new Error("secure-hash-unavailable");
@@ -29,6 +34,15 @@ export default class SoundingsPlugin extends Plugin {
     const policyValidation = createSettingsPolicy(this.app.vault.configDir);
     this.settingsPolicy = policyValidation.policy;
     await this.loadSettings();
+    this.vaultAdapter = new ObsidianVaultAdapter(this.app.vault);
+    this.observer = new ObservationProcessor({
+      adapter: this.vaultAdapter,
+      settings: () => this.settings,
+      digest: this.digest,
+      canProcess: () => !this.runs.isActive,
+      wait: (signal) => this.waitForObservation(signal),
+      onChanged: () => this.notifyInbox()
+    });
     this.addSettingTab(new SoundingsSettingTab(this.app, this));
     this.addRibbonIcon("waves", "Scan vault for transcripts", () => {
       void this.scanAndReview();
@@ -38,10 +52,17 @@ export default class SoundingsPlugin extends Plugin {
       name: "Scan vault for transcripts",
       callback: () => { void this.scanAndReview(); }
     });
+    this.addCommand({
+      id: "review-transcript-inbox",
+      name: "Review transcript inbox",
+      callback: () => { void this.reviewInbox(); }
+    });
+    this.syncObservation();
   }
 
   onunload(): void {
     this.runs.cancel();
+    this.stopObservation();
   }
 
   async setSettings(settings: SoundingsSettings): Promise<void> {
@@ -51,6 +72,82 @@ export default class SoundingsPlugin extends Plugin {
     if (!validation.settings) throw new Error("invalid-soundings-settings");
     this.settings = validation.settings;
     await this.saveData(validation.settings);
+    this.stopObservation();
+    this.syncObservation();
+  }
+
+  private syncObservation(): void {
+    if (!this.settingsPolicy || !this.settings.observationEnabled) {
+      this.stopObservation();
+      return;
+    }
+    if (this.observationEvent) return;
+    this.observationEvent = this.app.vault.on("create", (file) => {
+      if (file instanceof TFile) void this.observer?.handleCreated(file.path);
+    });
+    this.registerEvent(this.observationEvent);
+  }
+
+  private stopObservation(): void {
+    if (this.observationEvent) this.app.vault.offref(this.observationEvent);
+    this.observationEvent = undefined;
+    this.observer?.stop();
+    this.inboxNoticeOutstanding = false;
+  }
+
+  private waitForObservation(signal: AbortSignal): Promise<void> {
+    return new Promise((resolve) => {
+      if (signal.aborted) { resolve(); return; }
+      const timer = window.setTimeout(finish, 250);
+      signal.addEventListener("abort", finish, { once: true });
+      function finish(): void {
+        window.clearTimeout(timer);
+        signal.removeEventListener("abort", finish);
+        resolve();
+      }
+    });
+  }
+
+  private notifyInbox(): void {
+    if (this.inboxNoticeOutstanding || !this.observer || this.observer.inbox.size === 0) return;
+    this.inboxNoticeOutstanding = true;
+    new Notice("Soundings found new transcripts. Run ‘Review transcript inbox’ to inspect them.");
+  }
+
+  private isBusy(): boolean {
+    return this.runs.isActive || (this.observer?.pendingCount ?? 0) > 0;
+  }
+
+  private async reviewInbox(): Promise<void> {
+    const adapter = this.vaultAdapter;
+    const observer = this.observer;
+    if (!this.settingsPolicy || !adapter || !observer) {
+      new Notice("Soundings cannot review the inbox until the vault configuration is valid.");
+      return;
+    }
+    if (this.isBusy()) {
+      new Notice("Soundings is already scanning or converting.");
+      return;
+    }
+    const signal = this.runs.begin();
+    this.inboxNoticeOutstanding = false;
+    try {
+      const plan = await planTranscriptInbox(
+        observer.inbox, adapter, this.settings, this.digest, new Date(), () => activeWindow.crypto.randomUUID(), signal
+      );
+      if (!plan) {
+        new Notice("Soundings transcript inbox has no current eligible files.");
+        return;
+      }
+      new ReviewModal(this.app, plan, {
+        refresh: () => this.reviewInbox(),
+        convert: (selected) => this.convertPlan(plan, selected)
+      }).open();
+    } catch {
+      new Notice("Soundings could not review the transcript inbox. No files were changed.");
+    } finally {
+      this.runs.finish(signal);
+    }
   }
 
   private async loadSettings(): Promise<void> {
@@ -75,7 +172,7 @@ export default class SoundingsPlugin extends Plugin {
       new Notice("Soundings cannot scan until the vault configuration directory is valid.");
       return;
     }
-    if (this.runs.isActive) {
+    if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return;
     }
@@ -101,7 +198,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async convertPlan(plan: ReturnType<typeof buildPlan>, selected: ReadonlySet<string>): Promise<void> {
-    if (this.runs.isActive) {
+    if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return;
     }
@@ -116,6 +213,9 @@ export default class SoundingsPlugin extends Plugin {
         digest: this.digest,
         onProgress: (complete, total) => progress.update(complete, total)
       });
+      for (const outcome of outcomes) {
+        if (outcome.status === "created") this.observer?.inbox.remove(outcome.sourcePath);
+      }
       progress.close();
       new ResultsModal(this.app, outcomes).open();
     } catch {
