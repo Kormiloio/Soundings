@@ -1,4 +1,12 @@
 import { App, Modal, Setting } from "obsidian";
+import {
+  clearReviewSelection,
+  createReviewSelection,
+  PLAN_CLASSIFICATIONS,
+  projectReviewPlan,
+  selectAllVisibleEligible,
+  type ReviewClassificationFilter
+} from "../core/review-state";
 import type { ConversionPlan, ExecutionOutcome } from "../core/types";
 
 export interface ReviewActions {
@@ -7,7 +15,9 @@ export interface ReviewActions {
 }
 
 export class ReviewModal extends Modal {
-  private readonly selected = new Set<string>();
+  private selected = createReviewSelection();
+  private query = "";
+  private classification: ReviewClassificationFilter = "all";
 
   constructor(app: App, private readonly plan: ConversionPlan, private readonly actions: ReviewActions) {
     super(app);
@@ -15,34 +25,127 @@ export class ReviewModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this;
+    this.modalEl.addClass("soundings-review-modal");
     contentEl.empty();
+    contentEl.addClass("soundings-review");
+    this.selected = createReviewSelection();
+    this.query = "";
+    this.classification = "all";
     contentEl.createEl("h2", { text: "Soundings conversion plan" });
-    contentEl.createEl("p", {
+    const summaryEl = contentEl.createEl("p", {
       cls: "soundings-review__summary",
-      text: `${this.plan.items.length} transcript candidate${this.plan.items.length === 1 ? "" : "s"}. Select eligible notes to create.`
+      attr: { "aria-live": "polite" }
+    });
+    const selectedEl = contentEl.createEl("p", {
+      cls: "soundings-review__selected",
+      attr: { "aria-live": "polite" }
     });
 
-    let convertButton: HTMLButtonElement | undefined;
-    const updateConvert = () => { if (convertButton) convertButton.disabled = this.selected.size === 0; };
-
-    for (const item of this.plan.items) {
-      const row = new Setting(contentEl)
-        .setClass("soundings-review__item")
-        .setName(item.sourcePath)
-        .setDesc(`${item.destinationPath ?? "No safe destination"} — ${item.classification}: ${item.reason}`);
-      if (item.classification === "eligible") {
-        row.addToggle((toggle) => {
-          toggle.toggleEl.setAttr("aria-label", `Select ${item.sourcePath} for conversion`);
-          toggle.setValue(false).onChange((selected) => {
-            if (selected) this.selected.add(item.sourcePath);
-            else this.selected.delete(item.sourcePath);
-            updateConvert();
-          });
+    new Setting(contentEl)
+      .setClass("soundings-review__filters")
+      .addText((text) => {
+        text.setPlaceholder("Search source or destination paths");
+        text.inputEl.setAttr("aria-label", "Search transcript paths");
+        text.inputEl.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          event.stopPropagation();
         });
+        text.onChange((query) => {
+          this.query = query;
+          renderRows();
+        });
+      })
+      .addDropdown((dropdown) => {
+        dropdown.selectEl.setAttr("aria-label", "Filter by classification");
+        dropdown.addOption("all", "All classifications");
+        for (const classification of PLAN_CLASSIFICATIONS) {
+          dropdown.addOption(classification, classification.replaceAll("-", " "));
+        }
+        dropdown.setValue("all").onChange((classification) => {
+          this.classification = classification as ReviewClassificationFilter;
+          renderRows();
+        });
+      });
+
+    const itemsEl = contentEl.createDiv({ cls: "soundings-review__items" });
+
+    let convertButton: HTMLButtonElement | undefined;
+    let selectVisibleButton: HTMLButtonElement | undefined;
+    let clearButton: HTMLButtonElement | undefined;
+
+    const updateState = () => {
+      const projection = projectReviewPlan(this.plan, {
+        query: this.query,
+        classification: this.classification,
+        selectedSourcePaths: this.selected
+      });
+      const counts = PLAN_CLASSIFICATIONS
+        .filter((classification) => projection.counts[classification] > 0)
+        .map((classification) => `${classification}: ${projection.counts[classification]}`)
+        .join(" · ");
+      summaryEl.setText(
+        `${this.plan.items.length} transcript candidate${this.plan.items.length === 1 ? "" : "s"}. `
+        + `${projection.visibleItems.length} shown${counts ? ` · ${counts}` : ""}.`
+      );
+      selectedEl.setText(`${projection.selectedCount} selected. Select eligible notes to create.`);
+      if (convertButton) convertButton.disabled = projection.selectedCount === 0;
+      if (selectVisibleButton) selectVisibleButton.disabled = projection.visibleEligibleCount === 0;
+      if (clearButton) clearButton.disabled = projection.selectedCount === 0;
+      return projection;
+    };
+
+    const renderRows = () => {
+      const projection = updateState();
+      itemsEl.empty();
+      if (projection.visibleItems.length === 0) {
+        itemsEl.createEl("p", { text: "No transcript candidates match the current filters." });
+        return;
       }
-    }
+      for (const item of projection.visibleItems) {
+        const row = new Setting(itemsEl)
+          .setClass("soundings-review__item")
+          .setName(item.sourcePath)
+          .setDesc(`${item.destinationPath ?? "No safe destination"} — ${item.classification}: ${item.reason}`);
+        if (item.classification === "eligible") {
+          row.addToggle((toggle) => {
+            toggle.toggleEl.setAttr("aria-label", `Select ${item.sourcePath} for conversion`);
+            toggle.setValue(this.selected.has(item.sourcePath)).onChange((selected) => {
+              if (selected) this.selected.add(item.sourcePath);
+              else this.selected.delete(item.sourcePath);
+              updateState();
+            });
+          });
+        }
+      }
+    };
 
     new Setting(contentEl)
+      .setClass("soundings-review__selection-actions")
+      .addButton((button) => {
+        button.setButtonText("Select all eligible shown");
+        selectVisibleButton = button.buttonEl;
+        button.onClick(() => {
+          const projection = projectReviewPlan(this.plan, {
+            query: this.query,
+            classification: this.classification,
+            selectedSourcePaths: this.selected
+          });
+          this.selected = selectAllVisibleEligible(this.selected, projection.visibleItems);
+          renderRows();
+        });
+      })
+      .addButton((button) => {
+        button.setButtonText("Clear selection");
+        clearButton = button.buttonEl;
+        button.onClick(() => {
+          this.selected = clearReviewSelection();
+          renderRows();
+        });
+      });
+
+    new Setting(contentEl)
+      .setClass("soundings-review__footer")
       .addButton((button) => button.setButtonText("Refresh plan").onClick(async () => {
         this.close();
         await this.actions.refresh();
@@ -51,7 +154,6 @@ export class ReviewModal extends Modal {
       .addButton((button) => {
         button.setCta().setButtonText("Convert selected");
         convertButton = button.buttonEl;
-        updateConvert();
         button.onClick(async () => {
           if (this.selected.size === 0) return;
           const selection = new Set(this.selected);
@@ -59,9 +161,11 @@ export class ReviewModal extends Modal {
           await this.actions.convert(selection);
         });
       });
+    renderRows();
   }
 
   onClose(): void {
+    this.modalEl.removeClass("soundings-review-modal");
     this.contentEl.empty();
   }
 }

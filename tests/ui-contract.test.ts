@@ -41,6 +41,31 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(review).not.toContain(".setWarning()");
   });
 
+  it("uses labeled native review controls and textual live status for large plans", async () => {
+    const review = await source("src/obsidian/review-modal.ts");
+    expect(review).toContain('"Search transcript paths"');
+    expect(review).toContain('"Filter by classification"');
+    expect(review).toContain('"Select all eligible shown"');
+    expect(review).toContain('"Clear selection"');
+    expect(review).toContain('"Convert selected"');
+    expect(review).toContain('event.key !== "Enter"');
+    expect(review).toContain("event.preventDefault()");
+    expect(review).toContain("event.stopPropagation()");
+    expect(review.match(/"aria-live": "polite"/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(review).toContain("projection.selectedCount === 0");
+    expect(review).not.toMatch(/style\.(?:color|backgroundColor)/);
+  });
+
+  it("keeps large review plans scrollable and path text visible in narrow desktop windows", async () => {
+    const styles = await source("styles.css");
+    expect(styles).toContain("max-height: calc(100vh - 4rem)");
+    expect(styles).toContain("flex: 1 1 24rem");
+    expect(styles).toContain("overflow-y: auto");
+    expect(styles).toContain("overflow-wrap: anywhere");
+    expect(styles).toContain("@media (max-width: 640px)");
+    expect(styles).toContain("width: min(54rem, calc(100vw - 2rem))");
+  });
+
   it("registers one ribbon control and one command for the guarded scan workflow", async () => {
     const main = await source("src/main.ts");
     expect(main).toContain("createSettingsPolicy(this.app.vault.configDir)");

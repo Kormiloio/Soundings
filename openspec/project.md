@@ -29,7 +29,8 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-2. Evaluate Android, iOS, and iPadOS only through a separate future change.
+2. Prepare the completed large-vault review improvement for synchronization, archival, and a later release without weakening the reviewed create-only boundary.
+3. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
 ## Foundation implementation checkpoint
 
@@ -52,6 +53,8 @@ The `address-community-review-feedback` patch injected host-window cryptography 
 The completed `0.1.1` scan identified two follow-up source warnings: an unnecessary `SoundingsSettings` assertion during saved-settings migration and `activeWindow.setTimeout()` in the vault adapter. The `clear-community-review-followups` patch narrowed the exclusion-helper input, used `window.setTimeout()` at the adapter boundary, added local contracts for both findings, and prepared immutable release `0.1.2`. It did not change vault mutation, data handling, supported platforms, or conversion output; the Community listing remained unpublished until the clean completed rescan.
 
 Immutable release `0.1.2` passed 101 automated tests across 16 suites, runtime and dependency audits, strict validation, exact three-asset staging, saved-settings upgrade acceptance, custom-config exclusion, non-mutating review, explicit create/read-back, remote hash verification, and a completed Community review with no actionable finding. On 2026-09-24 the repository owner published Soundings in the Obsidian Community directory; the public listing reports Review Passed and Health Excellent.
+
+The completed `improve-large-vault-review` change keeps the immutable plan separate from pure review projection and selection state. It adds textual classification counts, case-insensitive source/destination search, classification filters, visible-eligible bulk selection, hidden-selection accounting, clear-all behavior, safe Return handling in search, fresh unselected state on every new or refreshed plan, and viewport-constrained desktop layout. The isolated implementation passes 113 tests across 18 suites, production build, runtime audit, strict OpenSpec validation, diff checks, and an extended 5,000-file rehearsal with zero mutations before explicit execution. Disposable-vault desktop acceptance confirmed the large mixed-plan controls, corrected narrow-window layout, Return-key conversion suppression, close-without-mutation behavior, and one selected create-only conversion with protected hashes unchanged.
 
 ## Definition of done
 

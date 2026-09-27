@@ -1,6 +1,6 @@
 # Foundation verification record
 
-**Last updated:** 2026-09-23
+**Last updated:** 2026-09-26
 
 ## Automated verification
 
@@ -10,6 +10,35 @@
 - npm production dependency audit: zero vulnerabilities reported.
 - Golden conversions: representative UTF-8 plain text and Zoom-style WebVTT passed byte-deterministic output checks.
 - Safety integration: source changes, missing sources, existing destinations, concurrent destination creation, malformed input, mismatched read-back, cancellation, and plugin ownership passed.
+
+## Large-vault review automated candidate
+
+The `improve-large-vault-review` automated gate passed again after desktop acceptance on 2026-09-26:
+
+- Production build and TypeScript checks: passed.
+- Full unit, integration, golden, UI-contract, modal-interaction, review-state, release-readiness, source-contract, adapter, and scale suites: 113 passed across 18 suites.
+- Review-state coverage verifies immutable classification counts, case-insensitive source/destination search, classification filtering, empty results, hidden-selection accounting, visible-eligible-only bulk selection, clear-all behavior, and fresh unselected state for a new plan.
+- Modal integration coverage verifies accessible native search and classification controls, textual live status, keyboard-operable buttons and toggles, disabled conversion without a selection, hidden-selection preservation, exact conversion selection, and reset state when reopened.
+- The 5,000-file rehearsal exercised search, filtering, bulk selection, hidden selections, clearing, and cancellation; the final recorded scan completed in 4.9 ms and source/destination mutation counts remained zero before explicit execution.
+- Runtime audit: passed with no network, telemetry, Node filesystem, credential, destructive vault API, or actionable Community source-warning pattern.
+- Strict OpenSpec validation and git diff whitespace validation: passed.
+- Disposable-vault desktop checks and one selected create-only conversion passed as recorded below.
+
+## Large-vault review desktop acceptance
+
+Acceptance passed on 2026-09-26 in `/private/tmp/soundings-large-review-restart.xjD4pP` using the corrected development build in Obsidian desktop. The vault contained 211 synthetic transcript candidates across nested folders and mixed classifications.
+
+- The initial plan reported 202 eligible, 1 excluded, 1 empty, 1 oversize, 4 destination-exists, and 2 destination-ambiguous candidates, with all 211 shown and 0 selected.
+- Manual acceptance first exposed an outer-modal overflow at the narrow desktop window. The corrected build constrained the modal to the viewport, kept the header and footer visible, wrapped paths, and made only the candidate list scroll. The repeated check passed without obscured controls or paths.
+- Case-insensitive path search reduced `Needle` to 9 visible eligible items. **Select all eligible shown** selected only those 9 items. Two explicitly submitted nine-item synthetic batches reported `created: 9 · skipped: 202`; all source and protected collision hashes remained unchanged.
+- A fresh plan reset to 0 selected. Selecting `Review/Zoom Sample.vtt` and then searching for `Transcript 198` showed 1 visible row while retaining the hidden selected count of 1. **Clear selection** returned the total to 0 and disabled conversion.
+- With the search cleared, the destination-exists filter showed all 22 current collisions. **Refresh plan** restored all classifications, all 211 rows, and 0 selected. Keyboard entry operated the native search control, and closing the refreshed plan produced no new Markdown file or protected-hash change.
+- The first desktop pass showed that pressing Return in the search input could activate the modal's default conversion action. The corrected build consumes that key event in the search control. With `Review/Transcript 198.txt` selected and its search field focused, pressing Return left the plan open at 1 shown and 1 selected; clearing and closing left `Review/Transcript 198.md` absent and the Markdown-file count unchanged at 23.
+- A final filtered review selected only `Review/Zoom Sample.vtt`. Execution reported `created: 1 · skipped: 210` using paths and outcome metadata only; no transcript or generated-note body appeared in the result report.
+- `Review/Zoom Sample.vtt` remained `db7137ac2afbd4b907843d28d917d5ae71dc0079b30ee0b02ebeac190937ceb8`.
+- Protected `Collisions/Existing 1.txt` remained `4e4d753917cf4568b1293e2b94669eb90f961d1917219de091f91c38337868ba`, and `Collisions/Existing 1.md` remained `0476ef679f1859d64e0d81342bfd677fba191d4400f2f75ad4da43eef5d9b55b`.
+- Hidden `.private/Hidden.txt` remained `424b4aa505c258e814b8e24884eb8b9430591acc2979f043d1059d4d26560dfb`.
+- The created `Review/Zoom Sample.md` is 389 bytes with SHA-256 `ac45b8a0695ffc6d2c1f2d35a6382f16782e1f257e7423dcfceed4ac14f34f3e`; its source metadata and transcript section were verified without logging body content.
 
 ## Corrective 0.1.1 automated candidate
 

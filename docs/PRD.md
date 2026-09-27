@@ -3,7 +3,7 @@
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
 **Document status:** Soundings 0.1.2 published in the Obsidian Community directory
-**Last updated:** 2026-09-23
+**Last updated:** 2026-09-26
 
 ## 1. Product summary
 
@@ -100,7 +100,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-02 | The foundation release recognizes `.txt` and valid WebVTT `.vtt` files case-insensitively. | Must |
 | FR-03 | Default exclusions include the active vault's configured Obsidian configuration directory, hidden folders, Soundings state, and user-configured exclusion patterns. | Must |
 | FR-04 | A scan classifies every discovered candidate without mutating the vault. | Must |
-| FR-05 | The user can review and select eligible conversions before execution. | Must |
+| FR-05 | The user can review classification counts, search and filter a plan, and explicitly select individual or all visible eligible conversions before execution; every new or refreshed plan begins unselected. | Must |
 | FR-06 | The destination remains beside the source, replaces the final extension with `.md`, and deterministically normalizes basename characters rejected by Obsidian; the exact final path is shown during review and the source name is unchanged. | Must |
 | FR-07 | Conversion creates a new Markdown file only when the destination does not exist at execution time. | Must |
 | FR-08 | Soundings never overwrites, deletes, renames, moves, or edits a source transcript. | Must |
@@ -134,7 +134,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 - **Compatibility:** declare the first release desktop-only, require Obsidian desktop 1.13.7 or later, and use the Obsidian API rather than Node-only filesystem primitives in runtime code. Mobile support requires a later approved change.
 - **Correctness:** UTF-8, UTF-8 with BOM, CRLF, repeated VTT cues, cue settings, speaker tags, malformed VTT, empty files, mixed-case extensions, safe Unicode names, rejected filename punctuation, unusable basenames, and post-normalization collisions have automated coverage.
 - **Resilience:** one unreadable or malformed transcript does not abort unrelated conversions.
-- **Performance:** a 5,000-file disposable desktop vault scan remains responsive and cancelable; parsing and conversion use a documented conservative source-size limit.
+- **Performance:** a 5,000-file disposable desktop vault scan and its search, filtering, bulk-selection, clearing, and cancellation review operations remain responsive; parsing and conversion use a documented conservative source-size limit.
 - **Accessibility:** the labeled ribbon control, commands, review controls, statuses, and errors are keyboard-accessible and do not rely on color alone.
 - **Testability:** discovery, exclusion, planning, parsing, rendering, path derivation, and execution are independently testable.
 - **Distribution:** release preparation fails closed when repository metadata, versions, tags, or runtime assets are missing or inconsistent; packaged assets pass desktop acceptance before publication.
@@ -201,3 +201,5 @@ The corrective `0.1.1` implementation passed its automated and packaged desktop 
 The `clear-community-review-followups` change prepared immutable release `0.1.2` to remove those two warnings without changing conversion behavior or the desktop-only, local-only, reviewed, and create-only boundaries. The listing remained unpublished through automated checks, packaged desktop acceptance, immutable release verification, and the owner-controlled Community rescan.
 
 Release `0.1.2` subsequently passed all automated and packaged desktop gates, reproduced byte-for-byte in the completed Community review, and reported no actionable source warning or failure. The repository owner published the listing on 2026-09-24; the public page reports Review Passed and Health Excellent and offers **Add to Obsidian**.
+
+The completed `improve-large-vault-review` change adds pure review projection and selection state without changing immutable plan data or create-only execution. Its review UI exposes textual classification counts, case-insensitive source/destination search, classification filters, visible-eligible bulk selection, hidden-selection accounting, clear-all behavior, safe Return handling in search, and a fresh unselected state for every new or refreshed plan. The isolated implementation passes 113 tests across 18 suites, production build, runtime audit, strict OpenSpec validation, diff checks, and an extended 5,000-file rehearsal with zero mutations before explicit execution. Disposable-vault desktop acceptance confirmed the corrected viewport-constrained layout, large mixed-plan controls, Return-key conversion suppression, close-without-mutation behavior, and one selected create-only conversion with unchanged source, collision, and hidden-file hashes.

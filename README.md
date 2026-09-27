@@ -7,14 +7,14 @@ Soundings recursively finds `.txt` and Zoom-style `.vtt` transcripts already sto
 ## Requirements
 
 - Obsidian desktop 1.13.7 or later.
-- macOS, Windows, or Linux desktop. Soundings 0.1.1 does not support Android, iOS, or iPadOS.
+- macOS, Windows, or Linux desktop. Soundings 0.1.2 does not support Android, iOS, or iPadOS.
 - No account, payment, API key, external program, or network service is required.
 
 ## Installation
 
 ### Obsidian Community plugins
 
-After Soundings is accepted into the Obsidian Community directory:
+Soundings is available in the Obsidian Community directory:
 
 1. Open **Settings → Community plugins** in Obsidian desktop.
 2. Select **Browse** and search for **Soundings**.
@@ -33,9 +33,10 @@ Use a disposable vault with synthetic transcripts for your first rehearsal. Back
 
 1. Put a synthetic `.txt` or `.vtt` transcript anywhere in a disposable vault.
 2. Select the waves icon labeled **Scan vault for transcripts** in the left ribbon. You can also run **Soundings: Scan vault for transcripts** from the command palette.
-3. Review every source path, destination path, and status. Nothing is selected automatically.
-4. Select only the eligible transcripts you want to convert.
-5. Select **Convert selected** and review the results before closing the window.
+3. Review the classification counts, source paths, destination paths, and statuses. Nothing is selected automatically.
+4. For a large plan, search source or destination paths and filter by classification. The selected count continues to include selected eligible items hidden by the current search or filter.
+5. Select eligible transcripts individually, or use **Select all eligible shown** to select only the eligible rows currently visible. **Clear selection** clears every selection, including hidden ones.
+6. Select **Convert selected** and review the results before closing the window. Refreshing the plan starts a fresh review with nothing selected.
 
 Soundings creates each note beside its source. If the intended Markdown destination already exists, Soundings reports the collision and leaves that file untouched.
 
@@ -62,7 +63,7 @@ Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-rela
 
 ## Known limitations
 
-- Version 0.1.1 is desktop-only.
+- Version 0.1.2 is desktop-only.
 - Existing `.md` destinations are always blocked, including previous Soundings output.
 - Updating a source does not update an existing generated note.
 - Plain-text transcripts are preserved without speaker inference.

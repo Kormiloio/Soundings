@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { discoverTranscripts, type DiscoveryAdapter } from "../src/core/discovery";
 import { executePlan, type PublicationAdapter } from "../src/core/execution";
 import { buildPlan } from "../src/core/planning";
+import { clearReviewSelection, projectReviewPlan, selectAllVisibleEligible } from "../src/core/review-state";
 import { DEFAULT_SETTINGS } from "../src/core/settings";
 import type { VaultFileRef } from "../src/core/types";
 import { testDigest } from "./test-crypto";
@@ -75,6 +76,20 @@ describe("5,000-file disposable desktop rehearsal", () => {
     expect(elapsed).toBeLessThan(10_000);
 
     const plan = buildPlan(discovery.items, new Set(adapter.paths), DEFAULT_SETTINGS, new Date(0), () => "scale");
+    const pathsBeforeReview = new Set(adapter.paths);
+    const reviewStarted = performance.now();
+    const filtered = projectReviewPlan(plan, { query: "meeting-00", classification: "eligible" });
+    expect(filtered.visibleItems).toHaveLength(10);
+    const selected = selectAllVisibleEligible(new Set(), filtered.visibleItems);
+    expect(selected.size).toBe(10);
+    const hidden = projectReviewPlan(plan, { query: "meeting-000", selectedSourcePaths: selected });
+    expect(hidden.visibleItems).toHaveLength(1);
+    expect(hidden.selectedCount).toBe(10);
+    expect(clearReviewSelection().size).toBe(0);
+    expect(performance.now() - reviewStarted).toBeLessThan(1_000);
+    expect(adapter.paths).toEqual(pathsBeforeReview);
+    for (const path of transcriptPaths) expect(digest(await adapter.readBinary(path))).toBe(sourceBefore.get(path));
+
     const raceSource = transcriptPaths[1];
     const raceDestination = raceSource.replace(/\.txt$/, ".md");
     await adapter.createBinary(raceDestination, encoder.encode("external winner"));

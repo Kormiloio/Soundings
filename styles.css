@@ -1,10 +1,76 @@
 .soundings-review__summary {
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.soundings-review-modal {
+  max-width: calc(100vw - 2rem);
+  width: min(54rem, calc(100vw - 2rem));
+}
+
+.soundings-review {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 4rem);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.soundings-review__selected {
+  margin-top: 0;
+}
+
+.soundings-review__filters .setting-item-control,
+.soundings-review__selection-actions .setting-item-control,
+.soundings-review__footer .setting-item-control {
+  flex-wrap: wrap;
+}
+
+.soundings-review__filters input {
+  min-width: min(22rem, 100%);
+}
+
+.soundings-review__items {
+  flex: 1 1 24rem;
+  min-height: 8rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .soundings-review__item {
   border-top: 1px solid var(--background-modifier-border);
   padding: 0.75rem 0;
+}
+
+.soundings-review__item .setting-item-info,
+.soundings-review__item .setting-item-name,
+.soundings-review__item .setting-item-description {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.soundings-review__item .setting-item-info {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.soundings-review__item .setting-item-control {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+  .soundings-review {
+    max-height: calc(100vh - 2rem);
+  }
+
+  .soundings-review__filters .setting-item-control,
+  .soundings-review__selection-actions .setting-item-control,
+  .soundings-review__footer .setting-item-control {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
 }
 
 .soundings-review__reason,
