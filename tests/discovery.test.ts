@@ -64,16 +64,36 @@ describe("discovery", () => {
     expect(JSON.stringify(result)).not.toContain("secret body");
   });
 
+  it("classifies VTT parse results before review", async () => {
+    const files = [file("eligible.vtt"), file("malformed.vtt"), file("unsupported.vtt")];
+    const vault = adapter(files, {
+      "eligible.vtt": encoder.encode("WEBVTT\n\n01:02.000 --> 01:05.000\n<v Mario>Hello"),
+      "malformed.vtt": encoder.encode("not webvtt"),
+      "unsupported.vtt": encoder.encode("WEBVTT\n\nSTYLE\n::cue { color: red; }")
+    });
+
+    const result = await discoverTranscripts(vault, DEFAULT_SETTINGS, undefined, 50, testDigest);
+
+    expect(result.items).toMatchObject([
+      { sourcePath: "eligible.vtt", classification: "eligible", reason: "Ready for review." },
+      { sourcePath: "malformed.vtt", classification: "unreadable", reason: "VTT structure is malformed." },
+      { sourcePath: "unsupported.vtt", classification: "unsupported", reason: "VTT format is not supported." }
+    ]);
+    expect(result.items[0]?.evidence).toBeDefined();
+    expect(result.items[1]?.evidence).toBeUndefined();
+    expect(result.items[2]?.evidence).toBeUndefined();
+  });
+
   it.each([
     ["Config/private.txt", 4, "excluded"],
-    ["large.txt", 6, "oversize"],
+    ["large.txt", 600, "oversize"],
     ["empty.txt", 0, "empty"],
     ["bad.txt", 4, "unreadable"],
-    ["good.vtt", 4, "eligible"]
+    ["good.vtt", 100, "eligible"]
   ] as const)("uses the same single-file policy for %s", async (path, size, classification) => {
-    const settings = { ...DEFAULT_SETTINGS, excludedPaths: ["Config"], maxSourceBytes: 5 };
+    const settings = { ...DEFAULT_SETTINGS, excludedPaths: ["Config"], maxSourceBytes: 500 };
     const ref = file(path, size);
-    const content = classification === "unreadable" ? new Error("private") : classification === "empty" ? new Uint8Array() : encoder.encode("body");
+    const content = classification === "unreadable" ? new Error("private") : classification === "empty" ? new Uint8Array() : encoder.encode("WEBVTT\n\n00:00:01.000 --> 00:00:05.000\nbody");
     const vault = adapter([ref], { [path]: content });
     const scan = await discoverTranscripts(vault, settings, undefined, 50, testDigest);
     const single = await discoverTranscriptFile(vault, ref, settings, testDigest);

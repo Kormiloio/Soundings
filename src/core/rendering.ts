@@ -1,12 +1,13 @@
 import type { NoteMetadata, ParsedTranscript, TranscriptBlock } from "./types";
+import { DEFAULT_OUTPUT_PROFILE, type OutputProfile, type ReservedSection } from "./settings";
 
-function yamlScalar(value: string | number): string {
+export function yamlScalar(value: string | number): string {
   return typeof value === "number" ? String(value) : JSON.stringify(value);
 }
 
 const MARKDOWN_HEADING_PUNCTUATION = new Set(["\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", ".", "!", "|", "<", ">"]);
 
-function safeHeading(value: string): string {
+export function safeHeading(value: string): string {
   const singleLine = value.replace(/[\r\n]+/g, " ");
   const escaped = [...singleLine].map((character) => MARKDOWN_HEADING_PUNCTUATION.has(character) ? `\\${character}` : character).join("");
   return escaped.trim() || "Untitled";
@@ -18,23 +19,53 @@ function literalBlock(text: string): string {
   return `${fence}text\n${text}\n${fence}`;
 }
 
-function renderBlock(block: TranscriptBlock): string {
+function renderBlock(block: TranscriptBlock, profile: OutputProfile): string {
   const heading = block.speaker ? `### ${safeHeading(block.speaker)}\n\n` : "";
-  return `${heading}${literalBlock(block.text)}`;
+  const timing = profile.timestampPolicy === "retain" && block.timing
+    ? `**Time:** \`${block.timing.start} → ${block.timing.end}\`\n\n`
+    : "";
+  return `${timing}${heading}${literalBlock(block.text)}`;
 }
 
-export function renderMarkdown(transcript: ParsedTranscript, metadata: NoteMetadata): string {
+const SECTION_CONTENT: Record<ReservedSection, string> = {
+  summary: "## Summary\n\n> Not generated. Add a summary manually or with an approved enrichment workflow.",
+  decisions: "## Decisions",
+  "action-items": "## Action Items",
+  "follow-ups": "## Follow-ups"
+};
+
+function noteSchemaVersion(profile: OutputProfile): number {
+  const defaultSections = DEFAULT_OUTPUT_PROFILE.enabledSections;
+  const sectionsMatch = profile.enabledSections.length === defaultSections.length
+    && profile.enabledSections.every((section, index) => section === defaultSections[index]);
+  return profile.titlePattern === DEFAULT_OUTPUT_PROFILE.titlePattern
+    && sectionsMatch
+    && profile.staticTags.length === 0
+    && profile.timestampPolicy === DEFAULT_OUTPUT_PROFILE.timestampPolicy
+    ? 1
+    : 2;
+}
+
+export function renderMarkdown(
+  transcript: ParsedTranscript,
+  metadata: NoteMetadata,
+  profile: OutputProfile = DEFAULT_OUTPUT_PROFILE
+): string {
   const frontmatter = [
     "---",
     `type: ${yamlScalar("meeting-transcript")}`,
     `source: ${yamlScalar("transcript")}`,
     `source_file: ${yamlScalar(metadata.sourceFile)}`,
     `source_format: ${yamlScalar(metadata.sourceFormat)}`,
-    "soundings_version: 1",
+    `soundings_version: ${noteSchemaVersion(profile)}`,
     `converted_at: ${yamlScalar(metadata.convertedAt)}`,
     ...(metadata.project ? [`project: ${yamlScalar(metadata.project)}`] : []),
+    ...(profile.staticTags.length > 0 ? [`tags: ${JSON.stringify(profile.staticTags)}`] : []),
     "---"
   ].join("\n");
-  const blocks = transcript.blocks.map(renderBlock).join("\n\n");
-  return `${frontmatter}\n\n# ${safeHeading(metadata.title)}\n\n## Summary\n\n> Not generated. Add a summary manually or with an approved enrichment workflow.\n\n## Decisions\n\n## Action Items\n\n## Follow-ups\n\n## Transcript\n\n${blocks}\n`;
+  const blocks = transcript.blocks.map((block) => renderBlock(block, profile)).join("\n\n");
+  const sections = profile.enabledSections.map((section) => SECTION_CONTENT[section]);
+  const header = `\n\n# ${safeHeading(metadata.title)}\n\n`;
+  const body = [...sections, `## Transcript\n\n${blocks}`].join("\n\n");
+  return `${frontmatter}${header}${body}\n`;
 }

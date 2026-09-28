@@ -1,5 +1,19 @@
 import type { TranscriptFormat } from "./types";
 
+export const RESERVED_SECTIONS = Object.freeze(["summary", "decisions", "action-items", "follow-ups"] as const);
+export type ReservedSection = typeof RESERVED_SECTIONS[number];
+export type TitlePattern = "source-name" | "parent-folder-source-name";
+export type DestinationNamePattern = "source-name" | "source-name-note";
+export type TimestampPolicy = "omit" | "retain";
+
+export interface OutputProfile {
+  readonly titlePattern: TitlePattern;
+  readonly destinationNamePattern: DestinationNamePattern;
+  readonly enabledSections: readonly ReservedSection[];
+  readonly staticTags: readonly string[];
+  readonly timestampPolicy: TimestampPolicy;
+}
+
 export interface SoundingsSettings {
   readonly enabledFormats: readonly TranscriptFormat[];
   readonly excludedPaths: readonly string[];
@@ -8,10 +22,19 @@ export interface SoundingsSettings {
   readonly projectRoot: string;
   readonly observationEnabled: boolean;
   readonly observationRoots: readonly string[];
+  readonly outputProfile: OutputProfile;
 }
 
 export const DEFAULT_MAX_SOURCE_BYTES = 5_000_000;
 export const SOUNDINGS_STATE_PATH = ".soundings";
+
+export const DEFAULT_OUTPUT_PROFILE: OutputProfile = Object.freeze({
+  titlePattern: "source-name",
+  destinationNamePattern: "source-name",
+  enabledSections: RESERVED_SECTIONS,
+  staticTags: Object.freeze([]),
+  timestampPolicy: "omit"
+});
 
 export const DEFAULT_SETTINGS: SoundingsSettings = Object.freeze({
   enabledFormats: Object.freeze<TranscriptFormat[]>(["txt", "vtt"]),
@@ -20,12 +43,17 @@ export const DEFAULT_SETTINGS: SoundingsSettings = Object.freeze({
   projectInferenceEnabled: false,
   projectRoot: "Projects",
   observationEnabled: false,
-  observationRoots: Object.freeze([])
+  observationRoots: Object.freeze([]),
+  outputProfile: DEFAULT_OUTPUT_PROFILE
 });
 
 export interface SettingsValidation {
   readonly settings?: SoundingsSettings;
   readonly errors: readonly string[];
+}
+
+export interface SavedSettingsMigration extends SettingsValidation {
+  readonly restoredOutputProfile: boolean;
 }
 
 export interface SoundingsSettingsPolicy {
@@ -36,6 +64,80 @@ export interface SoundingsSettingsPolicy {
 export interface SettingsPolicyValidation {
   readonly policy?: SoundingsSettingsPolicy;
   readonly errors: readonly string[];
+}
+
+export interface OutputProfileValidation {
+  readonly profile?: OutputProfile;
+  readonly errors: readonly string[];
+}
+
+const TITLE_PATTERNS = new Set<TitlePattern>(["source-name", "parent-folder-source-name"]);
+const DESTINATION_NAME_PATTERNS = new Set<DestinationNamePattern>(["source-name", "source-name-note"]);
+const TIMESTAMP_POLICIES = new Set<TimestampPolicy>(["omit", "retain"]);
+const RESERVED_SECTION_SET = new Set<ReservedSection>(RESERVED_SECTIONS);
+const STATIC_TAG = /^[\p{L}\p{N}_-]+(?:\/[\p{L}\p{N}_-]+)*$/u;
+
+function isStaticTag(value: string): boolean {
+  return value.length <= 100 && STATIC_TAG.test(value) && /[\p{L}_-]/u.test(value);
+}
+
+export function validateOutputProfile(input?: Partial<OutputProfile>): OutputProfileValidation {
+  const errors: string[] = [];
+  const titlePattern = input?.titlePattern ?? DEFAULT_OUTPUT_PROFILE.titlePattern;
+  if (!TITLE_PATTERNS.has(titlePattern)) errors.push(`Unknown title pattern: ${String(titlePattern)}.`);
+
+  const destinationNamePattern = input?.destinationNamePattern ?? DEFAULT_OUTPUT_PROFILE.destinationNamePattern;
+  if (!DESTINATION_NAME_PATTERNS.has(destinationNamePattern)) {
+    errors.push(`Unknown destination-name pattern: ${String(destinationNamePattern)}.`);
+  }
+
+  const timestampPolicy = input?.timestampPolicy ?? DEFAULT_OUTPUT_PROFILE.timestampPolicy;
+  if (!TIMESTAMP_POLICIES.has(timestampPolicy)) errors.push(`Unsupported timestamp policy: ${String(timestampPolicy)}.`);
+
+  const requestedSections = input?.enabledSections ?? DEFAULT_OUTPUT_PROFILE.enabledSections;
+  const sectionSet = new Set<ReservedSection>();
+  if (Array.isArray(requestedSections)) {
+    for (const section of requestedSections) {
+      if (!RESERVED_SECTION_SET.has(section)) errors.push(`Unknown reserved section: ${String(section)}.`);
+      else sectionSet.add(section);
+    }
+  } else {
+    errors.push(`Expected an array for enabled sections, but received: ${typeof requestedSections}.`);
+  }
+  const enabledSections = RESERVED_SECTIONS.filter((section) => sectionSet.has(section));
+
+  const staticTags: string[] = [];
+  const seenTags = new Set<string>();
+  const rawTags = input?.staticTags ?? DEFAULT_OUTPUT_PROFILE.staticTags;
+  if (Array.isArray(rawTags)) {
+    for (const rawTag of rawTags) {
+      if (typeof rawTag !== "string") {
+        errors.push(`Invalid static tag type: ${typeof rawTag}. Expected string.`);
+        continue;
+      }
+      const tag = rawTag.trim();
+      if (!isStaticTag(tag)) {
+        errors.push(`Invalid static tag: ${tag || "(empty)"}. Use letters, numbers, underscores, hyphens, and single slashes; tags cannot be only numbers.`);
+      } else if (!seenTags.has(tag)) {
+        seenTags.add(tag);
+        staticTags.push(tag);
+      }
+    }
+  } else {
+    errors.push(`Expected an array for static tags, but received: ${typeof rawTags}.`);
+  }
+
+  if (errors.length > 0) return { errors };
+  return {
+    profile: Object.freeze({
+      titlePattern,
+      destinationNamePattern,
+      enabledSections: Object.freeze(enabledSections),
+      staticTags: Object.freeze(staticTags),
+      timestampPolicy
+    }),
+    errors
+  };
 }
 
 export function normalizeVaultPath(value: string): string | undefined {
@@ -118,6 +220,9 @@ export function validateSettings(
     else observationRoots.push(normalized);
   }
 
+  const outputProfileValidation = validateOutputProfile(input.outputProfile);
+  errors.push(...outputProfileValidation.errors);
+
   if (errors.length > 0) return { errors };
   return {
     settings: Object.freeze({
@@ -127,10 +232,27 @@ export function validateSettings(
       projectInferenceEnabled,
       projectRoot,
       observationEnabled,
-      observationRoots: Object.freeze([...new Set(observationRoots)])
+      observationRoots: Object.freeze([...new Set(observationRoots)]),
+      outputProfile: outputProfileValidation.profile ?? DEFAULT_OUTPUT_PROFILE
     }),
     errors
   };
+}
+
+export function migrateSavedSettings(
+  input: Partial<SoundingsSettings>,
+  mandatoryExcludedPaths: readonly string[] = DEFAULT_SETTINGS.excludedPaths
+): SavedSettingsMigration {
+  const validation = validateSettings(input, mandatoryExcludedPaths);
+  if (validation.settings) return { ...validation, restoredOutputProfile: false };
+  if (input.outputProfile === undefined) return { ...validation, restoredOutputProfile: false };
+
+  const profileValidation = validateOutputProfile(input.outputProfile);
+  if (profileValidation.profile) return { ...validation, restoredOutputProfile: false };
+  const restored = validateSettings({ ...input, outputProfile: DEFAULT_OUTPUT_PROFILE }, mandatoryExcludedPaths);
+  return restored.settings
+    ? { settings: restored.settings, errors: profileValidation.errors, restoredOutputProfile: true }
+    : { errors: validation.errors, restoredOutputProfile: false };
 }
 
 export function settingsFingerprint(settings: SoundingsSettings): string {
@@ -141,6 +263,32 @@ export function settingsFingerprint(settings: SoundingsSettings): string {
     projectInferenceEnabled: settings.projectInferenceEnabled,
     projectRoot: settings.projectRoot,
     observationEnabled: settings.observationEnabled,
-    observationRoots: [...settings.observationRoots].sort()
+    observationRoots: [...settings.observationRoots].sort(),
+    outputProfile: settings.outputProfile
   });
+}
+
+export function outputProfileFingerprint(profile: OutputProfile): string {
+  return JSON.stringify({
+    titlePattern: profile.titlePattern,
+    destinationNamePattern: profile.destinationNamePattern,
+    enabledSections: profile.enabledSections,
+    staticTags: profile.staticTags,
+    timestampPolicy: profile.timestampPolicy
+  });
+}
+
+export function outputProfileSummary(profile: OutputProfile): string {
+  const title = profile.titlePattern === "source-name" ? "Source name" : "Parent folder — Source name";
+  const destination = profile.destinationNamePattern === "source-name" ? "Source name.md" : "Source name - Note.md";
+  const sectionNames: Record<ReservedSection, string> = {
+    summary: "Summary",
+    decisions: "Decisions",
+    "action-items": "Action Items",
+    "follow-ups": "Follow-ups"
+  };
+  const sections = profile.enabledSections.map((section) => sectionNames[section]).join(", ") || "none";
+  const tags = profile.staticTags.join(", ") || "none";
+  const timestamps = profile.timestampPolicy === "omit" ? "omit" : "retain";
+  return `Title: ${title}; destination: ${destination}; sections: ${sections}; tags: ${tags}; WebVTT timestamps: ${timestamps}.`;
 }

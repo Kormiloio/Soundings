@@ -1,0 +1,66 @@
+import {
+  enrichmentDraftFingerprint,
+  enrichmentDraftHasContent,
+  type EnrichmentDraft
+} from "./enrichment-draft";
+import type { SourceNoteEvidence } from "./enrichment-evidence";
+import { destinationForEnrichment, renderCompanionMarkdown } from "./enrichment-rendering";
+
+export type EnrichmentPlanStatus = "ready" | "empty" | "destination-exists" | "destination-invalid";
+
+export interface EnrichmentPlan {
+  readonly id: string;
+  readonly sourcePath: string;
+  readonly destinationPath: string;
+  readonly sourceEvidence: SourceNoteEvidence;
+  readonly draft: EnrichmentDraft;
+  readonly draftFingerprint: string;
+  readonly renderedMarkdown: string;
+  readonly convertedAt: string;
+  readonly status: EnrichmentPlanStatus;
+  readonly reason: string;
+}
+
+export function buildEnrichmentPlan(
+  sourcePath: string,
+  evidence: SourceNoteEvidence,
+  draft: EnrichmentDraft,
+  existingPaths: ReadonlySet<string>,
+  createdAt: Date,
+  id: string
+): EnrichmentPlan {
+  const convertedAt = createdAt.toISOString();
+  const destination = destinationForEnrichment(sourcePath);
+  const destinationPath = destination.ok && destination.value ? destination.value : "";
+
+  let status: EnrichmentPlanStatus = "ready";
+  let reason = "Ready for publication.";
+
+  if (!destination.ok || !destinationPath) {
+    status = "destination-invalid";
+    reason = "A safe companion destination could not be derived.";
+  } else if (existingPaths.has(destinationPath)) {
+    status = "destination-exists";
+    reason = "Companion destination already exists.";
+  } else if (!enrichmentDraftHasContent(draft)) {
+    status = "empty";
+    reason = "Add at least one enrichment field before publication.";
+  }
+
+  const renderedMarkdown = destinationPath
+    ? renderCompanionMarkdown(sourcePath, draft, convertedAt)
+    : "";
+
+  return Object.freeze({
+    id,
+    sourcePath,
+    destinationPath,
+    sourceEvidence: evidence,
+    draft,
+    draftFingerprint: enrichmentDraftFingerprint(draft),
+    renderedMarkdown,
+    convertedAt,
+    status,
+    reason
+  });
+}

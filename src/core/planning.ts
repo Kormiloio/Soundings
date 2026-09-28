@@ -1,5 +1,12 @@
 import type { DiscoveryItem } from "./discovery";
-import { settingsFingerprint, type SoundingsSettings } from "./settings";
+import {
+  outputProfileFingerprint,
+  outputProfileSummary,
+  settingsFingerprint,
+  type DestinationNamePattern,
+  type SoundingsSettings,
+  type TitlePattern
+} from "./settings";
 import type { ConversionPlan, PlanItem, Result } from "./types";
 
 export type DestinationError = "source-has-no-extension" | "destination-basename-invalid";
@@ -45,21 +52,39 @@ export function normalizeDestinationBasename(basename: string): Result<string, "
     : { ok: false, error: "destination-basename-invalid" };
 }
 
-export function destinationFor(sourcePath: string): Result<string, DestinationError> {
+function sourceBasename(sourcePath: string): Result<string, "source-has-no-extension"> {
   const slash = sourcePath.lastIndexOf("/");
   const dot = sourcePath.lastIndexOf(".");
   if (dot <= slash) return { ok: false, error: "source-has-no-extension" };
-  const basename = sourcePath.slice(slash + 1, dot);
+  return { ok: true, value: sourcePath.slice(slash + 1, dot) };
+}
+
+export function destinationFor(
+  sourcePath: string,
+  pattern: DestinationNamePattern = "source-name"
+): Result<string, DestinationError> {
+  const slash = sourcePath.lastIndexOf("/");
+  const sourceName = sourceBasename(sourcePath);
+  if (!sourceName.ok || sourceName.value === undefined) return sourceName;
+  const safeSourceName = normalizeDestinationBasename(sourceName.value);
+  if (!safeSourceName.ok || safeSourceName.value === undefined) return safeSourceName;
+  const basename = pattern === "source-name-note" ? `${safeSourceName.value} - Note` : safeSourceName.value;
   const normalized = normalizeDestinationBasename(basename);
   if (!normalized.ok || normalized.value === undefined) return normalized;
   const folder = slash >= 0 ? sourcePath.slice(0, slash + 1) : "";
   return { ok: true, value: `${folder}${normalized.value}.md` };
 }
 
-export function titleFor(sourcePath: string): string {
+export function titleFor(sourcePath: string, pattern: TitlePattern = "source-name"): string {
   const name = sourcePath.slice(sourcePath.lastIndexOf("/") + 1);
   const dot = name.lastIndexOf(".");
-  return dot > 0 ? name.slice(0, dot) : name;
+  const sourceName = dot > 0 ? name.slice(0, dot) : name;
+  if (pattern === "source-name") return sourceName;
+  const slash = sourcePath.lastIndexOf("/");
+  if (slash < 0) return sourceName;
+  const parentPath = sourcePath.slice(0, slash);
+  const parent = parentPath.slice(parentPath.lastIndexOf("/") + 1);
+  return parent ? `${parent} — ${sourceName}` : sourceName;
 }
 
 export function inferProject(sourcePath: string, settings: SoundingsSettings): string | undefined {
@@ -78,8 +103,9 @@ export function buildPlan(
   now = new Date(),
   idFactory?: () => string
 ): ConversionPlan {
+  const profileFingerprint = outputProfileFingerprint(settings.outputProfile);
   const draft = discovery.map((item): PlanItem => {
-    const destination = destinationFor(item.sourcePath);
+    const destination = destinationFor(item.sourcePath, settings.outputProfile.destinationNamePattern);
     const destinationPath = destination.value;
     let classification = item.classification;
     let reason = item.reason;
@@ -95,8 +121,9 @@ export function buildPlan(
       destinationPath,
       classification,
       reason,
-      title: titleFor(item.sourcePath),
-      project: inferProject(item.sourcePath, settings)
+      title: titleFor(item.sourcePath, settings.outputProfile.titlePattern),
+      project: inferProject(item.sourcePath, settings),
+      ...(classification === "eligible" ? { outputProfileFingerprint: profileFingerprint } : {})
     };
   });
 
@@ -114,6 +141,9 @@ export function buildPlan(
   return Object.freeze({
     id: idFactory?.() ?? (() => { throw new Error("secure-id-unavailable"); })(),
     settingsFingerprint: settingsFingerprint(settings),
+    outputProfile: settings.outputProfile,
+    outputProfileFingerprint: profileFingerprint,
+    outputProfileSummary: outputProfileSummary(settings.outputProfile),
     createdAt: now.toISOString(),
     items: Object.freeze(items)
   });

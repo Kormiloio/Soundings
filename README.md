@@ -46,6 +46,10 @@ In **Settings → Soundings**, you can opt in to **Observe new transcripts** and
 
 Observation is off by default. It does not run while Obsidian is closed, and disabling Soundings or observation cancels pending checks and clears the in-memory inbox. A later manual vault scan recovers files missed while observation was inactive.
 
+### Manual enrichment (companion notes)
+
+With a Soundings-generated transcript note active, run **Soundings: Add manual enrichment** from the command palette. Enter summary, decisions, action items, and follow-ups locally, review the exact companion destination and rendered Markdown, then publish. Soundings creates a separate ` - Enrichment.md` note beside the transcript note and links back to it. It never edits the transcript source, the transcript note, or an existing companion file.
+
 ## What Soundings creates
 
 Each generated Markdown note contains versioned frontmatter, a title, reserved sections for future enrichment, and a deterministic transcript body. Soundings does not claim to generate summaries, decisions, or action items in this release.
@@ -68,7 +72,15 @@ See [Privacy and data handling](docs/PRIVACY.md) for the complete disclosure.
 
 ## Settings
 
-Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-relative folders, limit source size, optionally infer project metadata from a configured folder root, and opt in to observation with validated vault-relative roots. Hidden folders, Soundings state, user exclusions, and the active vault's configured Obsidian configuration folder remain excluded from scans and observation, even when that folder is not named `.obsidian`.
+Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-relative folders, limit source size, optionally infer project metadata from a configured folder root, and opt in to observation with validated vault-relative roots. You can also configure the output profile for generated notes:
+
+- **Title pattern:** Choose between the source name or the parent folder and source name.
+- **Destination pattern:** Choose between the source name or appending a "Note" suffix.
+- **Enabled sections:** Toggle the visibility of Summary, Decisions, Action Items, and Follow-ups sections.
+- **Static tags:** Add a list of validated YAML tags to every generated note.
+- **Timestamp policy:** Choose whether to omit or retain WebVTT cue timings.
+
+Hidden folders, Soundings state, user exclusions, and the active vault's configured Obsidian configuration folder remain excluded from scans and observation, even when that folder is not named `.obsidian`.
 
 ## Known limitations
 
@@ -78,7 +90,7 @@ Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-rela
 - Plain-text transcripts are preserved without speaker inference.
 - WebVTT support is intentionally strict and may reject provider-specific extensions.
 - The default maximum source size is 5 MB.
-- Automatic conversion, durable/background inbox processing, AI enrichment, audio transcription, external folders, and mobile platforms are not supported.
+- Automatic conversion, durable/background inbox processing, AI-generated enrichment, audio transcription, external folders, and mobile platforms are not supported.
 
 ## Support
 

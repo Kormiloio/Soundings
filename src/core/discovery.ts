@@ -1,5 +1,6 @@
 import type { DigestFunction } from "./hash";
 import { sha256 } from "./hash";
+import { parseTranscript } from "./parsers";
 import type { SoundingsSettings } from "./settings";
 import type { PlanClassification, SourceEvidence, TranscriptFormat, VaultFileRef } from "./types";
 
@@ -71,6 +72,16 @@ export async function discoverTranscriptFile(
     if (bytes.byteLength === 0) {
       return { sourcePath: file.path, format, classification: "empty", reason: "Source is empty." };
     }
+
+    const parsed = parseTranscript(format, bytes);
+    if (!parsed.ok || !parsed.value) {
+      const error = parsed.error;
+      if (error === "empty") return { sourcePath: file.path, format, classification: "empty", reason: "Source is empty." };
+      if (error === "malformed-vtt") return { sourcePath: file.path, format, classification: "unreadable", reason: "VTT structure is malformed." };
+      if (error === "unsupported-vtt") return { sourcePath: file.path, format, classification: "unsupported", reason: "VTT format is not supported." };
+      return { sourcePath: file.path, format, classification: "unreadable", reason: `Parsing failed: ${error}.` };
+    }
+
     if (!digest) throw new Error("secure-hash-unavailable");
     const sourceHash = await sha256(bytes, digest);
     return {

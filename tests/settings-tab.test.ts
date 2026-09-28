@@ -18,10 +18,10 @@ function controls(items: SettingDefinitionItem[]): SettingDefinition[] {
 }
 
 describe("declarative Soundings settings", () => {
-  it("indexes eight controls and retains the non-searchable safety explanation", () => {
+  it("indexes output controls and retains non-searchable explanations", () => {
     const { tab } = setup();
     const definitions = tab.getSettingDefinitions();
-    expect(controls(definitions)).toHaveLength(8);
+    expect(controls(definitions)).toHaveLength(16);
     expect(controls(definitions).map((item) => item.name)).toEqual([
       "Convert .txt transcripts",
       "Convert .vtt transcripts",
@@ -29,11 +29,20 @@ describe("declarative Soundings settings", () => {
       "Maximum transcript bytes",
       "Infer project from folder",
       "Project root",
+      "Note title",
+      "Destination name",
+      "Include Summary section",
+      "Include Decisions section",
+      "Include Action Items section",
+      "Include Follow-ups section",
+      "Static tags",
+      "WebVTT timestamps",
       "Observe new transcripts",
       "Observation roots"
     ]);
     expect(definitions[0]).toMatchObject({ name: "Soundings safety", searchable: false });
-    expect(definitions[7]).toMatchObject({ name: "Transcript observation", searchable: false });
+    expect(definitions[7]).toMatchObject({ name: "Note output", searchable: false });
+    expect(definitions[16]).toMatchObject({ name: "Transcript observation", searchable: false });
   });
 
   it("adapts individual controls through validated effective settings", async () => {
@@ -49,6 +58,18 @@ describe("declarative Soundings settings", () => {
     expect(owner.settings.observationEnabled).toBe(true);
     await tab.setControlValue("observationRoots", "Meetings\nCalls");
     expect(owner.settings.observationRoots).toEqual(["Meetings", "Calls"]);
+    await tab.setControlValue("titlePattern", "parent-folder-source-name");
+    await tab.setControlValue("destinationNamePattern", "source-name-note");
+    await tab.setControlValue("decisions", false);
+    await tab.setControlValue("staticTags", "project/alpha\nnotes");
+    await tab.setControlValue("timestampPolicy", "retain");
+    expect(owner.settings.outputProfile).toEqual({
+      titlePattern: "parent-folder-source-name",
+      destinationNamePattern: "source-name-note",
+      enabledSections: ["summary", "action-items", "follow-ups"],
+      staticTags: ["project/alpha", "notes"],
+      timestampPolicy: "retain"
+    });
   });
 
   it("returns inline validation text before an unsafe value is persisted", async () => {
@@ -57,8 +78,10 @@ describe("declarative Soundings settings", () => {
     const maximum = definitions.find((item) => item.name === "Maximum transcript bytes")!;
     const excluded = definitions.find((item) => item.name === "Excluded folders")!;
     const obsRoots = definitions.find((item) => item.name === "Observation roots")!;
+    const staticTags = definitions.find((item) => item.name === "Static tags")!;
     expect(await maximum.control?.validate?.(0 as never)).toContain("positive whole number");
     expect(await excluded.control?.validate?.("../outside" as never)).toContain("Invalid excluded path");
     expect(await obsRoots.control?.validate?.("/absolute" as never)).toContain("Invalid observation root");
+    expect(await staticTags.control?.validate?.("#unsafe" as never)).toContain("Invalid static tag");
   });
 });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ReviewModal } from "../src/obsidian/review-modal";
 import type { ConversionPlan, PlanClassification, PlanItem } from "../src/core/types";
+import { DEFAULT_OUTPUT_PROFILE } from "../src/core/settings";
 import {
   resetRuntimeControls,
   runtimeControls,
@@ -18,6 +19,9 @@ function plan(): ConversionPlan {
     id: "modal",
     createdAt: new Date(0).toISOString(),
     settingsFingerprint: "settings",
+    outputProfile: DEFAULT_OUTPUT_PROFILE,
+    outputProfileFingerprint: "profile",
+    outputProfileSummary: "Title: Source name; destination: Source name.md; sections: Summary; tags: none; WebVTT timestamps: omit.",
     items: [
       item("Meetings/Alpha.txt", "eligible", "Meetings/Alpha.md"),
       item("Meetings/Nested/Beta.vtt", "eligible", "Meetings/Nested/Beta.md"),
@@ -53,6 +57,7 @@ describe("review modal", () => {
     expect(modal.contentEl.textContent).toContain("excluded: 1");
     expect(modal.contentEl.textContent).toContain("destination-exists: 1");
     expect(modal.contentEl.textContent).toContain("0 selected");
+    expect(modal.contentEl.textContent).toContain("Title: Source name");
     expect(runtimeControls.texts[0].inputEl.attributes.get("aria-label")).toBe("Search transcript paths");
     expect(runtimeControls.dropdowns[0].selectEl.attributes.get("aria-label")).toBe("Filter by classification");
     expect(button("Convert selected").buttonEl.disabled).toBe(true);

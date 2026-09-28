@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { executePlan, RunCoordinator, type PublicationAdapter } from "../src/core/execution";
 import { sha256 } from "../src/core/hash";
 import { buildPlan } from "../src/core/planning";
-import { DEFAULT_SETTINGS } from "../src/core/settings";
+import { DEFAULT_SETTINGS, DEFAULT_OUTPUT_PROFILE } from "../src/core/settings";
 import type { DiscoveryItem } from "../src/core/discovery";
 import { testDigest } from "./test-crypto";
 
@@ -81,6 +81,19 @@ describe("safe execution", () => {
       selectedSourcePaths: new Set(["one.txt"]), settings: { ...DEFAULT_SETTINGS, maxSourceBytes: 99 }, digest: testDigest
     });
     expect(outcomes[0].status).toBe("stale");
+    expect(vault.files.has("one.md")).toBe(false);
+  });
+
+  it("refuses stale output profiles after preview", async () => {
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set("one.txt", encoder.encode("one"));
+    const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set(["one.txt"]),
+      settings: { ...DEFAULT_SETTINGS, outputProfile: { ...DEFAULT_OUTPUT_PROFILE, timestampPolicy: "retain" } },
+      digest: testDigest
+    });
+    expect(outcomes[0]).toMatchObject({ status: "stale", reason: "Settings changed after preview." });
     expect(vault.files.has("one.md")).toBe(false);
   });
 

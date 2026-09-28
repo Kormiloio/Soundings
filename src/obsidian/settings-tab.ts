@@ -1,8 +1,21 @@
 import { App, PluginSettingTab, type SettingDefinitionItem } from "obsidian";
-import { editableExcludedPaths, validateSettings, type SoundingsSettings } from "../core/settings";
+import {
+  editableExcludedPaths,
+  RESERVED_SECTIONS,
+  validateSettings,
+  type DestinationNamePattern,
+  type OutputProfile,
+  type ReservedSection,
+  type SoundingsSettings,
+  type TimestampPolicy,
+  type TitlePattern
+} from "../core/settings";
 import type { TranscriptFormat } from "../core/types";
 
-type SoundingsSettingKey = "txt" | "vtt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot" | "observationEnabled" | "observationRoots";
+type SoundingsSettingKey =
+  | "txt" | "vtt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot"
+  | "observationEnabled" | "observationRoots" | "titlePattern" | "destinationNamePattern"
+  | "summary" | "decisions" | "action-items" | "follow-ups" | "staticTags" | "timestampPolicy";
 
 export interface SettingsOwner {
   settings: SoundingsSettings;
@@ -68,6 +81,57 @@ export class SoundingsSettingTab extends PluginSettingTab {
         }
       },
       {
+        name: "Note output",
+        searchable: false,
+        render: (setting) => {
+          setting.setName("").setDesc("Choose from safe, built-in output options. Every plan previews the exact destination and structure before conversion.");
+        }
+      },
+      {
+        name: "Note title",
+        desc: "Use the source name alone or prefix it with the immediate parent folder.",
+        control: {
+          type: "dropdown",
+          key: "titlePattern",
+          options: {
+            "source-name": "Source name",
+            "parent-folder-source-name": "Parent folder — Source name"
+          }
+        }
+      },
+      {
+        name: "Destination name",
+        desc: "Create Source name.md or append the content-neutral Note suffix.",
+        control: {
+          type: "dropdown",
+          key: "destinationNamePattern",
+          options: {
+            "source-name": "Source name.md",
+            "source-name-note": "Source name - Note.md"
+          }
+        }
+      },
+      ...RESERVED_SECTIONS.map((section) => this.sectionDefinition(section)),
+      {
+        name: "Static tags",
+        desc: "One tag per line. Use letters, numbers, underscores, hyphens, and single slashes; omit the leading #.",
+        control: {
+          type: "textarea",
+          key: "staticTags",
+          rows: 3,
+          validate: (value) => this.validateControl("staticTags", value)
+        }
+      },
+      {
+        name: "WebVTT timestamps",
+        desc: "Omit cue times or retain normalized source start and end times.",
+        control: {
+          type: "dropdown",
+          key: "timestampPolicy",
+          options: { omit: "Omit", retain: "Retain" }
+        }
+      },
+      {
         name: "Transcript observation",
         searchable: false,
         render: (setting) => {
@@ -105,6 +169,14 @@ export class SoundingsSettingTab extends PluginSettingTab {
       case "projectRoot": return this.owner.settings.projectRoot;
       case "observationEnabled": return this.owner.settings.observationEnabled;
       case "observationRoots": return this.owner.settings.observationRoots.join("\n");
+      case "titlePattern": return this.owner.settings.outputProfile.titlePattern;
+      case "destinationNamePattern": return this.owner.settings.outputProfile.destinationNamePattern;
+      case "summary":
+      case "decisions":
+      case "action-items":
+      case "follow-ups": return this.owner.settings.outputProfile.enabledSections.includes(settingKey);
+      case "staticTags": return this.owner.settings.outputProfile.staticTags.join("\n");
+      case "timestampPolicy": return this.owner.settings.outputProfile.timestampPolicy;
     }
   }
 
@@ -127,6 +199,20 @@ export class SoundingsSettingTab extends PluginSettingTab {
         key: format,
         validate: (value) => this.validateControl(format, value)
       }
+    };
+  }
+
+  private sectionDefinition(section: ReservedSection): SettingDefinitionItem<SoundingsSettingKey> {
+    const names: Record<ReservedSection, string> = {
+      summary: "Include Summary section",
+      decisions: "Include Decisions section",
+      "action-items": "Include Action Items section",
+      "follow-ups": "Include Follow-ups section"
+    };
+    return {
+      name: names[section],
+      desc: "Include this reserved enrichment section in generated notes.",
+      control: { type: "toggle", key: section }
     };
   }
 
@@ -156,7 +242,30 @@ export class SoundingsSettingTab extends PluginSettingTab {
         excludedPaths: this.editableExclusions(),
         observationRoots: String(value).split("\n").map((path) => path.trim()).filter(Boolean)
       };
+      case "titlePattern": return this.withOutputProfile({ titlePattern: String(value) as TitlePattern });
+      case "destinationNamePattern": return this.withOutputProfile({ destinationNamePattern: String(value) as DestinationNamePattern });
+      case "summary":
+      case "decisions":
+      case "action-items":
+      case "follow-ups": {
+        const sections = new Set(this.owner.settings.outputProfile.enabledSections);
+        if (value === true) sections.add(key);
+        else sections.delete(key);
+        return this.withOutputProfile({ enabledSections: [...sections] });
+      }
+      case "staticTags": return this.withOutputProfile({
+        staticTags: String(value).split("\n").map((tag) => tag.trim()).filter(Boolean)
+      });
+      case "timestampPolicy": return this.withOutputProfile({ timestampPolicy: String(value) as TimestampPolicy });
     }
+  }
+
+  private withOutputProfile(profile: Partial<OutputProfile>): Partial<SoundingsSettings> {
+    return {
+      ...this.owner.settings,
+      excludedPaths: this.editableExclusions(),
+      outputProfile: { ...this.owner.settings.outputProfile, ...profile }
+    };
   }
 
   private validateControl(key: SoundingsSettingKey, value: unknown): string | undefined {

@@ -9,6 +9,8 @@
 
 Soundings converts transcript files already organized anywhere inside an Obsidian vault into structured Markdown notes stored beside their sources. The foundation release is deterministic, local-only, and create-only: it discovers `.txt` and Zoom-style `.vtt` files, shows what would happen, and creates selected `.md` notes without moving, deleting, renaming, or overwriting user content.
 
+VTT compatibility includes support for dialects that omit hours in timestamps and cues with unclosed voice tags or multiple speakers. Discovery-phase parsing ensures that the review plan accurately classifies eligible, unsupported, and unreadable files before conversion.
+
 Later releases may add optional transcript cleanup, summaries, decisions, action items, people and project links, and local or explicitly configured AI providers. Those capabilities are outside the foundation release and require separate security and privacy review.
 
 ## 2. Problem
@@ -56,7 +58,9 @@ Optionally, the user may enable transcript observation for selected vault-relati
 
 ## 6. Generated note contract
 
-A generated note should have a predictable structure without pretending that deterministic parsing produced AI knowledge:
+A generated note should have a predictable structure without pretending that deterministic parsing produced AI knowledge. Users can configure the output profile via settings to customize the title, destination, enabled sections, static tags, and timestamp policy.
+
+Example of a default generated note:
 
 ```markdown
 ---
@@ -73,7 +77,7 @@ project: ProMBA
 
 ## Summary
 
-> Not generated. Add a summary manually or with an approved enrichment workflow.
+> Not generated. Add a summary manually with an approved enrichment workflow.
 
 ## Decisions
 
@@ -205,3 +209,5 @@ Release `0.1.2` subsequently passed all automated and packaged desktop gates, re
 The completed `improve-large-vault-review` change adds pure review projection and selection state without changing immutable plan data or create-only execution. Its review UI exposes textual classification counts, case-insensitive source/destination search, classification filters, visible-eligible bulk selection, hidden-selection accounting, clear-all behavior, safe Return handling in search, and a fresh unselected state for every new or refreshed plan. The isolated implementation passes 113 tests across 18 suites, production build, runtime audit, strict OpenSpec validation, diff checks, and an extended 5,000-file rehearsal with zero mutations before explicit execution. Disposable-vault desktop acceptance confirmed the corrected viewport-constrained layout, large mixed-plan controls, Return-key conversion suppression, close-without-mutation behavior, and one selected create-only conversion with unchanged source, collision, and hidden-file hashes.
 
 The completed `add-reviewed-transcript-inbox` change adds off-by-default create-event observation, validated vault-relative roots, a shared manual/event discovery policy, bounded stability checks, serialized event work, a content-free in-memory inbox, coalesced local notice, and a command that replans current queued files into the standard zero-selection review. It introduces no automatic conversion, persisted transcript content, network access, or background processing while Obsidian is closed. All 135 automated tests, production build, runtime and dependency audits, strict OpenSpec validation, event-storm checks, disposable-vault lifecycle acceptance, dismissal, deduplication, notification, and one explicit create/read-back conversion passed with protected hashes unchanged.
+
+The in-progress `add-local-manual-enrichment` change adds a command scoped to an active Soundings transcript note, a keyboard-accessible local entry form, a full companion-note preview, and create-only publication of an adjacent ` - Enrichment.md` file with source-evidence and destination revalidation. It does not edit transcript sources or existing notes, makes no model or network request, and keeps enrichment diagnostics content-free. Disposable-vault desktop acceptance remains required before release.

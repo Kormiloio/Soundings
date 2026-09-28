@@ -1,3 +1,5 @@
+import type { OutputProfile } from "./settings";
+
 export type TranscriptFormat = "txt" | "vtt";
 
 export type PlanClassification =
@@ -43,11 +45,15 @@ export interface PlanItem {
   readonly evidence?: SourceEvidence;
   readonly title?: string;
   readonly project?: string;
+  readonly outputProfileFingerprint?: string;
 }
 
 export interface ConversionPlan {
   readonly id: string;
   readonly settingsFingerprint: string;
+  readonly outputProfile: OutputProfile;
+  readonly outputProfileFingerprint: string;
+  readonly outputProfileSummary: string;
   readonly createdAt: string;
   readonly items: readonly PlanItem[];
 }
@@ -55,6 +61,10 @@ export interface ConversionPlan {
 export interface TranscriptBlock {
   readonly text: string;
   readonly speaker?: string;
+  readonly timing?: {
+    readonly start: string;
+    readonly end: string;
+  };
 }
 
 export interface ParsedTranscript {

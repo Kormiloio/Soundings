@@ -32,6 +32,10 @@ export class ReviewModal extends Modal {
     this.query = "";
     this.classification = "all";
     contentEl.createEl("h2", { text: "Soundings conversion plan" });
+    contentEl.createEl("p", {
+      text: this.plan.outputProfileSummary,
+      cls: "soundings-review__profile"
+    });
     const summaryEl = contentEl.createEl("p", {
       cls: "soundings-review__summary",
       attr: { "aria-live": "polite" }

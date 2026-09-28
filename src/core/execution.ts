@@ -2,7 +2,7 @@ import { equalBytes, sha256, type DigestFunction } from "./hash";
 import { parseTranscript } from "./parsers";
 import { isPlanCurrent } from "./planning";
 import { renderMarkdown } from "./rendering";
-import type { SoundingsSettings } from "./settings";
+import { outputProfileFingerprint, type OutputProfile, type SoundingsSettings } from "./settings";
 import type { ConversionPlan, ExecutionOutcome, PlanItem } from "./types";
 
 export interface PublicationAdapter {
@@ -27,12 +27,17 @@ function outcome(item: PlanItem, status: ExecutionOutcome["status"], reason: str
 async function executeItem(
   item: PlanItem,
   adapter: PublicationAdapter,
-  options: ExecuteOptions
+  options: ExecuteOptions,
+  outputProfile: OutputProfile
 ): Promise<ExecutionOutcome> {
   if (item.classification !== "eligible" || !item.destinationPath || !item.evidence || !item.format || !item.title) {
     return outcome(item, "blocked", item.reason);
   }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
+
+  if (item.outputProfileFingerprint !== outputProfileFingerprint(outputProfile)) {
+    return outcome(item, "stale", "Settings changed after preview.");
+  }
 
   let source: Uint8Array;
   try {
@@ -62,7 +67,7 @@ async function executeItem(
     title: item.title,
     convertedAt: (options.now ?? (() => new Date()))().toISOString(),
     ...(item.project ? { project: item.project } : {})
-  });
+  }, outputProfile);
   const bytes = new TextEncoder().encode(rendered);
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
 
@@ -104,7 +109,7 @@ export async function executePlan(
       outcomes.push(outcome(item, "canceled", "Conversion was canceled."));
       continue;
     }
-    outcomes.push(await executeItem(item, adapter, options));
+    outcomes.push(await executeItem(item, adapter, options, plan.outputProfile));
     options.onProgress?.(outcomes.filter((entry) => entry.status !== "skipped").length, selected.length);
   }
   return Object.freeze(outcomes);

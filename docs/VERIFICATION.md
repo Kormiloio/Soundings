@@ -1,6 +1,6 @@
 # Foundation verification record
 
-**Last updated:** 2026-09-26
+**Last updated:** 2026-09-27
 
 ## Automated verification
 
@@ -10,6 +10,20 @@
 - npm production dependency audit: zero vulnerabilities reported.
 - Golden conversions: representative UTF-8 plain text and Zoom-style WebVTT passed byte-deterministic output checks.
 - Safety integration: source changes, missing sources, existing destinations, concurrent destination creation, malformed input, mismatched read-back, cancellation, and plugin ownership passed.
+
+## Configurable output and WebVTT automated candidate
+
+The `add-configurable-note-output` and `improve-vtt-compatibility-and-discovery` automated gate passed on 2026-09-27:
+
+- Production build and TypeScript checks passed.
+- All 205 unit, integration, golden, UI-contract, release-readiness, source-contract, adapter, enrichment, and scale tests passed across 26 test files.
+- WebVTT coverage accepts timestamps with or without hours, unclosed voice tags, multiple voice lines per cue, and voice-tag classes while retaining deterministic cue text and timing data.
+- Discovery coverage proves parsable candidates become eligible with source evidence, malformed WebVTT becomes unreadable, and recognized WebVTT with unsupported structures becomes unsupported before the review plan opens.
+- Configurable-output coverage verifies title and destination patterns, optional reserved sections, static tags, timestamp retention, settings migration, previewed profile fingerprints, and execution-time profile revalidation.
+- The 5,000-file rehearsal recorded a 4.3 ms scan and zero source mutations.
+- Runtime audit passed with no network, telemetry, Node filesystem, credential, destructive vault API, or actionable Community source-warning pattern; the production dependency audit reported zero vulnerabilities.
+- Both OpenSpec changes pass strict validation.
+- Packaged desktop acceptance remains pending. This working tree also contains the in-progress manual-enrichment command, whose remaining desktop acceptance tasks must pass or be separated before a `0.1.3` release candidate is staged.
 
 ## Large-vault review automated candidate
 

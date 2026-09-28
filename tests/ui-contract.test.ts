@@ -26,7 +26,7 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(settings).toContain("getControlValue(key: string)");
     expect(settings).toContain("setControlValue(key: string, value: unknown)");
     expect(settings).not.toContain("display(): void");
-    expect(settings.match(/type: "(?:toggle|textarea|number|text)"/g)).toHaveLength(7);
+    expect(settings.match(/type: "(?:toggle|textarea|number|text|dropdown)"/g)).toHaveLength(12);
     expect(settings).toContain('this.formatDefinition("txt")');
     expect(settings).toContain('this.formatDefinition("vtt")');
     expect(settings).toContain("validate: (value)");
@@ -70,20 +70,34 @@ describe("Obsidian UI and lifecycle contracts", () => {
     const main = await source("src/main.ts");
     expect(main).toContain("createSettingsPolicy(this.app.vault.configDir)");
     expect(main).toContain("if (!this.settingsPolicy)");
-    expect(main.indexOf("if (!this.settingsPolicy)")).toBeLessThan(main.indexOf("const adapter = new ObsidianVaultAdapter"));
+    const scanBlock = main.slice(main.indexOf("private async scanAndReview"), main.indexOf("private async convertPlan"));
+    expect(scanBlock.indexOf("if (!this.settingsPolicy)")).toBeLessThan(scanBlock.indexOf("const adapter = new ObsidianVaultAdapter"));
     expect(main).toContain("activeWindow.crypto.randomUUID()");
     expect(main).toContain("activeWindow.crypto?.subtle");
     expect(main.match(/this\.addRibbonIcon\(/g)).toHaveLength(1);
     expect(main).toContain('this.addRibbonIcon("waves", "Scan vault for transcripts"');
-    expect(main.match(/this\.addCommand\(/g)).toHaveLength(2);
+    expect(main.match(/this\.addCommand\(/g)).toHaveLength(3);
     expect(main).toContain('id: "scan-vault-for-transcripts"');
     expect(main).toContain('id: "review-transcript-inbox"');
+    expect(main).toContain('id: "add-manual-enrichment"');
+    expect(main).toContain("startManualEnrichment");
     expect(main.match(/void this\.scanAndReview\(\)/g)).toHaveLength(2);
     expect(main).toContain("if (this.isBusy())");
     expect(main).toContain('new Notice("Soundings is already scanning or converting.")');
     expect(main).toContain("onunload(): void");
     expect(main).toContain("this.runs.cancel()");
     expect(main).not.toContain("ribbonIcon.remove()");
+  });
+
+  it("keeps manual enrichment local, reviewed, and non-mutating before confirmation", async () => {
+    const enrichment = await source("src/obsidian/enrichment-modal.ts");
+    expect(enrichment).toContain('"Continue to review"');
+    expect(enrichment).toContain('"Publish companion note"');
+    expect(enrichment).toContain('"Back to edit"');
+    expect(enrichment).toContain('"Enrichment summary"');
+    expect(enrichment).toContain("soundings-enrichment__preview");
+    expect(enrichment).not.toMatch(/vault\.(?:create|modify|delete|rename)/);
+    expect(enrichment.match(/"aria-live": "polite"/g)?.length).toBeGreaterThanOrEqual(1);
   });
 
   it("keeps opt-in observation lifecycle-bound and separate from conversion", async () => {

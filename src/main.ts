@@ -1,6 +1,10 @@
 import { Notice, Plugin, TFile, type EventRef } from "obsidian";
 import { discoverTranscripts } from "./core/discovery";
+import { executeEnrichmentPlan } from "./core/enrichment-execution";
+import { identifySourceNote } from "./core/enrichment-evidence";
+import type { EnrichmentPlan } from "./core/enrichment-planning";
 import { executePlan, RunCoordinator } from "./core/execution";
+import { sha256 } from "./core/hash";
 import type { DigestFunction } from "./core/hash";
 import { ObservationProcessor, planTranscriptInbox } from "./core/observation";
 import { buildPlan } from "./core/planning";
@@ -8,10 +12,12 @@ import {
   createSettingsPolicy,
   DEFAULT_SETTINGS,
   editableExcludedPaths,
+  migrateSavedSettings,
   validateSettings,
   type SoundingsSettings,
   type SoundingsSettingsPolicy
 } from "./core/settings";
+import { EnrichmentModal } from "./obsidian/enrichment-modal";
 import { ObsidianVaultAdapter } from "./obsidian/vault-adapter";
 import { ProgressModal, ResultsModal, ReviewModal } from "./obsidian/review-modal";
 import { SoundingsSettingTab } from "./obsidian/settings-tab";
@@ -56,6 +62,17 @@ export default class SoundingsPlugin extends Plugin {
       id: "review-transcript-inbox",
       name: "Review transcript inbox",
       callback: () => { void this.reviewInbox(); }
+    });
+    this.addCommand({
+      id: "add-manual-enrichment",
+      name: "Add manual enrichment",
+      checkCallback: (checking) => {
+        const file = this.app.workspace.getActiveFile();
+        if (!file || file.extension !== "md") return false;
+        if (checking) return true;
+        void this.startManualEnrichment(file.path);
+        return true;
+      }
     });
     this.syncObservation();
   }
@@ -118,6 +135,67 @@ export default class SoundingsPlugin extends Plugin {
     return this.runs.isActive || (this.observer?.pendingCount ?? 0) > 0;
   }
 
+  private async startManualEnrichment(sourcePath: string): Promise<void> {
+    if (this.isBusy()) {
+      new Notice("Soundings is already scanning or converting.");
+      return;
+    }
+    const adapter = this.vaultAdapter;
+    if (!adapter) {
+      new Notice("Soundings cannot add enrichment until the vault is ready.");
+      return;
+    }
+    let bytes: Uint8Array;
+    try {
+      bytes = await adapter.readBinary(sourcePath);
+    } catch {
+      new Notice("Soundings could not read the active note. No files were changed.");
+      return;
+    }
+    const identified = await identifySourceNote(
+      sourcePath,
+      bytes,
+      this.settings.maxSourceBytes,
+      (data) => sha256(data, this.digest)
+    );
+    if (!identified.ok || !identified.value) {
+      new Notice("Manual enrichment requires an active Soundings transcript note.");
+      return;
+    }
+    const existing = new Set(adapter.listFiles().map((file) => file.path));
+    new EnrichmentModal(this.app, sourcePath, {
+      sourceEvidence: identified.value,
+      existingPaths: existing,
+      planId: () => activeWindow.crypto.randomUUID(),
+      publish: (plan) => this.publishEnrichment(plan)
+    }).open();
+  }
+
+  private async publishEnrichment(plan: EnrichmentPlan): Promise<void> {
+    if (this.isBusy()) {
+      new Notice("Soundings is already scanning or converting.");
+      return;
+    }
+    const signal = this.runs.begin();
+    const adapter = new ObsidianVaultAdapter(this.app.vault);
+    try {
+      const outcome = await executeEnrichmentPlan(plan, adapter, {
+        signal,
+        digest: this.digest,
+        maxSourceBytes: this.settings.maxSourceBytes
+      });
+      if (outcome.status === "created") {
+        new Notice(`Soundings created ${outcome.destinationPath}.`);
+      } else {
+        new Notice(`Soundings did not publish enrichment: ${outcome.reason}`);
+      }
+    } catch {
+      new Notice("Soundings stopped after an unexpected error. No companion note was verified.");
+    } finally {
+      this.runs.finish(signal);
+    }
+  }
+
   private async reviewInbox(): Promise<void> {
     const adapter = this.vaultAdapter;
     const observer = this.observer;
@@ -161,7 +239,7 @@ export default class SoundingsPlugin extends Plugin {
     const storedExclusions = stored?.excludedPaths
       ? editableExcludedPaths({ excludedPaths: stored.excludedPaths }, policy.mandatoryExcludedPaths)
       : [];
-    const validation = validateSettings({ ...(stored ?? {}), excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
+    const validation = migrateSavedSettings({ ...(stored ?? {}), excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
     const safeDefaults = validateSettings({}, policy.mandatoryExcludedPaths).settings;
     this.settings = validation.settings ?? safeDefaults ?? DEFAULT_SETTINGS;
     if (validation.errors.length > 0) new Notice("Soundings ignored invalid saved settings and restored safe defaults.");

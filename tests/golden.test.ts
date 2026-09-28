@@ -3,20 +3,26 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseTranscript } from "../src/core/parsers";
 import { renderMarkdown } from "../src/core/rendering";
+import { DEFAULT_OUTPUT_PROFILE, type OutputProfile } from "../src/core/settings";
 import type { TranscriptFormat } from "../src/core/types";
 
 const root = join(process.cwd(), "tests/fixtures");
 const convertedAt = "2026-09-22T14:30:00.000Z";
 
-async function convert(sourceFile: string, format: TranscriptFormat): Promise<string> {
+async function convert(
+  sourceFile: string,
+  format: TranscriptFormat,
+  profile: OutputProfile = DEFAULT_OUTPUT_PROFILE,
+  title = sourceFile.slice(0, sourceFile.lastIndexOf("."))
+): Promise<string> {
   const parsed = parseTranscript(format, await readFile(join(root, sourceFile)));
   if (!parsed.ok || !parsed.value) throw new Error(parsed.error);
   return renderMarkdown(parsed.value, {
     sourceFile,
     sourceFormat: format,
-    title: sourceFile.slice(0, sourceFile.lastIndexOf(".")),
+    title,
     convertedAt
-  });
+  }, profile);
 }
 
 describe("golden conversions", () => {
@@ -27,5 +33,18 @@ describe("golden conversions", () => {
     const first = await convert(source, format);
     expect(first).toBe(await readFile(join(root, expected), "utf8"));
     expect(await convert(source, format)).toBe(first);
+  });
+
+  it("renders the representative customized profile byte-for-byte", async () => {
+    const profile: OutputProfile = {
+      titlePattern: "parent-folder-source-name",
+      destinationNamePattern: "source-name-note",
+      enabledSections: ["summary", "action-items"],
+      staticTags: ["project/alpha", "conversation"],
+      timestampPolicy: "retain"
+    };
+    const first = await convert("zoom-voice.vtt", "vtt", profile, "Calls — zoom-voice");
+    expect(first).toBe(await readFile(join(root, "expected-custom-profile.md"), "utf8"));
+    expect(await convert("zoom-voice.vtt", "vtt", profile, "Calls — zoom-voice")).toBe(first);
   });
 });

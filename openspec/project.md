@@ -24,12 +24,12 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 - **Markdown renderer:** produces versioned frontmatter and deterministic note sections.
 - **Conversion executor:** revalidates evidence and publishes only to an absent destination.
 - **Diagnostics:** content-free outcome records and user-facing summaries.
-- **Enrichment boundary:** future manual, local, or provider-backed enrichment; absent from the foundation runtime.
+- **Enrichment boundary:** manual local companion-note enrichment (in progress); future provider-backed enrichment remains separately approved and outside the converter core.
 
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-2. Complete and verify the opt-in reviewed transcript inbox without weakening the reviewed create-only boundary.
+2. Complete and verify local manual enrichment as a reviewed, create-only companion-note workflow.
 3. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
 ## Foundation implementation checkpoint
@@ -54,9 +54,9 @@ The completed `0.1.1` scan identified two follow-up source warnings: an unnecess
 
 Immutable release `0.1.2` passed 101 automated tests across 16 suites, runtime and dependency audits, strict validation, exact three-asset staging, saved-settings upgrade acceptance, custom-config exclusion, non-mutating review, explicit create/read-back, remote hash verification, and a completed Community review with no actionable finding. On 2026-09-24 the repository owner published Soundings in the Obsidian Community directory; the public listing reports Review Passed and Health Excellent.
 
-The completed `improve-large-vault-review` change keeps the immutable plan separate from pure review projection and selection state. It adds textual classification counts, case-insensitive source/destination search, classification filters, visible-eligible bulk selection, hidden-selection accounting, clear-all behavior, safe Return handling in search, fresh unselected state on every new or refreshed plan, and viewport-constrained desktop layout. The isolated implementation passes 113 tests across 18 suites, production build, runtime audit, strict OpenSpec validation, diff checks, and an extended 5,000-file rehearsal with zero mutations before explicit execution. Disposable-vault desktop acceptance confirmed the large mixed-plan controls, corrected narrow-window layout, Return-key conversion suppression, close-without-mutation behavior, and one selected create-only conversion with protected hashes unchanged.
-
 The completed `add-reviewed-transcript-inbox` change keeps observation off by default and uses the same pure single-path discovery policy as manual scans. Stable new-file evidence is serialized into a content-free in-memory inbox; a coalesced notice and command hand current files to the existing zero-selection review. Observation is lifecycle-bound, local-only, and cannot call conversion. All 135 automated tests and every production, security, strict-spec, event-storm, disposable-desktop lifecycle, dismissal, deduplication, notification, and explicit create/read-back check passed with protected hashes unchanged.
+
+The completed `improve-vtt-compatibility-and-discovery` change expands WebVTT parser compatibility to support optional hours in timestamps, unclosed voice tags, and multiple voice lines per cue. It moves parsing into the discovery phase so that the review plan accurately classifies items as `eligible`, `unsupported`, or `unreadable` before any conversion is attempted. The production build, runtime security audit, strict OpenSpec validation, and 205 automated tests pass. A repeated 5,000-file rehearsal with zero mutations confirmed stability.
 
 ## Definition of done
 

@@ -6,6 +6,7 @@ import {
   selectAllVisibleEligible
 } from "../src/core/review-state";
 import type { ConversionPlan, PlanClassification, PlanItem } from "../src/core/types";
+import { DEFAULT_OUTPUT_PROFILE } from "../src/core/settings";
 
 function item(sourcePath: string, classification: PlanClassification, destinationPath?: string): PlanItem {
   return Object.freeze({ sourcePath, destinationPath, classification, reason: classification });
@@ -15,6 +16,9 @@ function plan(items: readonly PlanItem[]): ConversionPlan {
   return Object.freeze({
     id: "review",
     settingsFingerprint: "settings",
+    outputProfile: DEFAULT_OUTPUT_PROFILE,
+    outputProfileFingerprint: "profile",
+    outputProfileSummary: "profile summary",
     createdAt: new Date(0).toISOString(),
     items: Object.freeze(items)
   });
