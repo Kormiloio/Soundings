@@ -1,7 +1,7 @@
 import { Result } from "./types";
 import { normalizeDestinationBasename } from "./planning";
 import { EnrichmentDraft } from "./enrichment-draft";
-import { safeHeading, yamlScalar } from "./rendering";
+import { yamlScalar } from "./rendering";
 
 export function destinationForEnrichment(sourcePath: string): Result<string, "destination-basename-invalid"> {
   const slash = sourcePath.lastIndexOf("/");
@@ -18,6 +18,21 @@ export function destinationForEnrichment(sourcePath: string): Result<string, "de
   return { ok: true, value: `${folder}${normalized.value}.md` };
 }
 
+function safeProse(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return "> Not provided.";
+  return trimmed
+    .split("\n")
+    .map((line) => (line.trimStart().startsWith("#") ? `\\${line.trimStart()}` : line))
+    .join("\n");
+}
+
+function safeListItem(item: string): string {
+  const singleLine = item.replace(/[\r\n]+/g, " ").trim();
+  if (singleLine.length === 0) return "";
+  return /^[-*#+>]/.test(singleLine) ? `\\${singleLine}` : singleLine;
+}
+
 export function renderCompanionMarkdown(
   sourcePath: string,
   draft: EnrichmentDraft,
@@ -31,11 +46,13 @@ export function renderCompanionMarkdown(
     "---"
   ].join("\n");
 
-  const renderList = (items: readonly string[]) => 
-    items.length > 0 ? items.map(item => `- ${safeHeading(item)}`).join("\n") : "> None recorded.";
+  const renderList = (items: readonly string[]) => {
+    const valid = items.map(safeListItem).filter((item) => item.length > 0);
+    return valid.length > 0 ? valid.map((item) => `- ${item}`).join("\n") : "> None recorded.";
+  };
 
   const sections = [
-    `## Summary\n\n${draft.summary ? safeHeading(draft.summary) : "> Not provided."}`,
+    `## Summary\n\n${safeProse(draft.summary)}`,
     `## Decisions\n\n${renderList(draft.decisions)}`,
     `## Action Items\n\n${renderList(draft.actionItems)}`,
     `## Follow-ups\n\n${renderList(draft.followUps)}`

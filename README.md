@@ -7,7 +7,7 @@ Soundings recursively finds `.txt` and Zoom-style `.vtt` transcripts already sto
 ## Requirements
 
 - Obsidian desktop 1.13.7 or later.
-- macOS, Windows, or Linux desktop. Soundings 0.1.2 does not support Android, iOS, or iPadOS.
+- macOS, Windows, or Linux desktop. Soundings 0.2.0 does not support Android, iOS, or iPadOS.
 - No account, payment, API key, external program, or network service is required.
 
 ## Installation
@@ -84,7 +84,7 @@ Hidden folders, Soundings state, user exclusions, and the active vault's configu
 
 ## Known limitations
 
-- Version 0.1.2 is desktop-only.
+- Version 0.2.0 is desktop-only.
 - Existing `.md` destinations are always blocked, including previous Soundings output.
 - Updating a source does not update an existing generated note.
 - Plain-text transcripts are preserved without speaker inference.

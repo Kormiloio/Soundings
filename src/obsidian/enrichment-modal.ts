@@ -60,37 +60,20 @@ export class EnrichmentModal extends Modal {
       attr: { "aria-live": "polite" }
     });
 
-    new Setting(contentEl)
-      .setName("Summary")
-      .setDesc("Optional short summary.")
-      .addTextArea((area) => {
-        area.inputEl.setAttr("aria-label", "Enrichment summary");
-        area.setValue(this.summary).onChange((value) => { this.summary = value; });
-      });
+    const addField = (name: string, desc: string, label: string, value: string, onChange: (v: string) => void) => {
+      new Setting(contentEl)
+        .setName(name)
+        .setDesc(desc)
+        .addTextArea((area) => {
+          area.inputEl.setAttr("aria-label", label);
+          area.setValue(value).onChange(onChange);
+        });
+    };
 
-    new Setting(contentEl)
-      .setName("Decisions")
-      .setDesc("One decision per line.")
-      .addTextArea((area) => {
-        area.inputEl.setAttr("aria-label", "Enrichment decisions");
-        area.setValue(this.decisions).onChange((value) => { this.decisions = value; });
-      });
-
-    new Setting(contentEl)
-      .setName("Action items")
-      .setDesc("One action item per line.")
-      .addTextArea((area) => {
-        area.inputEl.setAttr("aria-label", "Enrichment action items");
-        area.setValue(this.actionItems).onChange((value) => { this.actionItems = value; });
-      });
-
-    new Setting(contentEl)
-      .setName("Follow-ups")
-      .setDesc("One follow-up per line.")
-      .addTextArea((area) => {
-        area.inputEl.setAttr("aria-label", "Enrichment follow-ups");
-        area.setValue(this.followUps).onChange((value) => { this.followUps = value; });
-      });
+    addField("Summary", "Optional short summary.", "Enrichment summary", this.summary, (v) => { this.summary = v; });
+    addField("Decisions", "One decision per line.", "Enrichment decisions", this.decisions, (v) => { this.decisions = v; });
+    addField("Action items", "One action item per line.", "Enrichment action items", this.actionItems, (v) => { this.actionItems = v; });
+    addField("Follow-ups", "One follow-up per line.", "Enrichment follow-ups", this.followUps, (v) => { this.followUps = v; });
 
     new Setting(contentEl)
       .setClass("soundings-enrichment__footer")
@@ -146,9 +129,10 @@ export class EnrichmentModal extends Modal {
       attr: { "aria-live": "polite" }
     });
 
-    new Setting(contentEl).setName("Source note").setDesc(this.sourcePath);
-    new Setting(contentEl).setName("Companion destination").setDesc(plan.destinationPath || "Unavailable");
-    new Setting(contentEl).setName("Source link in note").setDesc(`[[${this.basename()}|Back to Transcript Note]]`);
+    const metadataEl = contentEl.createDiv({ cls: "soundings-enrichment__metadata" });
+    new Setting(metadataEl).setName("Source note").setDesc(this.sourcePath);
+    new Setting(metadataEl).setName("Companion destination").setDesc(plan.destinationPath || "Unavailable");
+    new Setting(metadataEl).setName("Source link in note").setDesc(`[[${this.basename()}|Back to Transcript Note]]`);
 
     contentEl.createEl("h3", { text: "Rendered companion note" });
     const preview = contentEl.createEl("pre", { cls: "soundings-enrichment__preview" });

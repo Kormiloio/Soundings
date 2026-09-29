@@ -47,4 +47,18 @@ describe("enrichment rendering", () => {
     expect(markdown).toContain("> Not provided.");
     expect(markdown).toContain("> None recorded.");
   });
+
+  it("preserves natural punctuation and multiline paragraphs in summary and list items", () => {
+    const draft: EnrichmentDraft = {
+      summary: "First paragraph.\n\nSecond paragraph (with details!).\n## Injected Heading",
+      decisions: ["Approve v0.2.0 release (unanimous)."],
+      actionItems: ["- Check documentation! (urgent)"],
+      followUps: ["Schedule demo on Friday?"]
+    };
+    const markdown = renderCompanionMarkdown("folder/note.md", draft, "2026-09-27T10:00:00Z");
+    expect(markdown).toContain("## Summary\n\nFirst paragraph.\n\nSecond paragraph (with details!).\n\\## Injected Heading");
+    expect(markdown).toContain("- Approve v0.2.0 release (unanimous).");
+    expect(markdown).toContain("- \\- Check documentation! (urgent)");
+    expect(markdown).toContain("- Schedule demo on Friday?");
+  });
 });

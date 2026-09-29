@@ -2,8 +2,8 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.1.2 published in the Obsidian Community directory
-**Last updated:** 2026-09-26
+**Document status:** Soundings 0.2.0 release candidate
+**Last updated:** 2026-09-29
 
 ## 1. Product summary
 
