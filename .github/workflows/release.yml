@@ -1,0 +1,80 @@
+name: Release & Attest Provenance
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    name: Build, Attest & Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Parse and validate semantic tag
+        id: tag_info
+        run: |
+          RAW_TAG="${GITHUB_REF_NAME}"
+          CLEAN_VERSION="${RAW_TAG#v}"
+          if ! [[ "$CLEAN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$RAW_TAG' does not conform to semantic versioning (x.y.z)."
+            exit 1
+          fi
+          echo "tag=$RAW_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$CLEAN_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Run verification gates
+        run: |
+          npm run check
+          npm run audit:runtime
+          npm audit --production
+          npm run spec:validate
+          git diff --check
+
+      - name: Stage release assets
+        run: |
+          npm run release:prepare -- --tag "${{ steps.tag_info.outputs.version }}"
+
+      - name: Generate build artifact attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            release/${{ steps.tag_info.outputs.version }}/main.js
+            release/${{ steps.tag_info.outputs.version }}/manifest.json
+            release/${{ steps.tag_info.outputs.version }}/styles.css
+
+      - name: Publish immutable GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.tag_info.outputs.version }}"
+          TAG="${{ steps.tag_info.outputs.tag }}"
+          
+          NOTES_FLAG="--generate-notes"
+          if [ -f CHANGELOG.md ]; then
+            NOTES_FLAG="--notes-file CHANGELOG.md"
+          fi
+          
+          gh release create "$TAG" \
+            "release/$VERSION/main.js" \
+            "release/$VERSION/manifest.json" \
+            "release/$VERSION/styles.css" \
+            --title "Soundings $VERSION" \
+            $NOTES_FLAG

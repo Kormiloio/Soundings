@@ -32,7 +32,7 @@ describe("enrichment security audit", () => {
   it("strictly limits adapter calls to the allowed set", async () => {
     const adapter = new ForbiddenAdapter();
     const sourcePath = "transcript.md";
-    const bytes = new TextEncoder().encode("---\ntype: \"meeting-transcript\"\nsoundings_version: 1\n---\n# Title");
+    const bytes = new TextEncoder().encode("---\ntype: \"meeting-transcript\"\nsource: \"transcript\"\nsoundings_version: 1\n---\n# Title");
     const evidence = await identifySourceNote(sourcePath, bytes, 5_000_000, (data) => sha256(data, testDigest));
     
     if (!evidence.ok || !evidence.value) throw new Error("Setup failed");

@@ -5,7 +5,7 @@ Soundings `0.2.0` introduces configurable note output profiles, enhanced WebVTT 
 ### ✨ New Features
 
 #### 🎛️ Configurable Output Profiles
-You now have full control over how your companion notes are created. Instead of a fixed format, customize output in **Settings → Soundings**:
+You now have constrained control over how generated transcript notes are created. Instead of a fixed format, customize output in **Settings → Soundings**:
 - **Flexible Naming**: Choose how your notes are titled and named. Use the source name alone or prefix it with the immediate parent folder to keep your vault organized.
 - **Selective Content**: Toggle specific enrichment sections on or off (**Summary**, **Decisions**, **Action Items**, **Follow-ups**).
 - **Custom Tags**: Add static tags to every companion note you generate, making them easy to find via Obsidian search.
@@ -16,7 +16,7 @@ Add structured review notes beside any generated transcript without external AI 
 - Run **Soundings: Add manual enrichment** on any active Soundings transcript note.
 - Record local summaries, decisions, action items, and follow-ups.
 - Preview the exact destination (` - Enrichment.md`) and rendered Markdown before writing.
-- 100% local, create-only, and non-mutating.
+- Runs locally, creates only an absent companion, and never edits an existing file.
 
 ### 🛠️ Improved WebVTT Support & Discovery
 We've overhauled the WebVTT parser to be more robust and an even better "first-pass" filter:
@@ -26,4 +26,4 @@ We've overhauled the WebVTT parser to be more robust and an even better "first-p
 ### 🔒 Safety & Performance
 - Zero changes to original transcripts (preserved byte-for-byte).
 - Zero overwriting of existing notes.
-- Sub-millisecond scan overhead across large vaults.
+- The recorded 5,000-file rehearsal completed with zero source mutations; timings are documented in `docs/VERIFICATION.md`.

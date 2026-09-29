@@ -1,6 +1,32 @@
 # Foundation verification record
 
-**Last updated:** 2026-09-27
+**Last updated:** 2026-09-29
+
+## Soundings 0.2.0 manual-enrichment automated candidate
+
+The hardened manual-enrichment automated gate passed on 2026-09-29:
+
+- Production build and TypeScript checks passed with 221 automated tests across 28 test files.
+- Exact source-note identification accepts generated schema versions 1 and 2 and rejects missing source linkage, lookalike types, duplicate metadata, malformed versions, and unsupported schema versions.
+- Companion backlinks retain the complete vault-relative source path so duplicate note names in different folders remain unambiguous.
+- A maximum-valid 50,000-byte enrichment draft produced a complete review plan without creating a companion or changing the source note.
+- Stale source evidence, planning collisions, destination races, cancellation, create failures, and read-back mismatches remain fail-closed and content-free.
+- The 5,000-file rehearsal recorded a 4.6 ms scan and zero source mutations.
+- Runtime audit, production dependency audit, strict OpenSpec validation, and `git diff --check` passed; the dependency audit reported zero vulnerabilities.
+- Packaged desktop acceptance and one explicitly confirmed companion publication passed as recorded below.
+
+Packaged desktop acceptance passed on 2026-09-29 in `/private/tmp/soundings-0.2.0-verification-1790643688` using Obsidian desktop 1.13.7 and only the staged `0.2.0` runtime assets:
+
+- `main.js`: `06da240b437383fc98be6db65c4fc1d9b4ca613980532dc2737be1849d282653`
+- `manifest.json`: `ab8f5c3b09034386f4db36318e33acd172b9bb7d1a0e68531857e0ecde2d985a`
+- `styles.css`: `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`
+- A lookalike note with an unsupported schema was rejected with no form or file creation. Empty input was blocked with an actionable local validation message.
+- The supported Alpha fixture showed the exact `Projects/Alpha/Meeting - Enrichment.md` destination, full `[[Projects/Alpha/Meeting|Back to Transcript Note]]` link, metadata, and rendered sections. Returning to edit preserved form state; canceling created no companion. Its source remained `55228373be3f2b7abca2bb5615df7a127b07400dd5b9e39cb7747c50b680b793`.
+- A pre-existing companion blocked publication and remained `a1799130665a73941bcd3abb701c729ac4cad5611f77d578a8fa932c3d0af6cb`.
+- An intentional source edit after preview produced a stale-evidence result and no companion. A destination created after preview produced a collision result; the external winner remained `bde352aeb58c5cef363ed2bc2c742bf7a7bdb2b4808c7ac4a5a8c902a9eb590f`.
+- Explicit confirmation created exactly `Acceptance/Publish - Enrichment.md`. Read-back matched the reviewed metadata and sections, and Obsidian resolved its full-path backlink to `Acceptance/Publish.md`.
+- `Acceptance/Publish.md` remained `f9d358cf3a1853fe3eb54dda37b74dd94499d0eccc06b93bcfeb564005fa5764`; the created companion is `c75d3125eb65e017e8f4abfc7fd2eb08c016242b044f881f4667d490d5b42a96`.
+- Same-named Alpha and Beta source notes, the unsupported note, collision source, race source, and every pre-existing destination retained their recorded hashes. Captured notices contained paths or outcome reasons only; debugger capture contained command metadata and no transcript, note, or enrichment bodies, and Obsidian reported no captured errors.
 
 ## Automated verification
 

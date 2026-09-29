@@ -33,7 +33,15 @@ describe("enrichment rendering", () => {
     expect(markdown).toContain("- D1\n- D2");
     expect(markdown).toContain("- A1");
     expect(markdown).toContain("> None recorded.");
-    expect(markdown).toContain("[[note|Back to Transcript Note]]");
+    expect(markdown).toContain("[[folder/note|Back to Transcript Note]]");
+  });
+
+  it("uses the full vault path to disambiguate duplicate note names", () => {
+    const draft: EnrichmentDraft = { summary: "Reviewed", decisions: [], actionItems: [], followUps: [] };
+    const alpha = renderCompanionMarkdown("Projects/Alpha/Meeting.md", draft, "2026-09-27T10:00:00Z");
+    const beta = renderCompanionMarkdown("Projects/Beta/Meeting.md", draft, "2026-09-27T10:00:00Z");
+    expect(alpha).toContain("[[Projects/Alpha/Meeting|Back to Transcript Note]]");
+    expect(beta).toContain("[[Projects/Beta/Meeting|Back to Transcript Note]]");
   });
 
   it("renders a companion note with empty draft defaults", () => {

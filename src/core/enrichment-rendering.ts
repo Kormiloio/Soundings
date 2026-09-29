@@ -33,6 +33,12 @@ function safeListItem(item: string): string {
   return /^[-*#+>]/.test(singleLine) ? `\\${singleLine}` : singleLine;
 }
 
+export function sourceLinkForEnrichment(sourcePath: string): string {
+  const dot = sourcePath.lastIndexOf(".");
+  const target = dot > sourcePath.lastIndexOf("/") ? sourcePath.slice(0, dot) : sourcePath;
+  return `[[${target}|Back to Transcript Note]]`;
+}
+
 export function renderCompanionMarkdown(
   sourcePath: string,
   draft: EnrichmentDraft,
@@ -58,7 +64,7 @@ export function renderCompanionMarkdown(
     `## Follow-ups\n\n${renderList(draft.followUps)}`
   ].join("\n\n");
 
-  const sourceLink = `[[${sourcePath.slice(sourcePath.lastIndexOf("/") + 1, sourcePath.lastIndexOf("."))}|Back to Transcript Note]]`;
+  const sourceLink = sourceLinkForEnrichment(sourcePath);
 
   return `${frontmatter}\n\n${sections}\n\n---\n${sourceLink}\n`;
 }

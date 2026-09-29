@@ -5,7 +5,7 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 const EXPECTED_ASSETS = ["main.js", "manifest.json", "styles.css"];
 
 function parseArgs(argv) {
-  const options = { root: process.cwd(), output: undefined, tag: undefined };
+  const options = { root: process.cwd(), output: undefined, tag: process.env.npm_config_tag || process.env.TAG || undefined };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--root") options.root = argv[++index];
@@ -57,6 +57,7 @@ async function prepareRelease({ root: requestedRoot, output: requestedOutput, ta
 
   requireValue(/^\d+\.\d+\.\d+$/.test(manifest.version ?? ""), "manifest.json version must use x.y.z semantic versioning.");
   requireValue(packageJson.version === manifest.version, "package.json and manifest.json versions must match.");
+  requireValue(Boolean(tag), "Release tag is required. Provide --tag <version>.");
   requireValue(tag === manifest.version, `Release tag must exactly match manifest version ${manifest.version}.`);
   requireValue(manifest.id === "soundings", "manifest.json plugin id must remain soundings.");
   requireValue(!manifest.id.includes("obsidian"), "manifest.json plugin id must not contain obsidian.");

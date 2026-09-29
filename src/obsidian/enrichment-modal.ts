@@ -2,6 +2,7 @@ import { App, Modal, Setting } from "obsidian";
 import { validateEnrichmentDraft } from "../core/enrichment-draft";
 import type { SourceNoteEvidence } from "../core/enrichment-evidence";
 import { buildEnrichmentPlan, type EnrichmentPlan } from "../core/enrichment-planning";
+import { sourceLinkForEnrichment } from "../core/enrichment-rendering";
 
 export interface EnrichmentModalActions {
   readonly sourceEvidence: SourceNoteEvidence;
@@ -132,7 +133,7 @@ export class EnrichmentModal extends Modal {
     const metadataEl = contentEl.createDiv({ cls: "soundings-enrichment__metadata" });
     new Setting(metadataEl).setName("Source note").setDesc(this.sourcePath);
     new Setting(metadataEl).setName("Companion destination").setDesc(plan.destinationPath || "Unavailable");
-    new Setting(metadataEl).setName("Source link in note").setDesc(`[[${this.basename()}|Back to Transcript Note]]`);
+    new Setting(metadataEl).setName("Source link in note").setDesc(sourceLinkForEnrichment(this.sourcePath));
 
     contentEl.createEl("h3", { text: "Rendered companion note" });
     const preview = contentEl.createEl("pre", { cls: "soundings-enrichment__preview" });
@@ -158,10 +159,4 @@ export class EnrichmentModal extends Modal {
       });
   }
 
-  private basename(): string {
-    const slash = this.sourcePath.lastIndexOf("/");
-    const name = slash >= 0 ? this.sourcePath.slice(slash + 1) : this.sourcePath;
-    const dot = name.lastIndexOf(".");
-    return dot > 0 ? name.slice(0, dot) : name;
-  }
 }

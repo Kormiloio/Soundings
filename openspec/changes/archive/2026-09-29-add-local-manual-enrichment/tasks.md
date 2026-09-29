@@ -15,10 +15,10 @@
 ## 3. Security and regression gates
 
 - [x] 3.1 Add runtime audit contracts proving the enrichment path has no network, model, credential, telemetry, overwrite, delete, move, or rename capability; verify synthetic forbidden fixtures fail and the production bundle passes
-- [ ] 3.2 Run the full unit/integration/golden suite, production build, dependency audit, strict OpenSpec validation, `git diff --check`, and a scale check using maximum valid draft sizes; record zero mutation before explicit publication
+- [x] 3.2 Run the full unit/integration/golden suite, production build, dependency audit, strict OpenSpec validation, `git diff --check`, and a scale check using maximum valid draft sizes; record zero mutation before explicit publication
 
 ## 4. Documentation and desktop acceptance
 
 - [x] 4.1 Update README, enrichment schema guidance, privacy documentation, `docs/PRD.md`, and `openspec/project.md`; verify companion-note ownership, local/manual scope, size limits, non-goals, and future-AI separation match the specs
-- [ ] 4.2 Install staged assets in a disposable Obsidian desktop vault and verify supported-note gating, entry validation, exact preview, cancel/close, collision, stale source, destination race, and content-free results with unchanged source transcript and transcript-note hashes
-- [ ] 4.3 Publish one explicitly confirmed companion note, verify exact destination/read-back/linkage and unchanged pre-existing hashes, and record all automated and manual evidence in `docs/VERIFICATION.md`
+- [x] 4.2 Install staged assets in a disposable Obsidian desktop vault and verify supported-note gating, entry validation, exact preview, cancel/close, collision, stale source, destination race, and content-free results with unchanged source transcript and transcript-note hashes
+- [x] 4.3 Publish one explicitly confirmed companion note, verify exact destination/read-back/linkage and unchanged pre-existing hashes, and record all automated and manual evidence in `docs/VERIFICATION.md`
