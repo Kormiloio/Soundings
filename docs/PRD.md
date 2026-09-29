@@ -149,11 +149,13 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 2. **Reviewed conversion alpha:** vault-wide preview and explicit create-only batch conversion in a disposable vault.
 3. **Desktop hardening:** large-vault testing, cancellation, accessibility, and real Obsidian desktop verification.
 4. **Opt-in observation:** safe conversion of newly created transcripts while Obsidian is open, disabled by default.
-5. **Deterministic enrichment:** configurable templates, speaker normalization, and additional transcript formats.
-6. **Local intelligence:** separately approved local-model summaries, decisions, actions, and linking.
-7. **External AI evaluation:** optional providers only after an explicit data-handling and consent design is approved.
-8. **Desktop community release:** documentation, release automation, policy review, and Obsidian catalog submission.
-9. **Mobile evaluation:** separately approved Android, iOS, and iPadOS performance and vault-API acceptance.
+5. **Configurable Output Profiles & Discovery:** customizable frontmatter tags, titles, destination patterns, reserved sections, and pre-execution WebVTT classification.
+6. **Local Companion Enrichment:** manual, local, create-only companion notes for reviewed summary and action-item capture.
+7. **Release Provenance & CI Automation:** GitHub Actions CI, build verification, and cryptographic GitHub artifact attestations.
+8. **Ergonomic Transcript Display:** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search.
+9. **Expanded Offline Caption Formats:** `.srt` (SubRip) parsing support, followed by offline structured JSON transcript schemas (Whisper / Otter / Zoom).
+10. **Guarded Vault Entity Linking:** opt-in linking of verified speaker names to existing Person notes within configured folders, strictly without automatic note creation.
+11. **Mobile Evaluation:** separately approved Android, iOS, and iPadOS performance and vault-API acceptance.
 
 ## 11. Foundation acceptance gate
 

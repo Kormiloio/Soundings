@@ -29,8 +29,11 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-2. Complete and verify local manual enrichment as a reviewed, create-only companion-note workflow.
-3. Evaluate Android, iOS, and iPadOS only through a separate future change.
+2. Complete release provenance and GitHub artifact attestations (`automate-release-provenance`).
+3. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`).
+4. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
+5. Design guarded speaker-to-person entity linking against existing vault notes.
+6. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
 ## Foundation implementation checkpoint
 
