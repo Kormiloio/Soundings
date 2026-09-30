@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.2.1 published; 0.2.2 hardening proposed
+**Document status:** Soundings 0.2.1 published; 0.2.2 hardening implemented, packaged desktop acceptance pending
 **Last updated:** 2026-09-30
 
 ## 1. Product summary
@@ -217,3 +217,15 @@ The completed `add-reviewed-transcript-inbox` change adds off-by-default create-
 The completed `add-local-manual-enrichment` change adds a command scoped to an active Soundings transcript note, a keyboard-accessible local entry form, a full companion-note preview, and create-only publication of an adjacent ` - Enrichment.md` file with source-evidence and destination revalidation. It does not edit transcript sources or existing notes, makes no model or network request, and keeps enrichment diagnostics content-free.
 
 Release `0.2.0` was published from commit `4b74b86`; its `main.js` (`eb42c8fa…`) differs from the build that passed packaged desktop acceptance (`06da240b…`), which added exact source-note identification and full-path companion backlinks. The corrective `release-0-2-1` change ships that verified hardening together with per-speaker WebVTT attribution, header-metadata and separator fixes, single-pass character-reference decoding, enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a least-privilege attested release workflow that accepts only bare version tags. Packaged desktop acceptance of the staged `0.2.1` assets passed, and immutable release `0.2.1` was published on 2026-09-30 with verified GitHub artifact attestations.
+
+The `harden-0-2-2` change fixes the findings of a full code and security review of `0.2.1`. It introduces no feature, network access, or new vault mutation.
+- A single-pass WebVTT markup scanner and a non-backtracking tag allowlist remove a parser freeze reachable from a small shared or synced file.
+- Rendering and per-item isolation keep one bad file from aborting a batch.
+- Collisions are compared case- and Unicode-insensitively; dot-leading destinations are refused; a storage-level existence check runs before every create.
+- Unload closes Soundings dialogs and blocks later writes, and dismissing progress cancels the run.
+- Observation starts after layout-ready and filters non-transcripts by path.
+- Headings, frontmatter, and enrichment text are escaped against Obsidian syntax, and unlinkable enrichment sources are refused.
+- Saved settings are type-checked.
+- The runtime audit and release staging are fail-closed.
+
+Two fingerprint checks first judged redundant were kept as the only guards against publishing unreviewed output from mutable input. The automated gate passes with 427 tests across 36 files. Packaged desktop acceptance of the staged `0.2.2` assets is pending.

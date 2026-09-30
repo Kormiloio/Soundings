@@ -53,10 +53,10 @@
 - [x] 9.3 Pin the `obsidian` dev dependency to an exact version and regenerate the lockfile with `npm install` (not `npm audit fix --force`)
 
 ## 10. Documentation and version
-- [ ] 10.1 Add `0.2.2` changelog notes, including the new refusals and heading-escape output change
-- [ ] 10.2 Update `docs/PRD.md` (status, last-updated date, safety section), `docs/SUPPORTED_TRANSCRIPTS.md` (tag limit, `</v>` behavior), `docs/PRIVACY.md` if affected, and `openspec/project.md` (checkpoint and test count)
-- [ ] 10.3 Bump `package.json`, `package-lock.json`, `manifest.json`, and `versions.json` to `0.2.2`
-- [ ] 10.4 Run build, full tests, runtime and dependency audits, strict OpenSpec validation, and `git diff --check`
+- [x] 10.1 Add `0.2.2` changelog notes, including the new refusals and heading-escape output change
+- [x] 10.2 Update `docs/PRD.md` (status, last-updated date, safety section), `docs/SUPPORTED_TRANSCRIPTS.md` (tag limit, `</v>` behavior), `docs/PRIVACY.md` if affected, and `openspec/project.md` (checkpoint and test count)
+- [x] 10.3 Bump `package.json`, `package-lock.json`, `manifest.json`, and `versions.json` to `0.2.2`
+- [x] 10.4 Run build, full tests, runtime and dependency audits, strict OpenSpec validation, and `git diff --check`
 
 ## 11. Acceptance and publication
 - [ ] 11.1 Stage `0.2.2` and complete packaged desktop acceptance in a disposable vault. Cover:
