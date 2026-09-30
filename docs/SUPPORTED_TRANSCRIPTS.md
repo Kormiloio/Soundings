@@ -3,7 +3,7 @@
 ## Plain text (`.txt`)
 
 - Encoding: strict UTF-8 or UTF-8 with a byte-order mark.
-- Normalization: BOM removal and CRLF/CR line endings converted to LF.
+- Normalization: removal of one leading BOM (a second U+FEFF is kept as content) and CRLF/CR line endings converted to LF.
 - Preservation: line order, blank lines, punctuation, Unicode, and repetition remain intact.
 - No speaker, task, decision, topic, or identity inference is performed.
 - Empty or invalid UTF-8 files are refused.
@@ -15,7 +15,7 @@
 - Header metadata lines directly below `WEBVTT` (for example `Kind:` and `Language:`) are ignored up to the first blank line.
 - A line that is empty or contains only spaces or tabs separates cues.
 - Cue text remains ordered and repeated cues remain repeated.
-- Explicit WebVTT voice spans become speaker headings. When one cue contains several voice spans, each span becomes its own block under its own speaker with the cue's timing; text before the first voice span has no speaker.
+- Explicit WebVTT voice spans become speaker headings. When one cue contains several voice spans, each span becomes its own block under its own speaker with the cue's timing; text before the first voice span, and text after a closing `</v>`, has no speaker. A voice tag is `v` followed by a space, a `.class`, or `>`; other tags that merely begin with `v` (such as `<video>`) are unknown tags and are refused.
 - Character references (`&amp;`, `&lt;`, `&gt;`, `&lrm;`, `&rlm;`, `&nbsp;`) are decoded exactly once.
 - Timing syntax and format-control records are omitted from note prose.
 - A cue tag longer than 256 characters, or a tag containing a second `<` (for example `a <<i>x</i>`), is refused. A lone `<` with no closing `>` is kept as literal text.

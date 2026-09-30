@@ -12,9 +12,9 @@
 - [x] 1.4 Verify every existing golden output is byte-identical
 
 ## 2. WebVTT faithfulness (code review 4, 7)
-- [ ] 2.1 Attribute text after `</v>` to no speaker; add test for `<v A>hi</v> narrator <v B>yo`
-- [ ] 2.2 Recognize the voice tag only before whitespace, `.`, or `>`; add `<video>` and `<vfoo>` refusal tests
-- [ ] 2.3 Remove the duplicate U+FEFF strip; add a double-BOM decoding test
+- [x] 2.1 Attribute text after `</v>` to no speaker; add test for `<v A>hi</v> narrator <v B>yo`
+- [x] 2.2 Recognize the voice tag only before whitespace, `.`, or `>`; add `<video>` and `<vfoo>` refusal tests
+- [x] 2.3 Remove the duplicate U+FEFF strip; add a double-BOM decoding test
 
 ## 3. Planning identity (code review 1)
 - [ ] 3.1 Compare existing and in-plan destinations by NFC case-folded key; add case-variant and NFC/NFD tests

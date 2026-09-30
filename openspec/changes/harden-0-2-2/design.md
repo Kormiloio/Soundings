@@ -21,6 +21,8 @@ Every fix stays inside its existing layer.
    - The same review found that `ALLOWED_TAG`'s `c(?:\.[^ >]+)*` backtracks exponentially (about 20 ms at 22 class groups, roughly 10× more per 4 extra groups). It is replaced by the equivalent `c(?:\.[^ >]+)?`. `lang(?:\s+[^>]+)?` becomes the equivalent (after trimming) `lang(?:\s[^>]*)?`.
    - The voice tag is recognized only as `v` followed by `.`, whitespace, or `>`. Classes are `(\.[^\s.>]+)*`, and the annotation is the remainder.
    - Opening `<v …>` starts a new attributed segment. `</v>` ends it, and following text becomes an unattributed segment.
+   - **Implementation note:** the unattributed segment starts only at the first following text that is not whitespace. Whitespace and allowed tags between `</v>` and that text stay with the closed voice segment, so single-voice cues such as `<v Mario>Hello</v>` keep byte-identical output. A `</v>` with no open voice is stripped as markup only.
+   - **Verification:** a 300,000-case differential fuzz over inputs whose tags are all allowed showed the same accept/refuse outcome as 0.2.1 in every case and, among accepted inputs, identical transcript text in the same order; only speaker attribution after `</v>` changed. On a broader alphabet, every difference was an intended one (text after `</v>`, `v`-prefixed unknown tags, or tag bodies containing `<`).
    - Allowed tags are `b`, `i`, `u`, `c` (with classes), `lang`, and `ruby`/`rt`, the same `ALLOWED_TAG` set as `0.2.1`. Classes on `b`/`i`/`u` and cue timestamp tags stay refused (deferred).
    - Single-voice golden outputs must be byte-identical.
    - *Alternative rejected:* rewriting the regular expressions to be unambiguous. This is still fragile under future edits and harder to prove linear.

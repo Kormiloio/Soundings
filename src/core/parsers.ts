@@ -5,8 +5,8 @@ export type ParseError = "unsupported-encoding" | "empty" | "malformed-vtt" | "u
 export function decodeUtf8(bytes: Uint8Array): Result<string, "unsupported-encoding"> {
   try {
     const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-    const withoutBom = decoded.charCodeAt(0) === 0xfeff ? decoded.slice(1) : decoded;
-    return { ok: true, value: withoutBom.replace(/\r\n?/g, "\n") };
+    // TextDecoder already removes exactly one leading byte-order mark; a second U+FEFF is content.
+    return { ok: true, value: decoded.replace(/\r\n?/g, "\n") };
   } catch {
     return { ok: false, error: "unsupported-encoding" };
   }
@@ -97,9 +97,15 @@ function voiceAnnotation(body: string): string | undefined {
   return body.slice(index);
 }
 
+// A voice tag is `v` followed by whitespace, a class period, or the end of the tag; `<video>` is not.
 function isVoiceMarkup(body: string): boolean {
-  const first = body[0] === "/" ? body[1] : body[0];
-  return first === "v" || first === "V";
+  const name = body[0] === "/" ? body.slice(1) : body;
+  if (name[0] !== "v" && name[0] !== "V") return false;
+  return name.length === 1 || name[1] === "." || isWhitespace(name[1]);
+}
+
+function isVoiceClose(body: string): boolean {
+  return body[0] === "/" && isVoiceMarkup(body);
 }
 
 function parseCuePayload(
@@ -109,18 +115,29 @@ function parseCuePayload(
   const tokens = tokenizeCue(payload);
   if (!tokens.ok || !tokens.value) return { ok: false, error: "unsupported-vtt" };
 
-  const segments: Array<{ readonly speaker?: string; readonly parts: string[]; hasRaw: boolean }> = [];
-  let current: { readonly speaker?: string; readonly parts: string[]; hasRaw: boolean } = { parts: [], hasRaw: false };
+  type Segment = { readonly speaker?: string; readonly parts: string[]; hasRaw: boolean; closed: boolean };
+  const segments: Segment[] = [];
+  let current: Segment = { parts: [], hasRaw: false, closed: false };
   for (const token of tokens.value) {
     if (token.kind === "text") {
+      // Text after a closing voice tag belongs to no speaker; whitespace alone does not start a segment.
+      if (current.closed && token.value.trim().length > 0) {
+        segments.push(current);
+        current = { parts: [], hasRaw: false, closed: false };
+      }
       current.parts.push(token.value);
+      current.hasRaw = true;
+      continue;
+    }
+    if (isVoiceClose(token.body)) {
+      if (current.speaker !== undefined) current.closed = true;
       current.hasRaw = true;
       continue;
     }
     const annotation = voiceAnnotation(token.body);
     if (annotation !== undefined) {
       if (current.hasRaw || current.speaker !== undefined) segments.push(current);
-      current = { speaker: decodeEntities(annotation.trim()), parts: [], hasRaw: false };
+      current = { speaker: decodeEntities(annotation.trim()), parts: [], hasRaw: false, closed: false };
       continue;
     }
     if (!isVoiceMarkup(token.body) && !ALLOWED_TAG.test(token.body.trim())) return { ok: false, error: "unsupported-vtt" };
