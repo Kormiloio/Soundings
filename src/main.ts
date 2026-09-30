@@ -14,6 +14,7 @@ import {
   DEFAULT_SETTINGS,
   editableExcludedPaths,
   migrateSavedSettings,
+  sanitizeSavedSettings,
   validateSettings,
   type SoundingsSettings,
   type SoundingsSettingsPolicy
@@ -276,20 +277,26 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async loadSettings(): Promise<void> {
-    const stored = await this.loadData() as Partial<SoundingsSettings> | null;
+    const raw: unknown = await this.loadData();
     const policy = this.settingsPolicy;
     if (!policy) {
       this.settings = DEFAULT_SETTINGS;
       new Notice("Soundings could not verify the vault configuration directory. Scanning is disabled.");
       return;
     }
-    const storedExclusions = stored?.excludedPaths
+    // Wrong-typed saved fields take safe defaults; nothing is written back until the user saves.
+    const { input: stored, resetFields } = sanitizeSavedSettings(raw);
+    const storedExclusions = stored.excludedPaths
       ? editableExcludedPaths({ excludedPaths: stored.excludedPaths }, policy.mandatoryExcludedPaths)
       : [];
-    const validation = migrateSavedSettings({ ...(stored ?? {}), excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
+    const validation = migrateSavedSettings({ ...stored, excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
     const safeDefaults = validateSettings({}, policy.mandatoryExcludedPaths).settings;
     this.settings = validation.settings ?? safeDefaults ?? DEFAULT_SETTINGS;
-    if (validation.errors.length > 0) new Notice("Soundings ignored invalid saved settings and restored safe defaults.");
+    if (resetFields.length > 0) {
+      new Notice(`Soundings reset invalid saved settings to safe defaults: ${resetFields.join(", ")}.`);
+    } else if (validation.errors.length > 0) {
+      new Notice("Soundings ignored invalid saved settings and restored safe defaults.");
+    }
   }
 
   private async scanAndReview(): Promise<void> {

@@ -103,6 +103,10 @@ Every fix stays inside its existing layer.
     - A wrong-typed field falls back to its default and adds a content-free warning such as `settings-field-reset:<field>`.
     - Mandatory exclusions are always re-applied.
     - Loading never throws on a malformed `data.json`.
+    - **Implementation notes:** there are two layers.
+      - A pure `sanitizeSavedSettings(raw)` keeps only known fields with the expected runtime type and drops unknown keys. Non-object saved data counts as empty. It returns the names, never the values, of reset fields.
+      - `loadSettings` runs it before the existing migration and shows one notice listing the reset field names. The warning is a notice rather than a `settings-field-reset:<field>` string.
+      - `validateSettings` also rejects wrong-typed fields from any caller with an error instead of coercing them. A string `excludedPaths` no longer splits into single-character exclusions, and non-string entries no longer throw.
 
 14. **Dead checks.**
     - Remove the per-item output-profile fingerprint comparison in `execution.ts`, which is identical to the plan's. `isPlanCurrent` remains the guard.

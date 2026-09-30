@@ -177,12 +177,59 @@ export function editableExcludedPaths(
   return Object.freeze(settings.excludedPaths.filter((path) => !mandatory.has(path)));
 }
 
+export interface SavedSettingsSanitization {
+  readonly input: Partial<SoundingsSettings>;
+  /** Names of saved fields whose runtime type was wrong; never their values. */
+  readonly resetFields: readonly string[];
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
+}
+
+const SAVED_FIELD_TYPES: Readonly<Record<keyof SoundingsSettings, (value: unknown) => boolean>> = Object.freeze({
+  enabledFormats: isStringArray,
+  excludedPaths: isStringArray,
+  maxSourceBytes: (value) => typeof value === "number",
+  projectInferenceEnabled: (value) => typeof value === "boolean",
+  projectRoot: (value) => typeof value === "string",
+  observationEnabled: (value) => typeof value === "boolean",
+  observationRoots: isStringArray,
+  outputProfile: (value) => typeof value === "object" && value !== null && !Array.isArray(value)
+});
+
+/**
+ * Keeps only known saved fields with the expected runtime type. A wrong-typed field is omitted so it
+ * takes its safe default, and is reported by name. Non-object saved data is treated as empty.
+ */
+export function sanitizeSavedSettings(raw: unknown): SavedSettingsSanitization {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { input: {}, resetFields: [] };
+  const record = raw as Record<string, unknown>;
+  const input: Record<string, unknown> = {};
+  const resetFields: string[] = [];
+  for (const [field, hasExpectedType] of Object.entries(SAVED_FIELD_TYPES)) {
+    const value = record[field];
+    if (value === undefined) continue;
+    if (hasExpectedType(value)) input[field] = value;
+    else resetFields.push(field);
+  }
+  return { input: input as Partial<SoundingsSettings>, resetFields: Object.freeze(resetFields) };
+}
+
+function stringListField(value: unknown, fallback: readonly string[], label: string, errors: string[]): readonly string[] {
+  if (value === undefined) return fallback;
+  if (isStringArray(value)) return value;
+  errors.push(`${label} must be a list of text values.`);
+  return [];
+}
+
 export function validateSettings(
   input: Partial<SoundingsSettings>,
   mandatoryExcludedPaths: readonly string[] = DEFAULT_SETTINGS.excludedPaths
 ): SettingsValidation {
   const errors: string[] = [];
-  const enabledFormats = [...new Set(input.enabledFormats ?? DEFAULT_SETTINGS.enabledFormats)]
+  const enabledFormatsRaw = stringListField(input.enabledFormats, DEFAULT_SETTINGS.enabledFormats, "Enabled formats", errors);
+  const enabledFormats = [...new Set(enabledFormatsRaw)]
     .filter((format): format is TranscriptFormat => format === "txt" || format === "vtt");
   if (enabledFormats.length === 0) errors.push("Enable at least one transcript format.");
 
@@ -194,7 +241,7 @@ export function validateSettings(
   }
 
   const exclusions: string[] = [];
-  for (const raw of input.excludedPaths ?? DEFAULT_SETTINGS.excludedPaths) {
+  for (const raw of stringListField(input.excludedPaths, DEFAULT_SETTINGS.excludedPaths, "Excluded paths", errors)) {
     const normalized = normalizeVaultPath(raw);
     if (!normalized) errors.push(`Invalid excluded path: ${raw || "(empty)"}`);
     else exclusions.push(normalized);
@@ -206,13 +253,16 @@ export function validateSettings(
   }
 
   const projectInferenceEnabled = input.projectInferenceEnabled ?? DEFAULT_SETTINGS.projectInferenceEnabled;
-  const projectRootRaw = input.projectRoot ?? DEFAULT_SETTINGS.projectRoot;
-  const normalizedProjectRoot = normalizeVaultPath(projectRootRaw);
+  if (typeof projectInferenceEnabled !== "boolean") errors.push("Project inference must be on or off.");
+  const projectRootRaw: unknown = input.projectRoot ?? DEFAULT_SETTINGS.projectRoot;
+  if (typeof projectRootRaw !== "string") errors.push("Project root must be text.");
+  const normalizedProjectRoot = typeof projectRootRaw === "string" ? normalizeVaultPath(projectRootRaw) : undefined;
   if (projectInferenceEnabled && !normalizedProjectRoot) errors.push("Project root must be a valid vault-relative path.");
   const projectRoot = normalizedProjectRoot ?? DEFAULT_SETTINGS.projectRoot;
 
   const observationEnabled = input.observationEnabled ?? DEFAULT_SETTINGS.observationEnabled;
-  const observationRootsRaw = input.observationRoots ?? DEFAULT_SETTINGS.observationRoots;
+  if (typeof observationEnabled !== "boolean") errors.push("Observation must be on or off.");
+  const observationRootsRaw = stringListField(input.observationRoots, DEFAULT_SETTINGS.observationRoots, "Observation roots", errors);
   const observationRoots: string[] = [];
   for (const raw of observationRootsRaw) {
     const normalized = normalizeVaultPath(raw);

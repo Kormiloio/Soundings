@@ -295,4 +295,25 @@ describe("plugin lifecycle", () => {
     workspace.finishLayout();
     expect(vault.listeners).toEqual([]);
   });
+
+  it.each([
+    [{ observationEnabled: "false", excludedPaths: "Archive" }, ["observationEnabled", "excludedPaths"]],
+    [{ enabledFormats: [1, 2], observationRoots: "Meetings" }, ["enabledFormats", "observationRoots"]],
+    ["not an object", []]
+  ])("loads safely from malformed saved settings %j", async (saved, resetFields) => {
+    const vault = new FakeVault();
+    vault.files.set("Meeting.txt", encoder.encode("hello"));
+    const plugin = await loadedPlugin(vault, undefined, saved);
+
+    expect(plugin.settings.observationEnabled).toBe(false);
+    expect(plugin.settings.excludedPaths).toEqual(expect.arrayContaining([".obsidian", ".soundings"]));
+    expect(vault.listeners).toEqual([]);
+    expect(stubPlugin(plugin).savedData).toEqual(saved);
+    for (const field of resetFields) expect(notices.join(" ")).toContain(field);
+
+    await command(plugin, "scan-vault-for-transcripts").callback?.();
+    await settle();
+    expect(modalOf(ReviewModal)).toBeDefined();
+    plugin.onunload();
+  });
 });

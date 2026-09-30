@@ -40,8 +40,8 @@
 - [x] 6.4 Refuse enrichment for source-note paths with link-breaking characters; add `x]] <img …> [[y` test
 
 ## 7. Settings (code review 12)
-- [ ] 7.1 Type-check every saved-settings field with per-field default fallback and content-free warnings
-- [ ] 7.2 Add tests for string booleans, a non-array `excludedPaths`, and non-string list entries; verify the plugin loads
+- [x] 7.1 Type-check every saved-settings field with per-field default fallback and content-free warnings
+- [x] 7.2 Add tests for string booleans, a non-array `excludedPaths`, and non-string list entries; verify the plugin loads
 
 ## 8. Cleanup (code review 11)
 - [ ] 8.1 Remove the self-comparing output-profile and draft fingerprint checks
