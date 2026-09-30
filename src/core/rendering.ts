@@ -14,7 +14,12 @@ export function safeHeading(value: string): string {
 }
 
 function literalBlock(text: string): string {
-  const longest = Math.max(0, ...[...text.matchAll(/~+/g)].map((match) => match[0].length));
+  let longest = 0;
+  let run = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    run = text.charCodeAt(index) === 0x7e ? run + 1 : 0;
+    if (run > longest) longest = run;
+  }
   const fence = "~".repeat(Math.max(3, longest + 1));
   return `${fence}text\n${text}\n${fence}`;
 }

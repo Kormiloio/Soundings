@@ -3,13 +3,23 @@
 ## ADDED Requirements
 
 ### Requirement: Bounded transcript processing
-Soundings SHALL parse and render any source within the configured size limit in time and stack depth proportional to its length. Cue markup SHALL be scanned without backtracking regular expressions; a tag longer than 256 characters or a `<` without a closing `>` in its cue SHALL make the source unsupported WebVTT. Fence sizing SHALL NOT depend on the number of arguments a function call can accept.
+Soundings SHALL parse and render any source within the configured size limit in time and stack depth proportional to its length. Cue markup SHALL be scanned in one pass without backtracking regular expressions. A tag runs from `<` to the next `>`; a tag body longer than 256 characters or containing `<` SHALL make the source unsupported WebVTT, while a `<` with no later `>` in its cue and an empty `<>` pair SHALL remain literal text. Fence sizing SHALL NOT depend on the number of arguments a function call can accept.
 
 #### Scenario: Adversarial voice-tag input
-- **GIVEN** a 1 MB WebVTT cue consisting of repeated `<v.`, repeated `<v `, or repeated `<` characters
+- **GIVEN** a 1 MB WebVTT cue consisting of repeated `<v.`, repeated `<v `, or repeated `<` characters, with or without a final `>`
 - **WHEN** Soundings discovers or converts the source
-- **THEN** Soundings classifies the source within 500 ms on the reference desktop
-- **AND** reports it as unsupported WebVTT without freezing Obsidian or producing Markdown content
+- **THEN** Soundings classifies the source within 500 ms on the reference desktop without freezing Obsidian
+- **AND** a source whose only tag exceeds 256 characters or contains `<` is reported as unsupported WebVTT and produces no Markdown content
+
+#### Scenario: Class tag with many class groups
+- **GIVEN** a WebVTT cue contains a `c` tag with 60 class groups
+- **WHEN** Soundings discovers or converts the source
+- **THEN** the tag is accepted or refused within 500 ms and its text is preserved when accepted
+
+#### Scenario: Stray angle bracket precedes a tag
+- **GIVEN** a WebVTT cue contains `a <<i>x</i>`
+- **WHEN** Soundings discovers or converts the source
+- **THEN** the source is reported as unsupported WebVTT rather than guessing which `<` begins the tag
 
 #### Scenario: Plain text contains many tilde runs
 - **GIVEN** a `.txt` source contains 150,000 separate `~` runs

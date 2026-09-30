@@ -13,7 +13,12 @@ Every fix stays inside its existing layer.
 
 1. **Linear cue-markup scanner.** `stripCueMarkup` and voice segmentation become one left-to-right pass.
    - The pass uses `indexOf("<")` / `indexOf(">")` and never uses regular expressions over unbounded input.
-   - A tag body longer than 256 characters, a `<` without a matching `>` in the cue, or a tag outside the allowlist makes the file `unsupported-vtt`, which is already a content-free outcome.
+   - A tag runs from `<` to the next `>`, matching the 0.2.1 tag boundaries.
+   - A tag body longer than 256 characters, a tag body containing `<`, or a tag outside the allowlist makes the file `unsupported-vtt`, which is already a content-free outcome.
+   - A `<` with no later `>` in the cue, and an empty `<>`, stay literal text as in 0.2.1.
+   - **Implementation note (deviation from draft):** the draft proposed refusing unterminated `<`. That would newly refuse files with literal "a < b" text that 0.2.1 accepts, so it was dropped.
+   - A differential fuzz of 400,000 random cues against the 0.2.1 parser showed that the only behavior differences are cues whose tag body contains `<`. The 0.2.1 two-pass regexes sometimes treated such a `<` as literal and sometimes produced different text. The scanner refuses them all, so every difference is fail-closed.
+   - The same review found that `ALLOWED_TAG`'s `c(?:\.[^ >]+)*` backtracks exponentially (about 20 ms at 22 class groups, roughly 10× more per 4 extra groups). It is replaced by the equivalent `c(?:\.[^ >]+)?`. `lang(?:\s+[^>]+)?` becomes the equivalent (after trimming) `lang(?:\s[^>]*)?`.
    - The voice tag is recognized only as `v` followed by `.`, whitespace, or `>`. Classes are `(\.[^\s.>]+)*`, and the annotation is the remainder.
    - Opening `<v …>` starts a new attributed segment. `</v>` ends it, and following text becomes an unattributed segment.
    - Allowed tags are `b`, `i`, `u`, `c` (with classes), `lang`, and `ruby`/`rt`, the same `ALLOWED_TAG` set as `0.2.1`. Classes on `b`/`i`/`u` and cue timestamp tags stay refused (deferred).

@@ -6,10 +6,10 @@
 - [x] 0.3 Owner approves the changeset scope before implementation begins (approved 2026-09-30)
 
 ## 1. Bounded parsing and rendering (security finding 1, 3)
-- [ ] 1.1 Add failing regression tests: 1 MB `<v.`, `<v `, and `<` inputs classify within 500 ms; 150,000 tilde runs render
-- [ ] 1.2 Replace cue-markup regular expressions with a linear scanner (256-character tag limit, unterminated tags refused)
-- [ ] 1.3 Replace the `Math.max` spread in fence sizing with a loop
-- [ ] 1.4 Verify every existing golden output is byte-identical
+- [x] 1.1 Add failing regression tests: 1 MB `<v.`, `<v `, and `<` inputs classify within 500 ms; 150,000 tilde runs render
+- [x] 1.2 Replace cue-markup regular expressions with a linear scanner (256-character tag limit; tag bodies containing `<` refused; unterminated `<` stays literal); make `ALLOWED_TAG` non-backtracking; differential-fuzz against 0.2.1 (400k cases, only fail-closed differences)
+- [x] 1.3 Replace the `Math.max` spread in fence sizing with a loop
+- [x] 1.4 Verify every existing golden output is byte-identical
 
 ## 2. WebVTT faithfulness (code review 4, 7)
 - [ ] 2.1 Attribute text after `</v>` to no speaker; add test for `<v A>hi</v> narrator <v B>yo`

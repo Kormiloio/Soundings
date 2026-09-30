@@ -18,6 +18,7 @@
 - Explicit WebVTT voice spans become speaker headings. When one cue contains several voice spans, each span becomes its own block under its own speaker with the cue's timing; text before the first voice span has no speaker.
 - Character references (`&amp;`, `&lt;`, `&gt;`, `&lrm;`, `&rlm;`, `&nbsp;`) are decoded exactly once.
 - Timing syntax and format-control records are omitted from note prose.
+- A cue tag longer than 256 characters, or a tag containing a second `<` (for example `a <<i>x</i>`), is refused. A lone `<` with no closing `>` is kept as literal text.
 - Unsupported style/region blocks, unknown tags (including inline karaoke timestamp tags such as `<00:00:01.500>` used by auto-generated captions), malformed cues, empty files, and invalid UTF-8 are refused rather than guessed.
 
 ## Generated Markdown
