@@ -20,16 +20,16 @@ Local scripts already build and validate an exact three-asset staging directory,
 
 ## Decisions
 
-1. Split CI and release into separate workflows. CI uses read-only repository permissions and runs on pull requests and pushes. Release runs only for tags matching semantic versions and grants `contents: write`, `id-token: write`, and `attestations: write` at the release job. A combined always-privileged workflow was rejected.
+1. Split CI and release into separate workflows. CI uses read-only repository permissions and runs on pull requests and pushes. Release runs only for bare `x.y.z` tags (Obsidian downloads assets from the release whose tag equals the manifest version, so `v`-prefixed tags are rejected). Within the release workflow, a read-only `build` job installs dependencies, runs every gate, verifies the tag is reachable from `main`, and uploads the staged bundle; a separate `publish` job holds the only `contents: write`, `id-token: write`, and `attestations: write` grants, never checks out or installs dependencies, and attests and uploads the bundle's exact bytes. Checkouts never persist credentials, and actions are pinned to full commit SHAs. A combined always-privileged workflow was rejected. *(Amended by `release-0-2-1` after review found workflow-level write permissions during `npm ci` and an uninstallable `v0.1.3` release.)*
 2. Reuse package scripts and the release-preparation program as the source of truth rather than duplicating version and inventory checks in YAML. Add a tag argument driven by the event ref so the script has no hard-coded current version.
-3. Build once in the release job, hash the staged assets, attest `main.js`, `manifest.json`, and `styles.css`, and upload those same bytes. Rebuilding separately for upload was rejected because provenance and release bytes could diverge.
+3. Build once in the build job, hash the staged assets, hand them to the publish job as one artifact, attest `main.js`, `manifest.json`, and `styles.css`, and upload those same bytes. Release notes are the matching `## <version>` section of `CHANGELOG.md`; a missing section fails the build. Rebuilding separately for upload was rejected because provenance and release bytes could diverge.
 4. Fail if the tag or release is already present and never use replacement flags. Immutability is more important than one-click repair; corrections use a new patch version.
 5. Keep issue templates and changelog guidance declarative and content-free. No user vault data enters CI.
 
 ## Risks / Trade-offs
 
 - [Workflow permissions may be unavailable at organization level] → Add a preflight checklist and fail before publication when attestation permissions are denied.
-- [Dependency drift can break reproducibility] → Use the committed lockfile and pinned action major versions; keep build reproduction in Community review.
+- [Dependency drift can break reproducibility] → Use the committed lockfile and SHA-pinned actions; keep build reproduction in Community review.
 - [Tag push can trigger an invalid candidate] → All gates run before release creation, so failure leaves the tag for maintainer review but publishes no assets.
 - [Automated publication reduces a manual checkpoint] → Tag creation remains explicit and immutable; Community listing publication stays owner-controlled.
 

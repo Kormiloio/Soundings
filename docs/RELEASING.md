@@ -43,11 +43,10 @@ Releases are now driven and attested through GitHub Actions:
    Runs on every pull request and push to `main` with read-only permissions (`contents: read`). Executes the full test suite, production build, runtime audit, dependency audit, OpenSpec strict validation, and diff checks.
 
 2. **Automated Attestation & Release (`.github/workflows/release.yml`)**:
-   Triggers when an explicit semantic tag (e.g. `0.2.0` or `v0.2.0`) is pushed to GitHub.
-   - Verifies all gates pass on the tagged commit.
-   - Stages exactly `main.js`, `manifest.json`, and `styles.css`.
-   - Generates cryptographic GitHub build provenance attestations (`actions/attest-build-provenance`).
-   - Publishes an immutable GitHub Release with the three staged assets and release notes.
+   Triggers only when a bare version tag (for example `0.2.1`) is pushed. Never use a `v` prefix: Obsidian downloads assets from the release whose tag exactly equals the manifest version, so release `v0.1.3` was not installable through Obsidian.
+   - The **build** job has read-only permissions and no persisted credentials. It verifies the tag commit is on `main`, runs every gate, stages exactly `main.js`, `manifest.json`, and `styles.css`, extracts the `## <version>` section of `CHANGELOG.md` as release notes (failing if it is missing), and uploads one bundle.
+   - The **publish** job alone holds `contents: write`, `id-token: write`, and `attestations: write`. It installs nothing, refuses an existing release, attests the three bundle assets, and creates the release from those exact bytes.
+   - Actions are pinned to full commit SHAs; update pins deliberately and record the version in the trailing comment.
 
 ## Manual Pre-publication checks
 

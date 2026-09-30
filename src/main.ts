@@ -1,7 +1,7 @@
 import { Notice, Plugin, TFile, type EventRef } from "obsidian";
 import { discoverTranscripts } from "./core/discovery";
-import { executeEnrichmentPlan } from "./core/enrichment-execution";
-import { identifySourceNote } from "./core/enrichment-evidence";
+import { executeEnrichmentPlan, type EnrichmentOutcome } from "./core/enrichment-execution";
+import { identifySourceNote, type SourceNoteEvidence } from "./core/enrichment-evidence";
 import type { EnrichmentPlan } from "./core/enrichment-planning";
 import { executePlan, RunCoordinator } from "./core/execution";
 import { sha256 } from "./core/hash";
@@ -145,12 +145,29 @@ export default class SoundingsPlugin extends Plugin {
       new Notice("Soundings cannot add enrichment until the vault is ready.");
       return;
     }
+    const evidence = await this.identifyEnrichmentSource(adapter, sourcePath);
+    if (!evidence) {
+      new Notice("Manual enrichment requires an active Soundings transcript note.");
+      return;
+    }
+    new EnrichmentModal(this.app, sourcePath, {
+      sourceEvidence: evidence,
+      existingPaths: () => new Set(adapter.listFiles().map((file) => file.path)),
+      planId: () => activeWindow.crypto.randomUUID(),
+      publish: (plan) => this.publishEnrichment(plan),
+      reidentify: () => this.identifyEnrichmentSource(adapter, sourcePath)
+    }).open();
+  }
+
+  private async identifyEnrichmentSource(
+    adapter: ObsidianVaultAdapter,
+    sourcePath: string
+  ): Promise<SourceNoteEvidence | undefined> {
     let bytes: Uint8Array;
     try {
       bytes = await adapter.readBinary(sourcePath);
     } catch {
-      new Notice("Soundings could not read the active note. No files were changed.");
-      return;
+      return undefined;
     }
     const identified = await identifySourceNote(
       sourcePath,
@@ -158,23 +175,13 @@ export default class SoundingsPlugin extends Plugin {
       this.settings.maxSourceBytes,
       (data) => sha256(data, this.digest)
     );
-    if (!identified.ok || !identified.value) {
-      new Notice("Manual enrichment requires an active Soundings transcript note.");
-      return;
-    }
-    const existing = new Set(adapter.listFiles().map((file) => file.path));
-    new EnrichmentModal(this.app, sourcePath, {
-      sourceEvidence: identified.value,
-      existingPaths: existing,
-      planId: () => activeWindow.crypto.randomUUID(),
-      publish: (plan) => this.publishEnrichment(plan)
-    }).open();
+    return identified.ok ? identified.value : undefined;
   }
 
-  private async publishEnrichment(plan: EnrichmentPlan): Promise<void> {
+  private async publishEnrichment(plan: EnrichmentPlan): Promise<EnrichmentOutcome | undefined> {
     if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
-      return;
+      return undefined;
     }
     const signal = this.runs.begin();
     const adapter = new ObsidianVaultAdapter(this.app.vault);
@@ -184,13 +191,11 @@ export default class SoundingsPlugin extends Plugin {
         digest: this.digest,
         maxSourceBytes: this.settings.maxSourceBytes
       });
-      if (outcome.status === "created") {
-        new Notice(`Soundings created ${outcome.destinationPath}.`);
-      } else {
-        new Notice(`Soundings did not publish enrichment: ${outcome.reason}`);
-      }
+      if (outcome.status === "created") new Notice(`Soundings created ${outcome.destinationPath}.`);
+      return outcome;
     } catch {
       new Notice("Soundings stopped after an unexpected error. No companion note was verified.");
+      return undefined;
     } finally {
       this.runs.finish(signal);
     }

@@ -75,4 +75,22 @@ describe("source note identification", () => {
     const result = await identifySourceNote("note.md", encoder.encode(`---\n${frontmatter}\n---\n# Title`), 5_000_000, testDigest);
     expect(result).toEqual({ ok: false, error: "invalid-soundings-note" });
   });
+
+  it.each([
+    ["delimiter-like value", "---\ntype: meeting-transcript\nsource: transcript\nsource_file: \"standup---notes.vtt\"\nsoundings_version: 1\n---\n# T"],
+    ["CRLF line endings", "---\r\ntype: meeting-transcript\r\nsource: transcript\r\nsoundings_version: 1\r\n---\r\n# T"],
+    ["byte-order mark", "\ufeff---\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 1\n---\n# T"]
+  ])("identifies frontmatter with %s", async (_label, content) => {
+    const result = await identifySourceNote("note.md", encoder.encode(content), 5_000_000, testDigest);
+    expect(result.ok).toBe(true);
+  });
+
+  it.each([
+    ["unclosed frontmatter", "---\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 1\n# T"],
+    ["frontmatter not at start", "\n---\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 1\n---"],
+    ["inline fence", "--- type: meeting-transcript\nsource: transcript\nsoundings_version: 1\n---"]
+  ])("rejects %s", async (_label, content) => {
+    const result = await identifySourceNote("note.md", encoder.encode(content), 5_000_000, testDigest);
+    expect(result).toEqual({ ok: false, error: "invalid-soundings-note" });
+  });
 });

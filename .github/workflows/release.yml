@@ -4,77 +4,119 @@ on:
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+"
 
-permissions:
-  contents: write
-  id-token: write
-  attestations: write
+permissions: {}
 
 jobs:
-  release:
-    name: Build, Attest & Publish Release
+  build:
+    name: Build & Verify (read-only)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.tag_info.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate bare semantic tag on main
+        id: tag_info
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$VERSION' must be a bare x.y.z version."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag '$VERSION' does not point at a commit on main."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Parse and validate semantic tag
-        id: tag_info
-        run: |
-          RAW_TAG="${GITHUB_REF_NAME}"
-          CLEAN_VERSION="${RAW_TAG#v}"
-          if ! [[ "$CLEAN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Tag '$RAW_TAG' does not conform to semantic versioning (x.y.z)."
-            exit 1
-          fi
-          echo "tag=$RAW_TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$CLEAN_VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Run verification gates
         run: |
           npm run check
           npm run audit:runtime
-          npm audit --production
+          npm audit --omit=dev
           npm run spec:validate
           git diff --check
 
       - name: Stage release assets
+        env:
+          VERSION: ${{ steps.tag_info.outputs.version }}
         run: |
-          npm run release:prepare -- --tag "${{ steps.tag_info.outputs.version }}"
+          node scripts/prepare-release.mjs --tag "$VERSION"
+          awk -v heading="## $VERSION" '
+            index($0, "## ") == 1 { active = ($0 == heading || index($0, heading " ") == 1) }
+            active { print }
+          ' CHANGELOG.md > "release/$VERSION/RELEASE_NOTES.md"
+          if ! [ -s "release/$VERSION/RELEASE_NOTES.md" ]; then
+            echo "::error::CHANGELOG.md has no '## $VERSION' section."
+            exit 1
+          fi
+          (cd "release/$VERSION" && sha256sum main.js manifest.json styles.css)
+
+      - name: Upload verified release bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-bundle
+          path: release/${{ steps.tag_info.outputs.version }}/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Attest & Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Download verified release bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-bundle
+          path: bundle
+
+      - name: Refuse an existing release
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "::error::Release $VERSION already exists. Releases are immutable; publish a new patch version."
+            exit 1
+          fi
+          sha256sum bundle/main.js bundle/manifest.json bundle/styles.css
 
       - name: Generate build artifact attestations
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
-            release/${{ steps.tag_info.outputs.version }}/main.js
-            release/${{ steps.tag_info.outputs.version }}/manifest.json
-            release/${{ steps.tag_info.outputs.version }}/styles.css
+            bundle/main.js
+            bundle/manifest.json
+            bundle/styles.css
 
       - name: Publish immutable GitHub release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.tag_info.outputs.version }}"
-          TAG="${{ steps.tag_info.outputs.tag }}"
-          
-          NOTES_FLAG="--generate-notes"
-          if [ -f CHANGELOG.md ]; then
-            NOTES_FLAG="--notes-file CHANGELOG.md"
-          fi
-          
-          gh release create "$TAG" \
-            "release/$VERSION/main.js" \
-            "release/$VERSION/manifest.json" \
-            "release/$VERSION/styles.css" \
+          gh release create "$VERSION" \
+            bundle/main.js \
+            bundle/manifest.json \
+            bundle/styles.css \
+            --verify-tag \
             --title "Soundings $VERSION" \
-            $NOTES_FLAG
+            --notes-file bundle/RELEASE_NOTES.md

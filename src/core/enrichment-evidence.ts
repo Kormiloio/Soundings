@@ -18,6 +18,15 @@ function frontmatterValue(frontmatter: string, key: string): string | undefined 
   return matches.length === 1 ? matches[0] : undefined;
 }
 
+function frontmatterBlock(content: string): string | undefined {
+  const lines = (content.charCodeAt(0) === 0xfeff ? content.slice(1) : content).split(/\r?\n/u);
+  if (lines[0]?.trimEnd() !== "---") return undefined;
+  for (let index = 1; index < lines.length; index += 1) {
+    if (lines[index].trimEnd() === "---") return lines.slice(1, index).join("\n");
+  }
+  return undefined;
+}
+
 function isScalar(value: string | undefined, expected: string): boolean {
   return value === expected || value === JSON.stringify(expected);
 }
@@ -37,10 +46,9 @@ export async function identifySourceNote(
     return { ok: false, error: "invalid-soundings-note" };
   }
 
-  const frontmatterMatch = content.match(/^---\s*([\s\S]*?)\s*---/);
-  if (!frontmatterMatch) return { ok: false, error: "invalid-soundings-note" };
+  const frontmatter = frontmatterBlock(content);
+  if (frontmatter === undefined) return { ok: false, error: "invalid-soundings-note" };
 
-  const frontmatter = frontmatterMatch[1];
   if (!isScalar(frontmatterValue(frontmatter, "type"), "meeting-transcript")) {
     return { ok: false, error: "invalid-soundings-note" };
   }

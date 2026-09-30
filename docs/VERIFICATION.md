@@ -2,6 +2,14 @@
 
 **Last updated:** 2026-09-29
 
+## Published 0.2.0 asset discrepancy
+
+Recorded 2026-09-29 during pre-release review. GitHub release `0.2.0` (tag `0.2.0` → commit `4b74b86`) exposes `main.js` `eb42c8fa92046a8af3f71405cd7259b5861e649d9ee4a2aac5e4dd8265e40b58`; rebuilding `4b74b86` reproduces that hash exactly. The packaged acceptance below covered `main.js` `06da240b…`, built from the later uncommitted working tree. `manifest.json` and `styles.css` match. The published `0.2.0` therefore lacks the verified exact source-note identification and full-path companion backlinks; it has no artifact attestations. Release `0.2.0` remains immutable; the corrections ship in `0.2.1`.
+
+## Soundings 0.2.1 automated candidate
+
+The `release-0-2-1` automated gate passed on 2026-09-29: production build and TypeScript checks, 244 automated tests across 29 files, runtime audit, production and full dependency audits with zero vulnerabilities, strict OpenSpec validation, and `git diff --check`. New coverage proves per-speaker blocks for multi-voice cues, ignored WebVTT header metadata, whitespace-only cue separators with fail-closed stray chunks, single-pass character-reference decoding, line-delimited frontmatter identification (delimiter-like values, CRLF, BOM), enrichment draft retention for every non-created outcome with refreshed evidence after stale sources, bare-tag release triggers, read-only dependency installation, job-scoped publish permissions, and SHA-pinned actions. Single-voice golden outputs are unchanged. Packaged desktop acceptance of staged `0.2.1` assets is pending.
+
 ## Soundings 0.2.0 manual-enrichment automated candidate
 
 The hardened manual-enrichment automated gate passed on 2026-09-29:

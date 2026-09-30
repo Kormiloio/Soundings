@@ -1,14 +1,16 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal, Notice, Setting } from "obsidian";
 import { validateEnrichmentDraft } from "../core/enrichment-draft";
 import type { SourceNoteEvidence } from "../core/enrichment-evidence";
+import type { EnrichmentOutcome } from "../core/enrichment-execution";
 import { buildEnrichmentPlan, type EnrichmentPlan } from "../core/enrichment-planning";
 import { sourceLinkForEnrichment } from "../core/enrichment-rendering";
 
 export interface EnrichmentModalActions {
   readonly sourceEvidence: SourceNoteEvidence;
-  readonly existingPaths: ReadonlySet<string>;
+  readonly existingPaths: () => ReadonlySet<string>;
   readonly planId: () => string;
-  readonly publish: (plan: EnrichmentPlan) => Promise<void>;
+  readonly publish: (plan: EnrichmentPlan) => Promise<EnrichmentOutcome | undefined>;
+  readonly reidentify: () => Promise<SourceNoteEvidence | undefined>;
 }
 
 type Step = "entry" | "preview";
@@ -25,6 +27,10 @@ export class EnrichmentModal extends Modal {
   private actionItems = "";
   private followUps = "";
   private validationEl?: HTMLElement;
+  private sourceEvidence?: SourceNoteEvidence;
+  private message = "";
+  private publishing = false;
+  private closed = false;
 
   constructor(
     app: App,
@@ -32,15 +38,18 @@ export class EnrichmentModal extends Modal {
     private readonly actions: EnrichmentModalActions
   ) {
     super(app);
+    this.sourceEvidence = actions.sourceEvidence;
   }
 
   onOpen(): void {
+    this.closed = false;
     this.modalEl.addClass("soundings-enrichment-modal");
     this.contentEl.addClass("soundings-enrichment");
     this.render();
   }
 
   onClose(): void {
+    this.closed = true;
     this.modalEl.removeClass("soundings-enrichment-modal");
     this.contentEl.empty();
   }
@@ -60,6 +69,7 @@ export class EnrichmentModal extends Modal {
       cls: "soundings-enrichment__reason",
       attr: { "aria-live": "polite" }
     });
+    if (this.message) this.validationEl.setText(this.message);
 
     const addField = (name: string, desc: string, label: string, value: string, onChange: (v: string) => void) => {
       new Setting(contentEl)
@@ -83,6 +93,11 @@ export class EnrichmentModal extends Modal {
   }
 
   private continueToPreview(): void {
+    const sourceEvidence = this.sourceEvidence;
+    if (!sourceEvidence) {
+      this.validationEl?.setText("The source note is no longer a supported Soundings note. Copy your draft before closing.");
+      return;
+    }
     const validation = validateEnrichmentDraft({
       summary: this.summary,
       decisions: [...linesFromInput(this.decisions)],
@@ -97,9 +112,9 @@ export class EnrichmentModal extends Modal {
 
     const plan = buildEnrichmentPlan(
       this.sourcePath,
-      this.actions.sourceEvidence,
+      sourceEvidence,
       validation.draft,
-      this.actions.existingPaths,
+      this.actions.existingPaths(),
       new Date(),
       this.actions.planId()
     );
@@ -110,6 +125,7 @@ export class EnrichmentModal extends Modal {
     }
 
     this.plan = plan;
+    this.message = "";
     this.step = "preview";
     this.render();
   }
@@ -149,14 +165,42 @@ export class EnrichmentModal extends Modal {
       .addButton((button) => button.setButtonText("Cancel").onClick(() => this.close()))
       .addButton((button) => {
         button.setCta().setButtonText("Publish companion note");
-        button.setDisabled(!canPublish);
+        button.setDisabled(!canPublish || this.publishing);
         button.onClick(async () => {
-          if (!canPublish || !this.plan) return;
-          const confirmed = this.plan;
-          this.close();
-          await this.actions.publish(confirmed);
+          if (!canPublish || !this.plan || this.publishing) return;
+          button.setDisabled(true);
+          await this.publish(this.plan);
         });
       });
   }
 
+  private async publish(plan: EnrichmentPlan): Promise<void> {
+    this.publishing = true;
+    let outcome: EnrichmentOutcome | undefined;
+    try {
+      outcome = await this.actions.publish(plan);
+    } finally {
+      this.publishing = false;
+    }
+    if (outcome?.status === "created") {
+      this.close();
+      return;
+    }
+    const reason = outcome ? `Not published: ${outcome.reason}` : "Not published.";
+    if (this.closed) {
+      new Notice(`Soundings: ${reason}`);
+      return;
+    }
+    if (outcome?.status === "stale") {
+      this.sourceEvidence = await this.actions.reidentify();
+      this.message = this.sourceEvidence
+        ? `${reason} Your draft is kept. Review it again against the current note.`
+        : `${reason} The source note is no longer a supported Soundings note. Copy your draft before closing.`;
+    } else {
+      this.message = `${reason} Your draft is kept.`;
+    }
+    this.plan = undefined;
+    this.step = "entry";
+    this.render();
+  }
 }

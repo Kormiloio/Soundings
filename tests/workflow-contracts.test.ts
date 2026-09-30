@@ -29,13 +29,41 @@ describe("GitHub Actions workflow contracts", () => {
     expect(`${ci}\n${release}`).not.toContain("npx openspec");
   });
 
-  it("restricts release.yml to explicit semantic tags and required attestation permissions", async () => {
+  it("restricts release.yml to bare semantic tags Obsidian can install", async () => {
     const release = await readFile(join(process.cwd(), ".github/workflows/release.yml"), "utf8");
-    expect(release).toContain("contents: write");
-    expect(release).toContain("id-token: write");
-    expect(release).toContain("attestations: write");
     expect(release).toContain("- \"[0-9]+.[0-9]+.[0-9]+\"");
-    expect(release).toContain("- \"v[0-9]+.[0-9]+.[0-9]+\"");
+    expect(release).not.toMatch(/- "v\[/);
+    expect(release).toContain("git merge-base --is-ancestor \"$GITHUB_SHA\" origin/main");
+    expect(release).toContain("--verify-tag");
+  });
+
+  it("keeps dependency installation read-only and scopes write permissions to the publish job", async () => {
+    const release = await readFile(join(process.cwd(), ".github/workflows/release.yml"), "utf8");
+    const [header, jobs] = release.split(/^jobs:$/m);
+    const [build, publish] = jobs.split(/^  publish:$/m);
+    expect(header).toContain("permissions: {}");
+    expect(build).toContain("contents: read");
+    expect(build).toContain("persist-credentials: false");
+    expect(build).toContain("npm ci");
+    expect(build).not.toMatch(/write/);
+    expect(publish).toContain("contents: write");
+    expect(publish).toContain("id-token: write");
+    expect(publish).toContain("attestations: write");
+    expect(publish).not.toMatch(/npm |actions\/checkout/);
+    expect(publish).toContain("gh release view");
+    expect(publish).toContain("--notes-file bundle/RELEASE_NOTES.md");
+  });
+
+  it("pins every action to a full commit SHA and uses a supported Node.js line", async () => {
+    for (const name of ["ci.yml", "release.yml"]) {
+      const workflow = await readFile(join(process.cwd(), ".github/workflows", name), "utf8");
+      const uses = [...workflow.matchAll(/uses:\s*(\S+)/g)].map((match) => match[1]);
+      expect(uses.length).toBeGreaterThan(0);
+      for (const action of uses) expect(action).toMatch(/@[0-9a-f]{40}$/);
+      expect(workflow).toContain("node-version: 22");
+      expect(workflow).toContain("persist-credentials: false");
+      expect(workflow).not.toContain("npm audit --production");
+    }
   });
 
   it("stages and attests the exact three Obsidian assets in release.yml", async () => {
