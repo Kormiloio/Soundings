@@ -125,7 +125,7 @@ describe("safe execution", () => {
     expect(vault.files.has("one.md")).toBe(false);
   });
 
-  it("refuses stale output profiles after preview", async () => {
+  it("refuses settings whose output profile changed after preview (plan settings fingerprint)", async () => {
     const vault = new MemoryPublicationAdapter();
     vault.files.set("one.txt", encoder.encode("one"));
     const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
@@ -135,6 +135,21 @@ describe("safe execution", () => {
       digest: testDigest
     });
     expect(outcomes[0]).toMatchObject({ status: "stale", reason: "Settings changed after preview." });
+    expect(vault.files.has("one.md")).toBe(false);
+  });
+
+  it("refuses a mutable output profile changed after preview even when settings still match (item fingerprint)", async () => {
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set("one.txt", encoder.encode("one"));
+    const profile = { ...DEFAULT_OUTPUT_PROFILE, staticTags: [] as string[] };
+    const planningSettings = { ...DEFAULT_SETTINGS, outputProfile: profile };
+    const plan = buildPlan([await item("one.txt", "one")], new Set(), planningSettings, new Date(0), () => "p1");
+    const reviewedSettings = { ...DEFAULT_SETTINGS, outputProfile: { ...profile, staticTags: [] } };
+    profile.timestampPolicy = "retain";
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set(["one.txt"]), settings: reviewedSettings, digest: testDigest
+    });
+    expect(outcomes[0]).toMatchObject({ status: "stale", reason: "Output profile changed after preview." });
     expect(vault.files.has("one.md")).toBe(false);
   });
 

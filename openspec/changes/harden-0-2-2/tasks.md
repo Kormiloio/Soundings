@@ -44,8 +44,8 @@
 - [x] 7.2 Add tests for string booleans, a non-array `excludedPaths`, and non-string list entries; verify the plugin loads
 
 ## 8. Cleanup (code review 11)
-- [ ] 8.1 Remove the self-comparing output-profile and draft fingerprint checks
-- [ ] 8.2 Rename or rewrite the stale-profile test so it names the `isPlanCurrent` path
+- [x] 8.1 ~~Remove the self-comparing output-profile and draft fingerprint checks~~ Revised: both are the only guard against publishing unreviewed output from mutable input. Kept, documented, given a distinct reason, and covered by tests proven by mutation (design decision 14)
+- [x] 8.2 Rename or rewrite the stale-profile test so it names the `isPlanCurrent` path
 
 ## 9. Release tooling (security 6, 7, 8; code review 13, 14)
 - [ ] 9.1 Confine `prepare-release.mjs` output to `release/<version>` and refuse symlinks; add tests for `src`, `.git`, and a symlink

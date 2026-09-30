@@ -108,10 +108,16 @@ Every fix stays inside its existing layer.
       - `loadSettings` runs it before the existing migration and shows one notice listing the reset field names. The warning is a notice rather than a `settings-field-reset:<field>` string.
       - `validateSettings` also rejects wrong-typed fields from any caller with an error instead of coercing them. A string `excludedPaths` no longer splits into single-character exclusions, and non-string entries no longer throw.
 
-14. **Dead checks.**
-    - Remove the per-item output-profile fingerprint comparison in `execution.ts`, which is identical to the plan's. `isPlanCurrent` remains the guard.
-    - Remove the draft self-comparison in `enrichment-execution.ts`.
-    - Rename the stale-profile test to name the `isPlanCurrent` path.
+14. **Fingerprint guards (revised during implementation).**
+    - The draft proposed removing the per-item output-profile check in `execution.ts` and the draft check in `enrichment-execution.ts` as self-comparisons. That premise holds only for frozen input.
+    - `buildPlan` stores the caller's `outputProfile` by reference, and `executeEnrichmentPlan` re-renders from `plan.draft` rather than publishing the reviewed `renderedMarkdown`.
+    - If a caller passes a mutable profile or draft and changes it after preview, each check is the only thing that refuses to publish unreviewed output. `isPlanCurrent` misses the profile case whenever execution receives settings that still match the plan's fingerprint.
+    - Removing a working safety guard for tidiness would conflict with hard rule 1, so both checks are **kept**:
+      - Each gets a comment explaining what it guards.
+      - The profile check now reports a distinct reason ("Output profile changed after preview.").
+      - A regression test covers each check. With the check disabled, exactly that test fails.
+    - The misattributed test is renamed to name the plan-settings-fingerprint (`isPlanCurrent`) path it actually exercises.
+    - In production both checks are currently unreachable, because validated settings and drafts are frozen.
 
 15. **Release tooling.**
     - `prepare-release.mjs` accepts only an output that resolves to `release/<manifest version>` beneath the repository. It refuses if `release/` or the target is a symbolic link (checked with `lstat`) before any removal.

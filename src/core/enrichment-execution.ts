@@ -64,6 +64,8 @@ export async function executeEnrichmentPlan(
 ): Promise<EnrichmentOutcome> {
   if (plan.status !== "ready") return outcome(plan, "blocked", plan.reason);
   if (options.signal?.aborted) return outcome(plan, "canceled", "Publication was canceled.");
+  // Publication re-renders from plan.draft; this keeps the published bytes equal to the reviewed
+  // preview even if a caller passed a mutable draft and changed it after review.
   if (enrichmentDraftFingerprint(plan.draft) !== plan.draftFingerprint) {
     return outcome(plan, "stale", "Enrichment changed after preview.");
   }

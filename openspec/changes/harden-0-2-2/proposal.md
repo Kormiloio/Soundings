@@ -14,7 +14,7 @@ A full code review and security review of published release `0.2.1` (2026-09-30)
 - **WebVTT attribution after `</v>`.** Text following a closing voice tag is credited to the previous speaker, contrary to the per-speaker requirement. The voice-tag expression also strips unknown tags that merely start with `v` (for example `<video>`), instead of refusing them.
 - **Structure breaks in notes.** An enrichment Summary line of `~~~`, a backtick fence, `---`, or `===` changes companion-note structure. A companion backlink target containing `]]`, `|`, `#`, `^`, or `[` can break out of the wikilink and inject raw HTML such as a remote `<img>`. Speaker and title headings leave Obsidian inline syntax (`%%`, `$`, `==`, `~~`, `^`) active, so a speaker named `%%` can hide later transcript text in reading view.
 - **Settings.** Any settings change clears the observation inbox. Saved settings are not type-checked, so `"false"` enables observation and a non-array `excludedPaths` prevents the plugin from loading.
-- **Smaller defects.** The decoder strips a second, genuine leading U+FEFF. C1 control characters in filenames are written raw into YAML frontmatter. Two fingerprint checks compare a value with itself. One test asserts a different code path than its name claims. Closing the progress dialog with Esc does not cancel the run.
+- **Smaller defects.** The decoder strips a second, genuine leading U+FEFF. C1 control characters in filenames are written raw into YAML frontmatter. Two fingerprint checks were reported as comparing a value with itself; implementation showed each is the only guard against publishing unreviewed output when a caller passes mutable input, so they are kept and tested (see design decision 14). One test asserts a different code path than its name claims. Closing the progress dialog with Esc does not cancel the run.
 - **Release tooling.** `scripts/prepare-release.mjs` will recursively remove any in-repository `--output` path, including `src` or `.git`. `scripts/audit-runtime.mjs` is a name blocklist that misses `requestUrl`, `request`, dynamic `import()`, `eval`, `new Function`, `vault.adapter.*` writes, `vault.process`, `vault.append`, `vault.modifyBinary`, and `fileManager.trashFile`. The `obsidian` dev dependency is declared as `latest`.
 
 ## What Changes
@@ -26,7 +26,7 @@ A full code review and security review of published release `0.2.1` (2026-09-30)
 - Add an `unloaded` guard to scan, conversion, and enrichment entry points. Close owned modals on unload, and make closing the progress dialog cancel the run.
 - Neutralize fence openers and setext underlines in enrichment prose. Refuse enrichment for a source note whose path cannot be safely wikilinked. Escape Obsidian inline syntax in generated headings. Escape C1 controls in frontmatter strings.
 - Type-check every saved-settings field, falling back to the safe default with a content-free migration warning.
-- Remove the duplicate BOM strip and the self-comparing fingerprint checks, and fix the misattributed test.
+- Remove the duplicate BOM strip, document and test the two fingerprint guards, and fix the misattributed test.
 - Restrict release staging to `release/<x.y.z>` with a symlink check. Harden the runtime audit with a bundle import allowlist and a repository-wide forbidden-member list. Pin the `obsidian` dev dependency to an exact version.
 - Bump to `0.2.2`; update the changelog, PRD, `openspec/project.md`, and verification docs.
 

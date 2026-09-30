@@ -49,8 +49,10 @@ async function executeItem(
   }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
 
+  // The plan holds the caller's profile by reference. If that object is mutated after preview, the
+  // settings fingerprint can still match while rendering would use an unreviewed profile.
   if (item.outputProfileFingerprint !== outputProfileFingerprint(outputProfile)) {
-    return outcome(item, "stale", "Settings changed after preview.");
+    return outcome(item, "stale", "Output profile changed after preview.");
   }
 
   let source: Uint8Array;

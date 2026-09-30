@@ -44,6 +44,19 @@ async function evidenceFor(path: string, body: string) {
 }
 
 describe("enrichment execution", () => {
+  it("refuses a mutable draft changed after review", async () => {
+    const sourcePath = "meetings/note.md";
+    const body = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# Title';
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set(sourcePath, encoder.encode(body));
+    const draft = { summary: "Reviewed", decisions: [] as string[], actionItems: [] as string[], followUps: [] as string[] };
+    const plan = buildEnrichmentPlan(sourcePath, await evidenceFor(sourcePath, body), draft, new Set(), new Date(0), "p1");
+    draft.summary = "Not reviewed";
+    const outcome = await executeEnrichmentPlan(plan, vault, { digest: testDigest, maxSourceBytes: 5_000_000 });
+    expect(outcome).toMatchObject({ status: "stale", reason: "Enrichment changed after preview." });
+    expect(vault.files.has("meetings/note - Enrichment.md")).toBe(false);
+  });
+
   it("plans a maximum-size valid draft without mutating the vault", async () => {
     const sourcePath = "meetings/maximum.md";
     const body = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 2\n---\n# Maximum';
