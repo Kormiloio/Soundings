@@ -176,6 +176,7 @@ export class ReviewModal extends Modal {
 
 export class ProgressModal extends Modal {
   private progressEl?: HTMLElement;
+  private finished = false;
 
   constructor(app: App, private readonly cancelRun: () => void) {
     super(app);
@@ -198,7 +199,15 @@ export class ProgressModal extends Modal {
     this.progressEl?.setText(`Processed ${complete} of ${total} selected transcript${total === 1 ? "" : "s"}.`);
   }
 
+  /** Closes after the run settles, without canceling it. */
+  finish(): void {
+    this.finished = true;
+    this.close();
+  }
+
   onClose(): void {
+    // Dismissing the dialog by any means (Escape, close control) cancels the remaining run.
+    if (!this.finished) this.cancelRun();
     this.contentEl.empty();
   }
 }

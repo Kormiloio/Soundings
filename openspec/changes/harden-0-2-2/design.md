@@ -31,6 +31,7 @@ Every fix stays inside its existing layer.
 2. **Fence sizing.** Compute the longest `~` run with a single loop over the string, and never spread into `Math.max`.
 
 3. **Per-item isolation.** In `executePlan`, wrap parse and render for each item in `try`/`catch`. Any thrown error becomes a `failed` outcome with a content-free category (`render-failed`), and the batch continues. The create and read-back section keeps its existing handling.
+   - **Implementation note:** `executePlan` also wraps each whole item. Any other unexpected error becomes `needs-attention` ("inspect the destination before retrying"), not `failed`, because it could occur after a create.
 
 4. **Collision identity.** `collisionKey(path) = path.normalize("NFC").toLowerCase()`.
    - Planning builds `existingKeys` from existing paths and computes in-plan ambiguity counts by key.
@@ -63,6 +64,11 @@ Every fix stays inside its existing layer.
    - `scan`, `convertPlan`, `publishEnrichment`, and inbox review return early when the flag is set.
    - Opened `ReviewModal`, `EnrichmentModal`, progress, and results modals register in a `Set` and are closed in `onunload`.
    - Closing the progress modal by any means calls `runs.cancel()`.
+   - **Implementation notes:**
+     - Ownership is a small `own(modal)` helper. It records the modal and wraps its `onClose` to forget it, so no modal class needs a new constructor parameter.
+     - `ProgressModal.finish()` closes the dialog without canceling after a run settles; any other close cancels.
+     - The guard is re-checked after every await that precedes opening a modal: after discovery, inbox planning, and source-note identification, and before the results dialog. A run that settles after unload therefore opens nothing.
+     - Behavior tests drive the real `main.ts` through an extended Obsidian stub: a minimal `Plugin`, tracking of open modals, and captured notices.
 
 9. **Enrichment prose safety.** `safeProse` prefixes a backslash to any line whose first non-space characters would:
    - open a fence (three or more `` ` `` or `~`)

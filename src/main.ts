@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile, type EventRef } from "obsidian";
+import { Notice, Plugin, TFile, type EventRef, type Modal } from "obsidian";
 import { discoverTranscripts } from "./core/discovery";
 import { executeEnrichmentPlan, type EnrichmentOutcome } from "./core/enrichment-execution";
 import { identifySourceNote, type SourceNoteEvidence } from "./core/enrichment-evidence";
@@ -30,6 +30,8 @@ export default class SoundingsPlugin extends Plugin {
   private observer?: ObservationProcessor;
   private observationEvent?: EventRef;
   private inboxNoticeOutstanding = false;
+  private unloaded = false;
+  private readonly ownedModals = new Set<Modal>();
   private readonly digest: DigestFunction = async (algorithm, data) => {
     const subtle = activeWindow.crypto?.subtle;
     if (!subtle) throw new Error("secure-hash-unavailable");
@@ -78,8 +80,22 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   onunload(): void {
+    this.unloaded = true;
     this.runs.cancel();
     this.stopObservation();
+    for (const modal of [...this.ownedModals]) modal.close();
+    this.ownedModals.clear();
+  }
+
+  /** Tracks a modal so unload closes it; closed modals are forgotten. */
+  private own<T extends Modal>(modal: T): T {
+    this.ownedModals.add(modal);
+    const onClose = modal.onClose.bind(modal);
+    modal.onClose = () => {
+      this.ownedModals.delete(modal);
+      onClose();
+    };
+    return modal;
   }
 
   async setSettings(settings: SoundingsSettings): Promise<void> {
@@ -136,6 +152,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async startManualEnrichment(sourcePath: string): Promise<void> {
+    if (this.unloaded) return;
     if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return;
@@ -146,17 +163,18 @@ export default class SoundingsPlugin extends Plugin {
       return;
     }
     const evidence = await this.identifyEnrichmentSource(adapter, sourcePath);
+    if (this.unloaded) return;
     if (!evidence) {
       new Notice("Manual enrichment requires an active Soundings transcript note.");
       return;
     }
-    new EnrichmentModal(this.app, sourcePath, {
+    this.own(new EnrichmentModal(this.app, sourcePath, {
       sourceEvidence: evidence,
       existingPaths: () => new Set(adapter.listFiles().map((file) => file.path)),
       planId: () => activeWindow.crypto.randomUUID(),
       publish: (plan) => this.publishEnrichment(plan),
       reidentify: () => this.identifyEnrichmentSource(adapter, sourcePath)
-    }).open();
+    })).open();
   }
 
   private async identifyEnrichmentSource(
@@ -179,6 +197,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async publishEnrichment(plan: EnrichmentPlan): Promise<EnrichmentOutcome | undefined> {
+    if (this.unloaded) return undefined;
     if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return undefined;
@@ -202,6 +221,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async reviewInbox(): Promise<void> {
+    if (this.unloaded) return;
     const adapter = this.vaultAdapter;
     const observer = this.observer;
     if (!this.settingsPolicy || !adapter || !observer) {
@@ -218,14 +238,15 @@ export default class SoundingsPlugin extends Plugin {
       const plan = await planTranscriptInbox(
         observer.inbox, adapter, this.settings, this.digest, new Date(), () => activeWindow.crypto.randomUUID(), signal
       );
+      if (this.unloaded) return;
       if (!plan) {
         new Notice("Soundings transcript inbox has no current eligible files.");
         return;
       }
-      new ReviewModal(this.app, plan, {
+      this.own(new ReviewModal(this.app, plan, {
         refresh: () => this.reviewInbox(),
         convert: (selected) => this.convertPlan(plan, selected)
-      }).open();
+      })).open();
     } catch {
       new Notice("Soundings could not review the transcript inbox. No files were changed.");
     } finally {
@@ -251,6 +272,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async scanAndReview(): Promise<void> {
+    if (this.unloaded) return;
     if (!this.settingsPolicy) {
       new Notice("Soundings cannot scan until the vault configuration directory is valid.");
       return;
@@ -263,16 +285,17 @@ export default class SoundingsPlugin extends Plugin {
     const adapter = new ObsidianVaultAdapter(this.app.vault);
     try {
       const discovery = await discoverTranscripts(adapter, this.settings, signal, 50, this.digest);
+      if (this.unloaded) return;
       if (discovery.canceled) {
         new Notice("Soundings scan canceled. No files were changed.");
         return;
       }
       const existing = new Set(adapter.listFiles().map((file) => file.path));
       const plan = buildPlan(discovery.items, existing, this.settings, new Date(), () => activeWindow.crypto.randomUUID());
-      new ReviewModal(this.app, plan, {
+      this.own(new ReviewModal(this.app, plan, {
         refresh: () => this.scanAndReview(),
         convert: (selected) => this.convertPlan(plan, selected)
-      }).open();
+      })).open();
     } catch {
       new Notice("Soundings could not complete the scan. No files were changed.");
     } finally {
@@ -281,12 +304,13 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async convertPlan(plan: ReturnType<typeof buildPlan>, selected: ReadonlySet<string>): Promise<void> {
+    if (this.unloaded) return;
     if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return;
     }
     const signal = this.runs.begin();
-    const progress = new ProgressModal(this.app, () => this.runs.cancel());
+    const progress = this.own(new ProgressModal(this.app, () => this.runs.cancel()));
     progress.open();
     try {
       const outcomes = await executePlan(plan, new ObsidianVaultAdapter(this.app.vault), {
@@ -299,10 +323,10 @@ export default class SoundingsPlugin extends Plugin {
       for (const outcome of outcomes) {
         if (outcome.status === "created") this.observer?.inbox.remove(outcome.sourcePath);
       }
-      progress.close();
-      new ResultsModal(this.app, outcomes).open();
+      progress.finish();
+      if (!this.unloaded) this.own(new ResultsModal(this.app, outcomes)).open();
     } catch {
-      progress.close();
+      progress.finish();
       new Notice("Soundings stopped after an unexpected error. Review the destination paths before retrying.");
     } finally {
       this.runs.finish(signal);

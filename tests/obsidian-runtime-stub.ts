@@ -123,25 +123,68 @@ export const runtimeControls = {
 };
 
 export function resetRuntimeControls(): void {
+  openModals.length = 0;
+  notices.length = 0;
   runtimeControls.buttons.length = 0;
   runtimeControls.toggles.length = 0;
   runtimeControls.texts.length = 0;
   runtimeControls.dropdowns.length = 0;
 }
 
-export class Plugin {}
+export interface FakeCommand {
+  readonly id: string;
+  readonly name: string;
+  readonly callback?: () => unknown;
+  readonly checkCallback?: (checking: boolean) => boolean | void;
+}
+
+export class Plugin {
+  readonly commands: FakeCommand[] = [];
+  readonly ribbonCallbacks: Array<() => unknown> = [];
+  readonly registeredEvents: unknown[] = [];
+  savedData: unknown = null;
+
+  constructor(readonly app: unknown, readonly manifest?: unknown) {}
+  addSettingTab(_tab: unknown): void {}
+  addRibbonIcon(_icon: string, _title: string, callback: () => unknown): FakeElement {
+    this.ribbonCallbacks.push(callback);
+    return new FakeElement("div");
+  }
+  addCommand(command: FakeCommand): FakeCommand { this.commands.push(command); return command; }
+  registerEvent(ref: unknown): void { this.registeredEvents.push(ref); }
+  async loadData(): Promise<unknown> { return this.savedData; }
+  async saveData(data: unknown): Promise<void> { this.savedData = data; }
+}
+
 export class PluginSettingTab {}
+
+/** Modals that are currently open, in opening order. */
+export const openModals: Modal[] = [];
 
 export class Modal {
   readonly modalEl = new FakeElement("div");
   readonly contentEl = new FakeElement("div");
 
   constructor(readonly app?: unknown) {}
-  open(): void { (this as { onOpen?: () => void }).onOpen?.(); }
-  close(): void { (this as { onClose?: () => void }).onClose?.(); }
+  open(): void {
+    openModals.push(this);
+    (this as { onOpen?: () => void }).onOpen?.();
+  }
+  close(): void {
+    const index = openModals.indexOf(this);
+    if (index < 0) return;
+    openModals.splice(index, 1);
+    (this as { onClose?: () => void }).onClose?.();
+  }
 }
 
-export class Notice {}
+export const notices: string[] = [];
+
+export class Notice {
+  constructor(message?: string) {
+    if (message !== undefined) notices.push(message);
+  }
+}
 
 export class Setting {
   readonly settingEl: FakeElement;

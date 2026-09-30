@@ -75,16 +75,21 @@ async function executeItem(
   if (presence === "unknown") return outcome(item, "failed", "Destination could not be checked.");
   if (presence === "present" || adapter.exists(item.destinationPath)) return outcome(item, "blocked", "Destination already exists.");
 
-  const parsed = parseTranscript(item.format, source);
-  if (!parsed.ok || !parsed.value) return outcome(item, "failed", `Transcript parsing failed: ${parsed.error ?? "unknown"}.`);
-  const rendered = renderMarkdown(parsed.value, {
-    sourceFile: item.sourcePath.slice(item.sourcePath.lastIndexOf("/") + 1),
-    sourceFormat: item.format,
-    title: item.title,
-    convertedAt: (options.now ?? (() => new Date()))().toISOString(),
-    ...(item.project ? { project: item.project } : {})
-  }, outputProfile);
-  const bytes = new TextEncoder().encode(rendered);
+  let bytes: Uint8Array;
+  try {
+    const parsed = parseTranscript(item.format, source);
+    if (!parsed.ok || !parsed.value) return outcome(item, "failed", `Transcript parsing failed: ${parsed.error ?? "unknown"}.`);
+    const rendered = renderMarkdown(parsed.value, {
+      sourceFile: item.sourcePath.slice(item.sourcePath.lastIndexOf("/") + 1),
+      sourceFormat: item.format,
+      title: item.title,
+      convertedAt: (options.now ?? (() => new Date()))().toISOString(),
+      ...(item.project ? { project: item.project } : {})
+    }, outputProfile);
+    bytes = new TextEncoder().encode(rendered);
+  } catch {
+    return outcome(item, "failed", "Transcript could not be rendered (render-failed).");
+  }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
 
   try {
@@ -125,7 +130,12 @@ export async function executePlan(
       outcomes.push(outcome(item, "canceled", "Conversion was canceled."));
       continue;
     }
-    outcomes.push(await executeItem(item, adapter, options, plan.outputProfile));
+    try {
+      outcomes.push(await executeItem(item, adapter, options, plan.outputProfile));
+    } catch {
+      // An unexpected error may occur after creation, so the destination must be inspected.
+      outcomes.push(outcome(item, "needs-attention", "Unexpected error; inspect the destination before retrying."));
+    }
     options.onProgress?.(outcomes.filter((entry) => entry.status !== "skipped").length, selected.length);
   }
   return Object.freeze(outcomes);

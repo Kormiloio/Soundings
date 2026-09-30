@@ -22,10 +22,10 @@
 - [x] 3.3 Add `existsOnDisk` (via `vault.adapter.exists`) to the vault adapter and refuse at execution and companion publication; add tests with a case-insensitive in-memory adapter
 
 ## 4. Execution isolation and lifecycle (security 3, code review 3, 16)
-- [ ] 4.1 Catch parse and render errors per item as `failed`; add test with a throwing renderer
-- [ ] 4.2 Add the `unloaded` guard to scan, conversion, inbox review, and enrichment publication
-- [ ] 4.3 Track and close owned modals on unload; make closing the progress modal cancel the run
-- [ ] 4.4 Add behavior tests for `main.ts`: unload with an open review and an open enrichment modal, and progress dismissal
+- [x] 4.1 Catch parse and render errors per item as `failed`; add test with a throwing renderer
+- [x] 4.2 Add the `unloaded` guard to scan, conversion, inbox review, and enrichment publication
+- [x] 4.3 Track and close owned modals on unload; make closing the progress modal cancel the run
+- [x] 4.4 Add behavior tests for `main.ts`: unload with an open review and an open enrichment modal, and progress dismissal
 
 ## 5. Observation (security 2, code review 2, 6)
 - [ ] 5.1 Subscribe to `create` only inside `workspace.onLayoutReady`; add test that vault-load events queue nothing

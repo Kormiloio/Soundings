@@ -45,7 +45,7 @@ Soundings SHALL stop starting new operations after cancellation or plugin unload
 - **THEN** Soundings cancels the run as if Cancel had been chosen and reports remaining items as canceled
 
 ### Requirement: Isolated and verified outcomes
-Soundings SHALL isolate failures by item, including unexpected parse or render errors, verify readable final bytes after a reported create, and summarize every selected operation as created, skipped, blocked, stale, canceled, needs-attention, or failed.
+Soundings SHALL isolate failures by item, including unexpected parse or render errors, verify readable final bytes after a reported create, and summarize every selected operation as created, skipped, blocked, stale, canceled, needs-attention, or failed. An unexpected error at a point where publication may already have occurred SHALL be reported as needs-attention rather than failed.
 
 #### Scenario: One operation fails while another remains valid
 - **GIVEN** a batch contains two selected operations and the first fails before publication
@@ -62,3 +62,9 @@ Soundings SHALL isolate failures by item, including unexpected parse or render e
 - **WHEN** Soundings executes the batch
 - **THEN** the first item is reported as failed with a content-free category
 - **AND** the second item is still evaluated and the results summary is shown
+
+#### Scenario: Unexpected error where publication may have started
+- **GIVEN** a batch contains two selected items and an unexpected error escapes processing of the first item
+- **WHEN** Soundings executes the batch
+- **THEN** the first item is reported as needs-attention with a content-free reason directing the user to inspect its destination
+- **AND** the second item is still evaluated
