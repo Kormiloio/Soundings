@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -67,6 +67,55 @@ async function run(root: string, tag = "0.1.2") {
 
 afterEach(async () => {
   await Promise.all(temporaryRoots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+});
+
+describe("release staging confinement", () => {
+  async function runWithOutput(root: string, output: string) {
+    return execFileAsync(process.execPath, [script, "--root", root, "--output", output, "--tag", "0.1.2"]);
+  }
+
+  it.each(["src", ".git", "release", "release/0.1.1", "docs/release/0.1.2", "../outside"])("refuses to stage into %s and removes nothing", async (target) => {
+    const root = await createCandidate();
+    for (const folder of ["src", ".git", "release/0.1.1", "docs/release/0.1.2"]) {
+      await mkdir(join(root, folder), { recursive: true });
+      await writeFile(join(root, folder, "keep.txt"), "keep");
+    }
+    await expect(runWithOutput(root, join(root, target))).rejects.toMatchObject({
+      stderr: expect.stringContaining("Release output must be release/0.1.2")
+    });
+    for (const folder of ["src", ".git", "release/0.1.1", "docs/release/0.1.2"]) {
+      await expect(access(join(root, folder, "keep.txt"))).resolves.toBeUndefined();
+    }
+  });
+
+  it("refuses a symbolic-link release folder before removing anything", async () => {
+    const root = await createCandidate();
+    const outside = await mkdtemp(join(tmpdir(), "soundings-release-outside-"));
+    temporaryRoots.push(outside);
+    await mkdir(join(outside, "0.1.2"), { recursive: true });
+    await writeFile(join(outside, "0.1.2", "keep.txt"), "keep");
+    await symlink(outside, join(root, "release"), "dir");
+    await expect(run(root)).rejects.toMatchObject({ stderr: expect.stringContaining("symbolic link") });
+    await expect(access(join(outside, "0.1.2", "keep.txt"))).resolves.toBeUndefined();
+  });
+
+  it("refuses a symbolic-link version folder before removing anything", async () => {
+    const root = await createCandidate();
+    const outside = await mkdtemp(join(tmpdir(), "soundings-release-outside-"));
+    temporaryRoots.push(outside);
+    await writeFile(join(outside, "keep.txt"), "keep");
+    await mkdir(join(root, "release"), { recursive: true });
+    await symlink(outside, join(root, "release", "0.1.2"), "dir");
+    await expect(run(root)).rejects.toMatchObject({ stderr: expect.stringContaining("symbolic link") });
+    await expect(access(join(outside, "keep.txt"))).resolves.toBeUndefined();
+  });
+
+  it("stages into the default release folder without --output", async () => {
+    const root = await createCandidate();
+    const { stdout } = await execFileAsync(process.execPath, [script, "--root", root, "--tag", "0.1.2"]);
+    expect(stdout).toContain("Release 0.1.2 staged");
+    expect(await readdir(join(root, "release", "0.1.2"))).toEqual(["main.js", "manifest.json", "styles.css"]);
+  });
 });
 
 describe("release readiness", () => {

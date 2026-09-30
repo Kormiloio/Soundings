@@ -48,9 +48,9 @@
 - [x] 8.2 Rename or rewrite the stale-profile test so it names the `isPlanCurrent` path
 
 ## 9. Release tooling (security 6, 7, 8; code review 13, 14)
-- [ ] 9.1 Confine `prepare-release.mjs` output to `release/<version>` and refuse symlinks; add tests for `src`, `.git`, and a symlink
-- [ ] 9.2 Add a bundle import allowlist and a repository-wide forbidden-member scan to `audit-runtime.mjs`; add bypass tests (`requestUrl`, `import(`, computed `window[...]`, `vault.process`, `adapter.write`)
-- [ ] 9.3 Pin the `obsidian` dev dependency to an exact version and regenerate the lockfile with `npm install` (not `npm audit fix --force`)
+- [x] 9.1 Confine `prepare-release.mjs` output to `release/<version>` and refuse symlinks; add tests for `src`, `.git`, and a symlink
+- [x] 9.2 Add a bundle import allowlist and a repository-wide forbidden-member scan to `audit-runtime.mjs`; add bypass tests (`requestUrl`, `import(`, computed `window[...]`, `vault.process`, `adapter.write`)
+- [x] 9.3 Pin the `obsidian` dev dependency to an exact version and regenerate the lockfile with `npm install` (not `npm audit fix --force`)
 
 ## 10. Documentation and version
 - [ ] 10.1 Add `0.2.2` changelog notes, including the new refusals and heading-escape output change

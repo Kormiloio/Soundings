@@ -127,6 +127,15 @@ Every fix stays inside its existing layer.
       - allows `adapter.exists` only in `vault-adapter.ts`
       - fails on computed member access to `window`/`globalThis`
     - Pin `obsidian` to the exact version in the lockfile.
+    - **Implementation notes:**
+      - The rules live in a pure `scripts/audit-rules.mjs` (`findViolations`, `bundleImports`) so bypass cases are unit-tested. `audit-runtime.mjs` only reads files and reports.
+      - The bundle allowlist parses every `require(...)` in `main.js`; a non-literal target counts as a violation. The draft planned an esbuild metafile, but reading the built bundle checks the actual shipped bytes and needs no build change.
+      - Destructive-call rules are scoped to `vault.` and `adapter.` receivers, because bare `.delete(`, `.remove(`, and `.open(` are Map, Set, inbox, and modal calls in this codebase.
+      - Violations name the rule and file, never the source text.
+      - **Residual risk:** a pattern audit cannot catch every aliasing bypass, for example `const v = this.app.vault; v.trash(f)`. The bundle import allowlist and code review remain the backstop.
+      - `prepare-release.mjs` requires the output to equal exactly `release/<manifest version>` and `lstat`s both `release/` and the version folder before any removal.
+      - `obsidian` is pinned to `1.13.1`, the newest version on npm and the version already locked. The lockfile change is one line and the integrity hash is unchanged.
+      - **Incident during verification:** running `release:prepare -- --tag 0.2.1` as a smoke test replaced the local, gitignored `release/0.2.1/` staging copy with a branch build. It was restored from a clean rebuild of tag `0.2.1` that reproduced all three published SHA-256 hashes. The published release was never affected. `docs/RELEASING.md` now warns against staging a published version.
 
 ## Risks / Trade-offs
 

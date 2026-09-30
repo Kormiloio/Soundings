@@ -26,6 +26,8 @@ Recheck these pages immediately before publishing because directory requirements
    git diff --check
    ```
 
+   Staging writes only to `release/<version>/` inside the repository and replaces that folder. It refuses any other `--output` and refuses a symbolic-link `release/` or version folder. Never stage a version that is already published: that overwrites the local copy of the accepted assets. The published assets are immutable, and a byte-identical copy can be rebuilt from the release tag.
+
 4. Confirm `release/<version>/` contains exactly:
 
    - `main.js`
