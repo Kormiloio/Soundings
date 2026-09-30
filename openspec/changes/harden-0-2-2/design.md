@@ -39,12 +39,17 @@ Every fix stays inside its existing layer.
    - *Alternative rejected:* detecting filesystem case sensitivity at runtime. It is platform-specific and unreliable across sync providers.
 
 5. **Dot-leading destinations.** If the sanitized basename begins with `.`, derivation fails with the existing `destination-invalid` classification and an actionable reason. The source is untouched.
+   - **Implementation note:** `destinationFor` returns a distinct `destination-basename-hidden` error, so the plan shows a specific reason: the name would start with a period, which Obsidian hides.
 
 6. **Execution-time filesystem check.**
    - `ConversionVault` gains `existsOnDisk(path)`, implemented as `vault.adapter.exists(path)`. That call is case-insensitive by default and sees unindexed files.
    - Execution refuses with `destination-exists` when either the index lookup or `existsOnDisk` reports the path.
    - The await happens before the final synchronous index check and `createBinary`. This leaves no new await between the last check and create.
-   - Companion publication uses the same check.
+   - Companion publication uses the same check, and enrichment planning compares companion destinations by `collisionKey` too.
+   - **Implementation notes:**
+     - `existsOnDisk` is a required `PublicationAdapter` method, so every adapter must implement it at compile time.
+     - If the storage check throws, the item is `failed` ("Destination could not be checked.") and no create is attempted.
+     - After a failed create, the storage check also decides between `blocked` (the destination appeared) and `failed`. A case-variant refusal from Obsidian is therefore reported as a collision, not a generic failure.
    - This reads only metadata. It is a public API, but it is adapter-level, so the runtime audit allows `adapter.exists` only in `vault-adapter.ts`.
 
 7. **Observation lifecycle.**

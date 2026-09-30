@@ -27,7 +27,9 @@
 - Source text is placed in dynamic literal fences so HTML, Markdown, links, and Obsidian embeds remain inert.
 - YAML metadata is versioned and safely encoded.
 - Summary, Decisions, Action Items, and Follow-ups are reserved but never fabricated.
-- A missing or existing destination blocks conversion. Soundings never reconverts over it.
+- An existing destination blocks conversion, including one that differs only by letter case (`bar.md` for `Bar.txt`) or Unicode composition. Soundings never converts over it.
+- Two sources whose destinations differ only by letter case or Unicode composition (for example `Foo.txt` and `foo.vtt`) are both blocked as ambiguous.
+- A cleaned-up name that would start with a period (for example `?.env.txt` → `.env.md`) is refused, because Obsidian hides such files.
 
 ## Size and platform status
 

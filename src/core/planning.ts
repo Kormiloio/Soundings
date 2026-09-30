@@ -9,7 +9,15 @@ import {
 } from "./settings";
 import type { ConversionPlan, PlanItem, Result } from "./types";
 
-export type DestinationError = "source-has-no-extension" | "destination-basename-invalid";
+export type DestinationError = "source-has-no-extension" | "destination-basename-invalid" | "destination-basename-hidden";
+
+/**
+ * Identity used for every collision comparison. Desktop filesystems are commonly case-insensitive and
+ * sync providers may change Unicode composition, so two paths that fold to the same key are one file.
+ */
+export function collisionKey(path: string): string {
+  return path.normalize("NFC").toLowerCase();
+}
 
 const REJECTED_BASENAME_CHARACTERS = new Set(["\\", ":", "*", "?", '"', "<", ">", "|"]);
 
@@ -71,6 +79,8 @@ export function destinationFor(
   const basename = pattern === "source-name-note" ? `${safeSourceName.value} - Note` : safeSourceName.value;
   const normalized = normalizeDestinationBasename(basename);
   if (!normalized.ok || normalized.value === undefined) return normalized;
+  // Obsidian does not index dot-leading names, so neither collision check could see them.
+  if (normalized.value.startsWith(".")) return { ok: false, error: "destination-basename-hidden" };
   const folder = slash >= 0 ? sourcePath.slice(0, slash + 1) : "";
   return { ok: true, value: `${folder}${normalized.value}.md` };
 }
@@ -104,6 +114,7 @@ export function buildPlan(
   idFactory?: () => string
 ): ConversionPlan {
   const profileFingerprint = outputProfileFingerprint(settings.outputProfile);
+  const existingKeys = new Set([...existingPaths].map(collisionKey));
   const draft = discovery.map((item): PlanItem => {
     const destination = destinationFor(item.sourcePath, settings.outputProfile.destinationNamePattern);
     const destinationPath = destination.value;
@@ -111,8 +122,10 @@ export function buildPlan(
     let reason = item.reason;
     if (classification === "eligible" && (!destination.ok || !destinationPath)) {
       classification = "destination-invalid";
-      reason = "A safe Markdown destination could not be derived from this filename.";
-    } else if (classification === "eligible" && destinationPath && existingPaths.has(destinationPath)) {
+      reason = destination.error === "destination-basename-hidden"
+        ? "The Markdown destination would start with a period, which Obsidian hides. Rename the source outside Soundings."
+        : "A safe Markdown destination could not be derived from this filename.";
+    } else if (classification === "eligible" && destinationPath && existingKeys.has(collisionKey(destinationPath))) {
       classification = "destination-exists";
       reason = "Destination already exists.";
     }
@@ -130,11 +143,12 @@ export function buildPlan(
   const destinationCounts = new Map<string, number>();
   for (const item of draft) {
     if (item.classification === "eligible" && item.destinationPath) {
-      destinationCounts.set(item.destinationPath, (destinationCounts.get(item.destinationPath) ?? 0) + 1);
+      const key = collisionKey(item.destinationPath);
+      destinationCounts.set(key, (destinationCounts.get(key) ?? 0) + 1);
     }
   }
   const items = draft.map((item): PlanItem => Object.freeze(
-    item.classification === "eligible" && item.destinationPath && (destinationCounts.get(item.destinationPath) ?? 0) > 1
+    item.classification === "eligible" && item.destinationPath && (destinationCounts.get(collisionKey(item.destinationPath)) ?? 0) > 1
       ? { ...item, classification: "destination-ambiguous", reason: "Multiple sources resolve to this destination." }
       : item
   ));

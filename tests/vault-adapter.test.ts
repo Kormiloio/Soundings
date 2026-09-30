@@ -16,4 +16,11 @@ describe("Obsidian vault adapter", () => {
     await adapter.yieldControl();
     expect(setTimeout).toHaveBeenCalledOnce();
   });
+
+  it("checks storage existence with the platform's default case handling", async () => {
+    const exists = vi.fn(async (_path: string, _sensitive?: boolean) => true);
+    const adapter = new ObsidianVaultAdapter({ adapter: { exists } } as unknown as Vault);
+    await expect(adapter.existsOnDisk("a/bar.md")).resolves.toBe(true);
+    expect(exists).toHaveBeenCalledWith("a/bar.md");
+  });
 });

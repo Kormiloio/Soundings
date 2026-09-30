@@ -19,6 +19,11 @@ class ForbiddenAdapter implements PublicationAdapter {
     return false;
   }
 
+  async existsOnDisk(path: string): Promise<boolean> {
+    this.calls.push(`existsOnDisk(${JSON.stringify(path)})`);
+    return false;
+  }
+
   async createBinary(path: string, _bytes: Uint8Array): Promise<void> {
     this.calls.push(`createBinary(${JSON.stringify(path)})`);
   }

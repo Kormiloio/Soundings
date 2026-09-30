@@ -26,6 +26,10 @@ class MemoryPublicationAdapter implements PublicationAdapter {
     return this.files.has(path);
   }
 
+  async existsOnDisk(path: string): Promise<boolean> {
+    return this.files.has(path);
+  }
+
   async createBinary(path: string, bytes: Uint8Array): Promise<void> {
     await this.createHook?.(path, bytes);
     if (this.files.has(path)) throw new Error("exists");

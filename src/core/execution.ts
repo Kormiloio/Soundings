@@ -7,7 +7,10 @@ import type { ConversionPlan, ExecutionOutcome, PlanItem } from "./types";
 
 export interface PublicationAdapter {
   readBinary(path: string): Promise<Uint8Array>;
+  /** Exact lookup in the vault index. */
   exists(path: string): boolean;
+  /** Storage-level lookup that sees unindexed files and case variants on case-insensitive filesystems. */
+  existsOnDisk(path: string): Promise<boolean>;
   createBinary(path: string, bytes: Uint8Array): Promise<void>;
 }
 
@@ -22,6 +25,17 @@ export interface ExecuteOptions {
 
 function outcome(item: PlanItem, status: ExecutionOutcome["status"], reason: string): ExecutionOutcome {
   return Object.freeze({ sourcePath: item.sourcePath, destinationPath: item.destinationPath ?? "", status, reason });
+}
+
+export async function destinationPresence(
+  adapter: PublicationAdapter,
+  path: string
+): Promise<"present" | "absent" | "unknown"> {
+  try {
+    return await adapter.existsOnDisk(path) ? "present" : "absent";
+  } catch {
+    return "unknown";
+  }
 }
 
 async function executeItem(
@@ -57,7 +71,9 @@ async function executeItem(
   if (source.byteLength !== item.evidence.byteLength || currentHash !== item.evidence.sha256) {
     return outcome(item, "stale", "Source changed after preview.");
   }
-  if (adapter.exists(item.destinationPath)) return outcome(item, "blocked", "Destination already exists.");
+  const presence = await destinationPresence(adapter, item.destinationPath);
+  if (presence === "unknown") return outcome(item, "failed", "Destination could not be checked.");
+  if (presence === "present" || adapter.exists(item.destinationPath)) return outcome(item, "blocked", "Destination already exists.");
 
   const parsed = parseTranscript(item.format, source);
   if (!parsed.ok || !parsed.value) return outcome(item, "failed", `Transcript parsing failed: ${parsed.error ?? "unknown"}.`);
@@ -74,7 +90,7 @@ async function executeItem(
   try {
     await adapter.createBinary(item.destinationPath, bytes);
   } catch {
-    return adapter.exists(item.destinationPath)
+    return adapter.exists(item.destinationPath) || await destinationPresence(adapter, item.destinationPath) === "present"
       ? outcome(item, "blocked", "Destination appeared during publication.")
       : outcome(item, "failed", "Destination could not be created.");
   }

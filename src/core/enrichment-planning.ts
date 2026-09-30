@@ -5,6 +5,7 @@ import {
 } from "./enrichment-draft";
 import type { SourceNoteEvidence } from "./enrichment-evidence";
 import { destinationForEnrichment, renderCompanionMarkdown } from "./enrichment-rendering";
+import { collisionKey } from "./planning";
 
 export type EnrichmentPlanStatus = "ready" | "empty" | "destination-exists" | "destination-invalid";
 
@@ -19,6 +20,12 @@ export interface EnrichmentPlan {
   readonly convertedAt: string;
   readonly status: EnrichmentPlanStatus;
   readonly reason: string;
+}
+
+function hasCollision(existingPaths: ReadonlySet<string>, destinationPath: string): boolean {
+  const key = collisionKey(destinationPath);
+  for (const path of existingPaths) if (collisionKey(path) === key) return true;
+  return false;
 }
 
 export function buildEnrichmentPlan(
@@ -39,7 +46,7 @@ export function buildEnrichmentPlan(
   if (!destination.ok || !destinationPath) {
     status = "destination-invalid";
     reason = "A safe companion destination could not be derived.";
-  } else if (existingPaths.has(destinationPath)) {
+  } else if (hasCollision(existingPaths, destinationPath)) {
     status = "destination-exists";
     reason = "Companion destination already exists.";
   } else if (!enrichmentDraftHasContent(draft)) {

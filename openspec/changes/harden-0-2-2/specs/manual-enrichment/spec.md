@@ -60,3 +60,35 @@ Soundings SHALL accept manual local input for the supported enrichment sections,
 - **WHEN** the user reviews the companion note
 - **THEN** the preview shows the entered text visibly preserved
 - **AND** every section heading and the source-note link that follow remain intact
+
+### Requirement: Companion publication is create-only
+Soundings SHALL derive a deterministic Obsidian-safe companion destination beside the transcript note, treat any existing path that differs from it only by letter case or Unicode composition as that destination, revalidate source-note evidence and destination absence in both the vault index and vault storage immediately before publication, and create the companion atomically or fail without fallback overwrite behavior.
+
+#### Scenario: Reviewed companion is created
+- **GIVEN** valid reviewed enrichment, unchanged source-note evidence, and an absent companion destination
+- **WHEN** the user explicitly confirms publication
+- **THEN** Soundings creates and reads back one companion Markdown note linked to the source note
+- **AND** the transcript source, transcript note, and every pre-existing Markdown file remain unchanged
+
+#### Scenario: Companion destination already exists
+- **GIVEN** the deterministic companion destination exists before planning or appears after review
+- **WHEN** Soundings plans or executes publication
+- **THEN** Soundings reports a collision
+- **AND** leaves the existing destination byte-for-byte unchanged
+
+#### Scenario: Source note changes after review
+- **GIVEN** the transcript note changes after enrichment review
+- **WHEN** Soundings revalidates before publication
+- **THEN** Soundings reports stale evidence and creates no companion
+
+#### Scenario: Publication is canceled or fails
+- **GIVEN** publication is canceled or the create operation fails
+- **WHEN** Soundings settles the attempt
+- **THEN** Soundings reports a content-free canceled or failed outcome
+- **AND** does not mutate the source transcript or transcript note
+
+#### Scenario: Companion destination exists with different letter case
+- **GIVEN** `meetings/NOTE - enrichment.md` exists and the derived companion destination is `meetings/note - Enrichment.md`
+- **WHEN** Soundings plans or executes publication
+- **THEN** Soundings reports a collision without calling the create operation
+- **AND** the existing file remains byte-for-byte unchanged

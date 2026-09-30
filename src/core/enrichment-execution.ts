@@ -2,7 +2,7 @@ import { identifySourceNote, type SourceNoteEvidence } from "./enrichment-eviden
 import { enrichmentDraftFingerprint } from "./enrichment-draft";
 import { renderCompanionMarkdown } from "./enrichment-rendering";
 import { equalBytes, sha256, type DigestFunction } from "./hash";
-import type { PublicationAdapter } from "./execution";
+import { destinationPresence, type PublicationAdapter } from "./execution";
 import type { EnrichmentPlan } from "./enrichment-planning";
 import type { ExecutionStatus } from "./types";
 
@@ -72,7 +72,9 @@ export async function executeEnrichmentPlan(
     return outcome(plan, "stale", "Source note changed after preview.");
   }
 
-  if (adapter.exists(plan.destinationPath)) {
+  const presence = await destinationPresence(adapter, plan.destinationPath);
+  if (presence === "unknown") return outcome(plan, "failed", "Destination could not be checked.");
+  if (presence === "present" || adapter.exists(plan.destinationPath)) {
     return outcome(plan, "blocked", "Destination already exists.");
   }
 
@@ -83,7 +85,7 @@ export async function executeEnrichmentPlan(
   try {
     await adapter.createBinary(plan.destinationPath, bytes);
   } catch {
-    return adapter.exists(plan.destinationPath)
+    return adapter.exists(plan.destinationPath) || await destinationPresence(adapter, plan.destinationPath) === "present"
       ? outcome(plan, "blocked", "Destination appeared during publication.")
       : outcome(plan, "failed", "Destination could not be created.");
   }

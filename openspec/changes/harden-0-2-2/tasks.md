@@ -17,9 +17,9 @@
 - [x] 2.3 Remove the duplicate U+FEFF strip; add a double-BOM decoding test
 
 ## 3. Planning identity (code review 1)
-- [ ] 3.1 Compare existing and in-plan destinations by NFC case-folded key; add case-variant and NFC/NFD tests
-- [ ] 3.2 Refuse dot-leading sanitized basenames as `destination-invalid`; add `?.env.txt` test
-- [ ] 3.3 Add `existsOnDisk` (via `vault.adapter.exists`) to the vault adapter and refuse at execution and companion publication; add tests with a case-insensitive in-memory adapter
+- [x] 3.1 Compare existing and in-plan destinations by NFC case-folded key; add case-variant and NFC/NFD tests
+- [x] 3.2 Refuse dot-leading sanitized basenames as `destination-invalid`; add `?.env.txt` test
+- [x] 3.3 Add `existsOnDisk` (via `vault.adapter.exists`) to the vault adapter and refuse at execution and companion publication; add tests with a case-insensitive in-memory adapter
 
 ## 4. Execution isolation and lifecycle (security 3, code review 3, 16)
 - [ ] 4.1 Catch parse and render errors per item as `failed`; add test with a throwing renderer

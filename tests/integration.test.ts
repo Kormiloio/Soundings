@@ -16,6 +16,7 @@ class Vault implements PublicationAdapter {
     return new Uint8Array(value);
   }
   exists(path: string): boolean { return this.files.has(path); }
+  async existsOnDisk(path: string): Promise<boolean> { return this.files.has(path); }
   async createBinary(path: string, bytes: Uint8Array): Promise<void> {
     if (this.files.has(path)) throw new Error("exists");
     this.files.set(path, new Uint8Array(bytes));

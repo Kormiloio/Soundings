@@ -105,11 +105,11 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-03 | Default exclusions include the active vault's configured Obsidian configuration directory, hidden folders, Soundings state, and user-configured exclusion patterns. | Must |
 | FR-04 | A scan classifies every discovered candidate without mutating the vault. | Must |
 | FR-05 | The user can review classification counts, search and filter a plan, and explicitly select individual or all visible eligible conversions before execution; every new or refreshed plan begins unselected. | Must |
-| FR-06 | The destination remains beside the source, replaces the final extension with `.md`, and deterministically normalizes basename characters rejected by Obsidian; the exact final path is shown during review and the source name is unchanged. | Must |
+| FR-06 | The destination remains beside the source, replaces the final extension with `.md`, and deterministically normalizes basename characters rejected by Obsidian and refuses a normalized name that would start with a period; the exact final path is shown during review and the source name is unchanged. | Must |
 | FR-07 | Conversion creates a new Markdown file only when the destination does not exist at execution time. | Must |
 | FR-08 | Soundings never overwrites, deletes, renames, moves, or edits a source transcript. | Must |
-| FR-09 | An existing destination is reported as a collision and remains untouched, regardless of its contents. | Must |
-| FR-10 | The executor revalidates source identity and destination absence immediately before creation. | Must |
+| FR-09 | An existing destination, including one that differs only by letter case or Unicode composition, is reported as a collision and remains untouched, regardless of its contents. | Must |
+| FR-10 | The executor revalidates source identity and destination absence in both the vault index and vault storage immediately before creation. | Must |
 | FR-11 | Plain-text conversion preserves source text with only documented encoding, line-ending, and structural normalization. | Must |
 | FR-12 | WebVTT conversion removes format control records, preserves cue text in order, and retains speaker attribution when reliably present. | Must |
 | FR-13 | Generated notes contain versioned YAML metadata, a title, reserved enrichment sections, and the converted transcript. | Must |
