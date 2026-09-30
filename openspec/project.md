@@ -29,6 +29,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
+   - Active change `harden-0-2-2` (awaiting approval) fixes the `0.2.1` review findings before new features ship: a linear-time WebVTT markup scanner, observation registered after layout-ready, case- and Unicode-insensitive collision identity, unload guards, note-structure escaping, typed settings, and fail-closed release tooling.
 2. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`).
 3. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
 4. Design guarded speaker-to-person entity linking against existing vault notes.

@@ -2,8 +2,8 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.2.1 published
-**Last updated:** 2026-09-29
+**Document status:** Soundings 0.2.1 published; 0.2.2 hardening proposed
+**Last updated:** 2026-09-30
 
 ## 1. Product summary
 
@@ -127,6 +127,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 
 - **Create-only publication:** destination creation must use an API contract that fails when the path already exists. A check followed by an overwriting write is not sufficient.
 - **No source mutation:** the plugin must not offer source deletion or archival in the foundation release.
+- **Bounded processing:** parsing and rendering run in time proportional to source size; untrusted markup cannot stall Obsidian.
 - **Fail closed:** source changes, destination appearance, parse uncertainty that risks text loss, cancellation, and plugin unload prevent publication or produce an explicit failure.
 - **Local processing:** transcript bytes remain on the device and inside the vault. The plugin has no analytics or remote dependency.
 - **Content-free diagnostics:** normal logs and notices may contain paths, sizes, hashes, parser outcomes, and error categories but not transcript or generated-note bodies.
@@ -152,6 +153,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 5. **Configurable Output Profiles & Discovery:** customizable frontmatter tags, titles, destination patterns, reserved sections, and pre-execution WebVTT classification.
 6. **Local Companion Enrichment:** manual, local, create-only companion notes for reviewed summary and action-item capture.
 7. **Release Provenance & CI Automation:** GitHub Actions CI, build verification, and cryptographic GitHub artifact attestations.
+7a. **Post-release Hardening (0.2.2):** bounded linear-time parsing, startup-quiet observation, case-insensitive collision identity, lifecycle guards, note-structure escaping, and fail-closed release tooling, fixing the `0.2.1` code and security review findings.
 8. **Ergonomic Transcript Display:** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search.
 9. **Expanded Offline Caption Formats:** `.srt` (SubRip) parsing support, followed by offline structured JSON transcript schemas (Whisper / Otter / Zoom).
 10. **Guarded Vault Entity Linking:** opt-in linking of verified speaker names to existing Person notes within configured folders, strictly without automatic note creation.
