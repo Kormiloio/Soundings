@@ -85,6 +85,10 @@ Every fix stays inside its existing layer.
 10. **Linkable companion source.**
     - `identifySourceNote` refuses (a content-free `source-note-unlinkable` reason) when the source note's vault path contains `[`, `]`, `|`, `#`, `^`, `<`, `>`, or a line break.
     - Other paths render the unchanged `[[path|Back to Transcript Note]]`.
+    - **Implementation notes:**
+      - `isLinkableVaultPath` lives in `enrichment-rendering.ts` and is enforced in three places: `identifySourceNote` (new error `source-note-unlinkable`), `buildEnrichmentPlan` (`destination-invalid`, nothing rendered), and the enrichment command, which shows the actionable reason before reading the note.
+      - Enrichment list items get the same structural-line escaping as prose. CommonMark already closes a fence at the end of its list item, so this keeps `~~~` visible as text rather than fixing a section break.
+      - The prose tests fail against the 0.2.1 renderer for every Summary case except `# heading`, which was already escaped.
     - *Alternative deferred:* a percent-encoded Markdown link. Its resolution behavior in Obsidian 1.13.7 is unverified, and fail-closed is sufficient for a patch.
 
 11. **Heading and metadata escaping.**

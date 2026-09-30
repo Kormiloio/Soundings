@@ -48,7 +48,7 @@ Observation is off by default. It starts only after Obsidian finishes loading th
 
 ### Manual enrichment (companion notes)
 
-With a Soundings-generated transcript note active, run **Soundings: Add manual enrichment** from the command palette. Enter summary, decisions, action items, and follow-ups locally, review the exact companion destination and rendered Markdown, then publish. Soundings creates a separate ` - Enrichment.md` note beside the transcript note and links back to it. It never edits the transcript source, the transcript note, or an existing companion file.
+With a Soundings-generated transcript note active, run **Soundings: Add manual enrichment** from the command palette. Enter summary, decisions, action items, and follow-ups locally, review the exact companion destination and rendered Markdown, then publish. Soundings creates a separate ` - Enrichment.md` note beside the transcript note and links back to it. It never edits the transcript source, the transcript note, or an existing companion file. Lines you type that would change the note's layout (such as `~~~`, a backtick fence, `---`, or `===`) are escaped so they stay visible as text. Enrichment is unavailable for a note whose name contains `[ ] | # ^ < >`, because the backlink could not point at it safely; rename the note first.
 
 ## What Soundings creates
 

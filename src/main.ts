@@ -2,7 +2,8 @@ import { Notice, Plugin, TFile, type EventRef, type Modal } from "obsidian";
 import { discoverTranscripts } from "./core/discovery";
 import { executeEnrichmentPlan, type EnrichmentOutcome } from "./core/enrichment-execution";
 import { identifySourceNote, type SourceNoteEvidence } from "./core/enrichment-evidence";
-import type { EnrichmentPlan } from "./core/enrichment-planning";
+import { UNLINKABLE_REASON, type EnrichmentPlan } from "./core/enrichment-planning";
+import { isLinkableVaultPath } from "./core/enrichment-rendering";
 import { executePlan, RunCoordinator } from "./core/execution";
 import { sha256 } from "./core/hash";
 import type { DigestFunction } from "./core/hash";
@@ -176,6 +177,10 @@ export default class SoundingsPlugin extends Plugin {
     const adapter = this.vaultAdapter;
     if (!adapter) {
       new Notice("Soundings cannot add enrichment until the vault is ready.");
+      return;
+    }
+    if (!isLinkableVaultPath(sourcePath)) {
+      new Notice(`Soundings: ${UNLINKABLE_REASON}`);
       return;
     }
     const evidence = await this.identifyEnrichmentSource(adapter, sourcePath);

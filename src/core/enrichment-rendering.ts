@@ -18,19 +18,38 @@ export function destinationForEnrichment(sourcePath: string): Result<string, "de
   return { ok: true, value: `${folder}${normalized.value}.md` };
 }
 
+// Characters that would end, alias, or retarget a [[wikilink]], or open raw HTML around it.
+const UNLINKABLE_PATH_CHARACTERS = new Set(["[", "]", "|", "#", "^", "<", ">", "\r", "\n"]);
+
+export function isLinkableVaultPath(path: string): boolean {
+  for (const character of path) if (UNLINKABLE_PATH_CHARACTERS.has(character)) return false;
+  return true;
+}
+
+/**
+ * A line that would open a code fence, form a heading, or form a setext underline or thematic break
+ * (only `=`, `-`, `*`, `_`, and spaces) is escaped so it stays visible text inside its section.
+ */
+function isStructuralLine(trimmedStart: string): boolean {
+  return trimmedStart.startsWith("#")
+    || trimmedStart.startsWith("```")
+    || trimmedStart.startsWith("~~~")
+    || /^[=\-*_][=\-*_ \t]*$/.test(trimmedStart);
+}
+
 function safeProse(text: string): string {
   const trimmed = text.trim();
   if (trimmed.length === 0) return "> Not provided.";
   return trimmed
     .split("\n")
-    .map((line) => (line.trimStart().startsWith("#") ? `\\${line.trimStart()}` : line))
+    .map((line) => (isStructuralLine(line.trimStart()) ? `\\${line.trimStart()}` : line))
     .join("\n");
 }
 
 function safeListItem(item: string): string {
   const singleLine = item.replace(/[\r\n]+/g, " ").trim();
   if (singleLine.length === 0) return "";
-  return /^[-*#+>]/.test(singleLine) ? `\\${singleLine}` : singleLine;
+  return /^[-*#+>]/.test(singleLine) || isStructuralLine(singleLine) ? `\\${singleLine}` : singleLine;
 }
 
 export function sourceLinkForEnrichment(sourcePath: string): string {

@@ -1,3 +1,4 @@
+import { isLinkableVaultPath } from "./enrichment-rendering";
 import type { Result } from "./types";
 
 export interface SourceNoteEvidence {
@@ -36,7 +37,8 @@ export async function identifySourceNote(
   bytes: Uint8Array,
   maxBytes: number,
   digest: (data: Uint8Array) => Promise<string>
-): Promise<Result<SourceNoteEvidence, "invalid-soundings-note">> {
+): Promise<Result<SourceNoteEvidence, "invalid-soundings-note" | "source-note-unlinkable">> {
+  if (!isLinkableVaultPath(path)) return { ok: false, error: "source-note-unlinkable" };
   if (bytes.byteLength > maxBytes) return { ok: false, error: "invalid-soundings-note" };
   
   let content: string;

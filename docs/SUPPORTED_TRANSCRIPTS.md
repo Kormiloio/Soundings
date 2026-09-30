@@ -25,7 +25,8 @@
 
 - The note is created beside its source by replacing only the final extension with `.md`.
 - Source text is placed in dynamic literal fences so HTML, Markdown, links, and Obsidian embeds remain inert.
-- YAML metadata is versioned and safely encoded.
+- YAML metadata is versioned and safely encoded; C1 control characters and Unicode line/paragraph separators in names are written as `\uXXXX` escapes.
+- Speaker and title headings escape Markdown punctuation and Obsidian inline syntax (`%%`, `$`, `==`, `~~`, `^`), so a speaker named `%%` cannot hide later text and `$5 … $10` does not render as math.
 - Summary, Decisions, Action Items, and Follow-ups are reserved but never fabricated.
 - An existing destination blocks conversion, including one that differs only by letter case (`bar.md` for `Bar.txt`) or Unicode composition. Soundings never converts over it.
 - Two sources whose destinations differ only by letter case or Unicode composition (for example `Foo.txt` and `foo.vtt`) are both blocked as ambiguous.

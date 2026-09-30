@@ -34,10 +34,10 @@
 - [x] 5.4 Restart observation and clear the inbox only when enablement or roots change; add retention test
 
 ## 6. Note structure safety (security 4, 5; code review 5, 10, 15)
-- [ ] 6.1 Escape `%`, `$`, `=`, `~`, `^` in generated headings; add speaker `%%` and `$5 … $10` tests
-- [ ] 6.2 Escape C1 controls and U+2028/U+2029 in frontmatter strings; add YAML round-trip test
-- [ ] 6.3 Neutralize fence, setext, and thematic-break lines in enrichment prose and list items; add structure tests
-- [ ] 6.4 Refuse enrichment for source-note paths with link-breaking characters; add `x]] <img …> [[y` test
+- [x] 6.1 Escape `%`, `$`, `=`, `~`, `^` in generated headings; add speaker `%%` and `$5 … $10` tests
+- [x] 6.2 Escape C1 controls and U+2028/U+2029 in frontmatter strings; add YAML round-trip test
+- [x] 6.3 Neutralize fence, setext, and thematic-break lines in enrichment prose and list items; add structure tests
+- [x] 6.4 Refuse enrichment for source-note paths with link-breaking characters; add `x]] <img …> [[y` test
 
 ## 7. Settings (code review 12)
 - [ ] 7.1 Type-check every saved-settings field with per-field default fallback and content-free warnings

@@ -4,7 +4,7 @@ import {
   type EnrichmentDraft
 } from "./enrichment-draft";
 import type { SourceNoteEvidence } from "./enrichment-evidence";
-import { destinationForEnrichment, renderCompanionMarkdown } from "./enrichment-rendering";
+import { destinationForEnrichment, isLinkableVaultPath, renderCompanionMarkdown } from "./enrichment-rendering";
 import { collisionKey } from "./planning";
 
 export type EnrichmentPlanStatus = "ready" | "empty" | "destination-exists" | "destination-invalid";
@@ -22,6 +22,8 @@ export interface EnrichmentPlan {
   readonly reason: string;
 }
 
+export const UNLINKABLE_REASON = "The note name contains [ ] | # ^ < > or a line break, so a companion note cannot link back to it safely. Rename the note first.";
+
 function hasCollision(existingPaths: ReadonlySet<string>, destinationPath: string): boolean {
   const key = collisionKey(destinationPath);
   for (const path of existingPaths) if (collisionKey(path) === key) return true;
@@ -37,13 +39,17 @@ export function buildEnrichmentPlan(
   id: string
 ): EnrichmentPlan {
   const convertedAt = createdAt.toISOString();
+  const linkable = isLinkableVaultPath(sourcePath);
   const destination = destinationForEnrichment(sourcePath);
-  const destinationPath = destination.ok && destination.value ? destination.value : "";
+  const destinationPath = linkable && destination.ok && destination.value ? destination.value : "";
 
   let status: EnrichmentPlanStatus = "ready";
   let reason = "Ready for publication.";
 
-  if (!destination.ok || !destinationPath) {
+  if (!linkable) {
+    status = "destination-invalid";
+    reason = UNLINKABLE_REASON;
+  } else if (!destination.ok || !destinationPath) {
     status = "destination-invalid";
     reason = "A safe companion destination could not be derived.";
   } else if (hasCollision(existingPaths, destinationPath)) {
