@@ -29,11 +29,10 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-2. Ship corrective release `0.2.1` (`release-0-2-1`) through the attested workflow, completing release provenance (`automate-release-provenance`).
-3. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`).
-4. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
-5. Design guarded speaker-to-person entity linking against existing vault notes.
-6. Evaluate Android, iOS, and iPadOS only through a separate future change.
+2. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`).
+3. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
+4. Design guarded speaker-to-person entity linking against existing vault notes.
+5. Evaluate Android, iOS, and iPadOS only through a separate future change.
 
 ## Foundation implementation checkpoint
 
@@ -63,7 +62,7 @@ The completed `improve-vtt-compatibility-and-discovery` change expands WebVTT pa
 
 Release `0.2.0` was published from commit `4b74b86`. Its `main.js` (`eb42c8fa…`) reproduces byte-for-byte from that commit but differs from the build recorded in packaged desktop acceptance (`06da240b…`), which included exact source-note identification and full-path companion backlinks. The `v0.1.3` release was tagged with a `v` prefix and is not installable through Obsidian.
 
-The active `release-0-2-1` change ships that verified hardening plus per-speaker WebVTT attribution, header-metadata and whitespace-separator handling, single-pass character-reference decoding, manual-enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a split read-only build / job-scoped publish release workflow with SHA-pinned actions, bare-tag enforcement, and version-scoped release notes. The production build, runtime and dependency audits, strict OpenSpec validation, and 244 automated tests across 29 files pass, and packaged desktop acceptance on Obsidian 1.13.7 (macOS 26.7 arm64) passed with unchanged source hashes; attested publication remains.
+The completed `release-0-2-1` change shipped that verified hardening plus per-speaker WebVTT attribution, header-metadata and whitespace-separator handling, single-pass character-reference decoding, manual-enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a split read-only build / job-scoped publish release workflow with SHA-pinned actions, bare-tag enforcement, and version-scoped release notes. The production build, runtime and dependency audits, strict OpenSpec validation, and 244 automated tests across 29 files pass, and packaged desktop acceptance on Obsidian 1.13.7 (macOS 26.7 arm64) passed with unchanged source hashes. Immutable release `0.2.1` was published on 2026-09-30 by the attested workflow with exactly the accepted asset hashes, and every attestation verifies against tag `0.2.1`.
 
 ## Definition of done
 

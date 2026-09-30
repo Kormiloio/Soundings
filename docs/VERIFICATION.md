@@ -20,6 +20,8 @@ Packaged desktop acceptance passed on 2026-09-30 in a disposable vault using Obs
 - Manual enrichment opened for `Meetings/standup---notes.md`. With the companion destination created externally after review, publication was refused and the form stayed open with the typed summary intact. After the blocker was removed, publication created `Meetings/standup---notes - Enrichment.md` with the full-path backlink `[[Meetings/standup---notes|Back to Transcript Note]]`.
 - All ten pre-existing files, including every transcript source, `Calls/existing.md`, and the hidden transcript, retained their recorded SHA-256 hashes.
 
+Immutable release `0.2.1` was published on 2026-09-30 by release workflow run `36716977301` from tag `0.2.1` (merge commit `6615f1d` on `main`). It exposes exactly `main.js`, `manifest.json`, and `styles.css` with the accepted hashes above. Each asset has one GitHub build-provenance attestation, and `gh attestation verify` succeeded for all three against `refs/tags/0.2.1`. The release notes contain only the `## 0.2.1` changelog section. Releases `0.2.0` and `0.1.2` retain their original asset digests.
+
 ## Soundings 0.2.0 manual-enrichment automated candidate
 
 The hardened manual-enrichment automated gate passed on 2026-09-29:

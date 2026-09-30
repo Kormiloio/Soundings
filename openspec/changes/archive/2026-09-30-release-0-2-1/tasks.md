@@ -27,4 +27,4 @@
 ## 5. Acceptance and publication
 - [x] 5.1 Stage `0.2.1` and complete packaged desktop acceptance in a disposable vault (multi-voice, header metadata, enrichment draft retention, create-only checks) with recorded hashes
 - [x] 5.2 Push the branch, open a pull request, and confirm CI passes
-- [ ] 5.3 After owner approval, merge and push tag `0.2.1`; verify three matching attested assets and unchanged prior releases
+- [x] 5.3 After owner approval, merge and push tag `0.2.1`; verify three matching attested assets and unchanged prior releases
