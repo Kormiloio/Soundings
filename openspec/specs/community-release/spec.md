@@ -120,3 +120,62 @@ Each corrective release prepared for the existing Soundings Community draft SHAL
 - **WHEN** release readiness is evaluated
 - **THEN** those recommendations are recorded accurately
 - **AND** they are not misreported as failures or used to weaken vault-wide discovery, local-only processing, or create-only publication
+
+### Requirement: Automated releases are verified and attested
+For a new explicit semantic-version tag, Soundings SHALL run build, automated tests, runtime audit, dependency audit, strict OpenSpec validation, and version-driven release preparation from the tagged source. It SHALL publish exactly `main.js`, `manifest.json`, and `styles.css` only when all gates pass and SHALL attach verifiable GitHub artifact attestations for the installable assets.
+
+#### Scenario: Tagged release succeeds
+- **GIVEN** a new semantic-version tag matches package, manifest, and compatibility metadata and no release exists for that tag
+- **WHEN** the release workflow completes every required gate
+- **THEN** one immutable GitHub release is published with exactly the three verified runtime assets
+- **AND** each installable asset has provenance tied to the tagged repository source and workflow run
+
+#### Scenario: Validation fails before publication
+- **GIVEN** any build, test, audit, OpenSpec, version, inventory, or hash gate fails
+- **WHEN** the release workflow runs
+- **THEN** no GitHub release is published
+- **AND** the failure identifies metadata and paths without transcript or note content
+
+#### Scenario: Tag or release already exists
+- **GIVEN** the requested tag or GitHub release already exists
+- **WHEN** automated publication is requested
+- **THEN** the workflow stops for maintainer review
+- **AND** does not replace the tag, assets, attestations, or prior release
+
+### Requirement: Continuous integration protects release readiness
+Soundings SHALL run the production build, automated tests, runtime audit, strict OpenSpec validation, and release-contract tests for proposed changes before they can be treated as release-ready.
+
+#### Scenario: Pull request satisfies continuous checks
+- **GIVEN** a proposed repository change preserves all release contracts
+- **WHEN** continuous integration evaluates it
+- **THEN** every required check reports success without publishing a release
+
+#### Scenario: Runtime boundary regresses
+- **GIVEN** a proposed change introduces a forbidden runtime network, telemetry, Node filesystem, destructive vault, or credential pattern
+- **WHEN** continuous integration runs the runtime audit
+- **THEN** the change fails the required check
+- **AND** no release asset is published
+
+### Requirement: Release publication is installable and least-privilege
+Automated release publication SHALL run only for a bare `x.y.z` tag that equals the manifest version and is reachable from `main`. Dependency installation, build, and verification SHALL run without repository write permission, identity tokens, or persisted credentials. Only a separate publishing job that installs no dependencies SHALL hold release-write and attestation permissions, and it SHALL publish the exact bytes produced and verified by the build job. Workflow actions SHALL be pinned to full commit SHAs.
+
+#### Scenario: Prefixed tag is pushed
+- **GIVEN** a maintainer pushes tag `v0.2.1`
+- **WHEN** GitHub evaluates release triggers
+- **THEN** no release workflow runs and no release is published
+
+#### Scenario: Tag is not on main
+- **GIVEN** a bare semantic tag points at a commit not reachable from `main`
+- **WHEN** the release workflow runs
+- **THEN** the build job fails before staging and no release is published
+
+#### Scenario: Dependency install runs without write access
+- **GIVEN** the release workflow is building a tagged release
+- **WHEN** dependencies are installed and scripts run
+- **THEN** the job token is read-only, no identity token is available, and no credential is persisted in the checkout
+
+#### Scenario: Release notes are version-scoped
+- **GIVEN** `CHANGELOG.md` contains a `## <version>` section for the tag
+- **WHEN** the release is published
+- **THEN** the release notes contain only that section
+- **AND** a missing section fails the build before publication

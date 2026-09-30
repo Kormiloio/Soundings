@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.2.0 published; 0.2.1 corrective release candidate
+**Document status:** Soundings 0.2.1 published
 **Last updated:** 2026-09-29
 
 ## 1. Product summary
@@ -214,4 +214,4 @@ The completed `add-reviewed-transcript-inbox` change adds off-by-default create-
 
 The completed `add-local-manual-enrichment` change adds a command scoped to an active Soundings transcript note, a keyboard-accessible local entry form, a full companion-note preview, and create-only publication of an adjacent ` - Enrichment.md` file with source-evidence and destination revalidation. It does not edit transcript sources or existing notes, makes no model or network request, and keeps enrichment diagnostics content-free.
 
-Release `0.2.0` was published from commit `4b74b86`; its `main.js` (`eb42c8fa…`) differs from the build that passed packaged desktop acceptance (`06da240b…`), which added exact source-note identification and full-path companion backlinks. The corrective `release-0-2-1` change ships that verified hardening together with per-speaker WebVTT attribution, header-metadata and separator fixes, single-pass character-reference decoding, enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a least-privilege attested release workflow that accepts only bare version tags. Packaged desktop acceptance of the staged `0.2.1` assets is required before tagging.
+Release `0.2.0` was published from commit `4b74b86`; its `main.js` (`eb42c8fa…`) differs from the build that passed packaged desktop acceptance (`06da240b…`), which added exact source-note identification and full-path companion backlinks. The corrective `release-0-2-1` change ships that verified hardening together with per-speaker WebVTT attribution, header-metadata and separator fixes, single-pass character-reference decoding, enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a least-privilege attested release workflow that accepts only bare version tags. Packaged desktop acceptance of the staged `0.2.1` assets passed, and immutable release `0.2.1` was published on 2026-09-30 with verified GitHub artifact attestations.

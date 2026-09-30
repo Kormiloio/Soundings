@@ -20,5 +20,5 @@
 ## 4. Documentation and live verification
 
 - [x] 4.1 Update README badges, `docs/RELEASING.md`, `docs/PRD.md`, `openspec/project.md`, and `docs/VERIFICATION.md`; verify the documented owner/tag boundary, least-privilege permissions, rollback, and Community publication boundary match the workflows
-- [ ] 4.2 Run CI on a pull request and verify every required check passes without publishing a release or changing runtime assets
-- [ ] 4.3 Use the workflow only for the next approved version after normal packaged desktop acceptance; verify the immutable release has exactly three matching assets, valid artifact attestations, unchanged prior releases, and a clean Community scorecard rescan
+- [x] 4.2 Run CI on a pull request and verify every required check passes without publishing a release or changing runtime assets
+- [x] 4.3 Use the workflow only for the next approved version after normal packaged desktop acceptance; verify the immutable release has exactly three matching assets, valid artifact attestations, unchanged prior releases, and a clean Community scorecard rescan
