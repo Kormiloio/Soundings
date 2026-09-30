@@ -47,6 +47,18 @@ export function isWithinObservationRoots(path: string, roots: readonly string[])
   return roots.length === 0 || roots.some((root) => isAtOrBelow(path, root));
 }
 
+/**
+ * Path-only observation policy: enabled supported format, not excluded, within the observation roots.
+ * It never reads the vault, so creation events for other files cost nothing and are never pending work.
+ */
+export function isObservableCandidatePath(path: string, settings: SoundingsSettings): boolean {
+  const format = formatForPath(path);
+  return format !== undefined
+    && settings.enabledFormats.includes(format)
+    && !isExcludedPath(path, settings)
+    && isWithinObservationRoots(path, settings.observationRoots);
+}
+
 export async function discoverTranscriptFile(
   adapter: Pick<DiscoveryAdapter, "readBinary">,
   file: VaultFileRef,

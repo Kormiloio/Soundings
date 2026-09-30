@@ -116,7 +116,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-14 | Project inference is configurable and uses an explicit folder rule; ambiguous values are omitted. | Should |
 | FR-15 | Results distinguish created, skipped, blocked, unsupported, and failed items with actionable reasons. | Must |
 | FR-16 | Manual scans and active conversions can be cancelled without corrupting or partially publishing a note; dismissing the progress dialog cancels the run, and unloading the plugin closes its dialogs and prevents any later scan, conversion, or companion publication from them. | Must |
-| FR-17 | Transcript observation is opt-in, runs only while Obsidian is open, applies the same discovery policy, retains content-free evidence in memory, and hands candidates to an unselected reviewed plan without automatic conversion. | Should |
+| FR-17 | Transcript observation is opt-in, runs only while Obsidian is open and after the vault layout is ready, applies the same discovery policy (path-only checks before any read), retains content-free evidence in memory, and hands candidates to an unselected reviewed plan without automatic conversion. | Should |
 | FR-18 | The foundation plugin makes no network requests and collects no telemetry. | Must |
 | FR-19 | The plugin provides settings for supported formats, exclusions, maximum source size, and project inference without exposing unsafe overwrite behavior. | Must |
 | FR-20 | A user can inspect the source path and intended destination for every planned conversion. | Must |

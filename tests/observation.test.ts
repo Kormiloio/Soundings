@@ -121,7 +121,7 @@ describe("observation processor", () => {
       onChanged: vi.fn()
     });
     const pending = processor.handleCreated("one.txt");
-    processor.stop();
+    processor.stop(true);
     controller.release?.();
     await pending;
     expect(processor.pendingCount).toBe(0);
@@ -159,6 +159,88 @@ describe("observation processor", () => {
     expect(reads.has("Meetings/huge.txt")).toBe(false);
     expect(reads.has("Archive/no.txt")).toBe(false);
     expect(JSON.stringify(processor.inbox.entries())).not.toContain("private body");
+  });
+});
+
+describe("observation prefilter and bounded retries", () => {
+  const settings = { ...DEFAULT_SETTINGS, observationEnabled: true, observationRoots: ["Meetings"], excludedPaths: ["Meetings/Archive"], maxSourceBytes: 10 };
+
+  function countingAdapter(size = 1): DiscoveryAdapter & { readonly lookups: string[]; readonly reads: string[] } {
+    const lookups: string[] = [];
+    const reads: string[] = [];
+    return {
+      lookups,
+      reads,
+      listFiles: () => [],
+      fileForPath: (path) => {
+        lookups.push(path);
+        return { path, extension: path.split(".").pop() ?? "", size, isFile: true };
+      },
+      readBinary: async (path) => {
+        reads.push(path);
+        return encoder.encode("body");
+      }
+    };
+  }
+
+  it("never counts non-candidate paths as pending work or reads them", async () => {
+    const adapter = countingAdapter();
+    const wait = vi.fn(async () => undefined);
+    const processor = new ObservationProcessor({
+      adapter, settings: () => settings, digest: testDigest, canProcess: () => true, wait, onChanged: vi.fn()
+    });
+    const paths = [
+      ...Array.from({ length: 300 }, (_, index) => `Meetings/note ${index}.md`),
+      ...Array.from({ length: 300 }, (_, index) => `Meetings/image ${index}.png`),
+      "Meetings/.hidden/one.txt",
+      "Meetings/Archive/old.txt",
+      "Elsewhere/one.txt",
+      "Meetings/disabled.srt"
+    ];
+    const handled = paths.map((path) => processor.handleCreated(path));
+    expect(processor.pendingCount).toBe(0);
+    await Promise.all(handled);
+    expect(adapter.lookups).toEqual([]);
+    expect(adapter.reads).toEqual([]);
+    expect(wait).not.toHaveBeenCalled();
+  });
+
+  it("does not count a disabled format as pending work", async () => {
+    const adapter = countingAdapter();
+    const processor = new ObservationProcessor({
+      adapter, settings: () => ({ ...settings, enabledFormats: ["vtt"] }), digest: testDigest, canProcess: () => true, wait: async () => undefined, onChanged: vi.fn()
+    });
+    const handled = processor.handleCreated("Meetings/one.txt");
+    expect(processor.pendingCount).toBe(0);
+    await handled;
+    expect(adapter.lookups).toEqual([]);
+  });
+
+  it("stops after one attempt for an oversized transcript", async () => {
+    const adapter = countingAdapter(99);
+    const wait = vi.fn(async () => undefined);
+    const result = await discoverStableTranscript(adapter, "Meetings/huge.txt", settings, new AbortController().signal, testDigest, { attempts: 4, wait });
+    expect(result).toBeUndefined();
+    expect(adapter.lookups).toEqual(["Meetings/huge.txt"]);
+    expect(wait).not.toHaveBeenCalled();
+    expect(adapter.reads).toEqual([]);
+  });
+
+  it("stops without waiting for a path that is not a candidate", async () => {
+    const adapter = countingAdapter();
+    const wait = vi.fn(async () => undefined);
+    const result = await discoverStableTranscript(adapter, "Meetings/Archive/old.txt", settings, new AbortController().signal, testDigest, { attempts: 4, wait });
+    expect(result).toBeUndefined();
+    expect(adapter.lookups).toEqual([]);
+    expect(wait).not.toHaveBeenCalled();
+  });
+
+  it("keeps retrying a transcript that is still empty while it is being written", async () => {
+    const adapter = changingAdapter("Meetings/one.txt", [new Uint8Array(), encoder.encode("body"), encoder.encode("body")]);
+    const wait = vi.fn(async () => undefined);
+    const result = await discoverStableTranscript(adapter, "Meetings/one.txt", settings, new AbortController().signal, testDigest, { attempts: 4, wait });
+    expect(result?.classification).toBe("eligible");
+    expect(wait).toHaveBeenCalledTimes(2);
   });
 });
 

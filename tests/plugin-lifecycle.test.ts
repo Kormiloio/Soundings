@@ -53,14 +53,32 @@ class FakeVault {
   }
 }
 
-function fakeApp(vault: FakeVault, activePath?: string) {
-  return {
-    vault,
-    workspace: {
-      getActiveFile: () => (activePath ? vault.getAbstractFileByPath(activePath) : null),
-      onLayoutReady: (callback: () => void) => callback()
-    }
-  };
+class FakeWorkspace {
+  private ready = true;
+  private readonly pending: Array<() => void> = [];
+  constructor(private readonly vault: FakeVault, private readonly activePath?: string) {}
+
+  deferLayout(): void { this.ready = false; }
+  finishLayout(): void {
+    this.ready = true;
+    for (const callback of this.pending.splice(0)) callback();
+  }
+  getActiveFile(): FakeFile | null {
+    return this.activePath ? this.vault.getAbstractFileByPath(this.activePath) : null;
+  }
+  onLayoutReady(callback: () => void): void {
+    if (this.ready) callback();
+    else this.pending.push(callback);
+  }
+}
+
+function fakeApp(vault: FakeVault, activePath?: string, workspace = new FakeWorkspace(vault, activePath)) {
+  return { vault, workspace };
+}
+
+function emitCreate(vault: FakeVault, path: string): void {
+  const file = vault.getAbstractFileByPath(path);
+  for (const listener of [...vault.listeners]) if (listener.name === "create") listener.callback(file);
 }
 
 async function settle(): Promise<void> {
@@ -81,11 +99,23 @@ function modalOf<T>(type: abstract new (...args: never[]) => T): T | undefined {
   return openModals.find((modal) => modal instanceof type) as T | undefined;
 }
 
-async function loadedPlugin(vault: FakeVault, activePath?: string): Promise<SoundingsPlugin> {
-  const plugin = new SoundingsPlugin(fakeApp(vault, activePath) as never, {} as never);
+async function loadedPlugin(
+  vault: FakeVault,
+  activePath?: string,
+  saved: unknown = null,
+  workspace = new FakeWorkspace(vault, activePath)
+): Promise<SoundingsPlugin> {
+  const plugin = new SoundingsPlugin(fakeApp(vault, activePath, workspace) as never, {} as never);
+  stubPlugin(plugin).savedData = saved;
   await plugin.onload();
   return plugin;
 }
+
+function inboxSize(plugin: SoundingsPlugin): number {
+  return (plugin as unknown as { observer: { inbox: { size: number } } }).observer.inbox.size;
+}
+
+const OBSERVING = { observationEnabled: true, observationRoots: ["Meetings"] };
 
 const NOTE = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# Title\n';
 
@@ -213,5 +243,56 @@ describe("plugin lifecycle", () => {
     await converting;
     await settle();
     expect(openModals).toEqual([]);
+  });
+
+  it("does not queue existing files from vault-load creation events", async () => {
+    const vault = new FakeVault();
+    vault.files.set("Meetings/Existing.txt", encoder.encode("hello"));
+    const workspace = new FakeWorkspace(vault);
+    workspace.deferLayout();
+    const plugin = await loadedPlugin(vault, undefined, OBSERVING, workspace);
+
+    emitCreate(vault, "Meetings/Existing.txt");
+    await settle();
+    expect(vault.listeners).toEqual([]);
+    expect(inboxSize(plugin)).toBe(0);
+    expect(notices).toEqual([]);
+
+    workspace.finishLayout();
+    vault.files.set("Meetings/New.txt", encoder.encode("new"));
+    emitCreate(vault, "Meetings/New.txt");
+    await vi.waitFor(() => expect(inboxSize(plugin)).toBe(1), { timeout: 3000 });
+    expect(notices.some((message) => message.includes("found new transcripts"))).toBe(true);
+    plugin.onunload();
+  });
+
+  it("keeps queued candidates when unrelated settings change", async () => {
+    const vault = new FakeVault();
+    const plugin = await loadedPlugin(vault, undefined, OBSERVING);
+    vault.files.set("Meetings/New.txt", encoder.encode("new"));
+    emitCreate(vault, "Meetings/New.txt");
+    await vi.waitFor(() => expect(inboxSize(plugin)).toBe(1), { timeout: 3000 });
+
+    await plugin.setSettings({ ...plugin.settings, outputProfile: { ...plugin.settings.outputProfile, staticTags: ["meeting"] } });
+    expect(inboxSize(plugin)).toBe(1);
+    expect(vault.listeners).toHaveLength(1);
+
+    await plugin.setSettings({ ...plugin.settings, observationRoots: ["Other"] });
+    expect(inboxSize(plugin)).toBe(0);
+    expect(vault.listeners).toHaveLength(1);
+
+    await plugin.setSettings({ ...plugin.settings, observationEnabled: false });
+    expect(vault.listeners).toEqual([]);
+    plugin.onunload();
+  });
+
+  it("does not subscribe when layout becomes ready after unload", async () => {
+    const vault = new FakeVault();
+    const workspace = new FakeWorkspace(vault);
+    workspace.deferLayout();
+    const plugin = await loadedPlugin(vault, undefined, OBSERVING, workspace);
+    plugin.onunload();
+    workspace.finishLayout();
+    expect(vault.listeners).toEqual([]);
   });
 });

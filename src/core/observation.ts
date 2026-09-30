@@ -1,5 +1,5 @@
 import type { DigestFunction } from "./hash";
-import { discoverTranscriptFile, isWithinObservationRoots, type DiscoveryAdapter, type DiscoveryItem } from "./discovery";
+import { discoverTranscriptFile, isObservableCandidatePath, type DiscoveryAdapter, type DiscoveryItem } from "./discovery";
 import type { SoundingsSettings } from "./settings";
 import { buildPlan } from "./planning";
 import type { ConversionPlan, SourceEvidence, TranscriptFormat } from "./types";
@@ -67,7 +67,7 @@ export class ObservationProcessor {
   async handleCreated(path: string): Promise<void> {
     if (this.controller.signal.aborted || this.pending.has(path) || !this.options.canProcess()) return;
     const settings = this.options.settings();
-    if (!settings.observationEnabled || !isWithinObservationRoots(path, settings.observationRoots)) return;
+    if (!settings.observationEnabled || !isObservableCandidatePath(path, settings)) return;
     const token = Symbol(path);
     const signal = this.controller.signal;
     this.pending.set(path, token);
@@ -93,7 +93,7 @@ export class ObservationProcessor {
     }
   }
 
-  stop(clearInbox = true): void {
+  stop(clearInbox: boolean): void {
     this.controller.abort();
     this.controller = new AbortController();
     this.pending.clear();
@@ -136,6 +136,8 @@ function sameEvidence(left: SourceEvidence | undefined, right: SourceEvidence | 
     && left.sha256 === right.sha256;
 }
 
+const PERMANENT_CLASSIFICATIONS: ReadonlySet<DiscoveryItem["classification"]> = new Set(["excluded", "oversize"]);
+
 export async function discoverStableTranscript(
   adapter: DiscoveryAdapter,
   path: string,
@@ -144,7 +146,7 @@ export async function discoverStableTranscript(
   digest: DigestFunction,
   options: StabilityOptions = {}
 ): Promise<DiscoveryItem | undefined> {
-  if (!isWithinObservationRoots(path, settings.observationRoots)) return undefined;
+  if (!isObservableCandidatePath(path, settings)) return undefined;
   const attempts = options.attempts ?? 4;
   const wait = options.wait ?? (async () => Promise.resolve());
   let previousEvidence: SourceEvidence | undefined;
@@ -155,8 +157,10 @@ export async function discoverStableTranscript(
     if (!file) return undefined;
     const item = await discoverTranscriptFile(adapter, file, settings, digest);
     if (signal.aborted) return undefined;
-    if (item?.classification === "eligible" && sameEvidence(previousEvidence, item.evidence)) return item;
-    previousEvidence = item?.classification === "eligible" ? item.evidence : undefined;
+    // Waiting cannot turn these into eligible transcripts: size only grows while a file is written.
+    if (!item || PERMANENT_CLASSIFICATIONS.has(item.classification)) return undefined;
+    if (item.classification === "eligible" && sameEvidence(previousEvidence, item.evidence)) return item;
+    previousEvidence = item.classification === "eligible" ? item.evidence : undefined;
     if (attempt + 1 < attempts) await wait(signal);
   }
   return undefined;

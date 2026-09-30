@@ -28,10 +28,10 @@
 - [x] 4.4 Add behavior tests for `main.ts`: unload with an open review and an open enrichment modal, and progress dismissal
 
 ## 5. Observation (security 2, code review 2, 6)
-- [ ] 5.1 Subscribe to `create` only inside `workspace.onLayoutReady`; add test that vault-load events queue nothing
-- [ ] 5.2 Prefilter created paths synchronously before `pending`; add non-transcript event-storm test asserting zero pending and no reads
-- [ ] 5.3 Stop stability retries on permanent outcomes; add oversized and excluded single-attempt tests
-- [ ] 5.4 Restart observation and clear the inbox only when enablement or roots change; add retention test
+- [x] 5.1 Subscribe to `create` only inside `workspace.onLayoutReady`; add test that vault-load events queue nothing
+- [x] 5.2 Prefilter created paths synchronously before `pending`; add non-transcript event-storm test asserting zero pending and no reads
+- [x] 5.3 Stop stability retries on permanent outcomes; add oversized and excluded single-attempt tests
+- [x] 5.4 Restart observation and clear the inbox only when enablement or roots change; add retention test
 
 ## 6. Note structure safety (security 4, 5; code review 5, 10, 15)
 - [ ] 6.1 Escape `%`, `$`, `=`, `~`, `^` in generated headings; add speaker `%%` and `$5 … $10` tests

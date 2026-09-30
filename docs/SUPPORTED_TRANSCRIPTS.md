@@ -37,6 +37,6 @@ The desktop foundation release requires Obsidian 1.13.7 or later and uses a cons
 
 ## Optional observation
 
-Observation applies the same enabled-format, size, hidden-folder, configured Obsidian directory, Soundings-state, and user-exclusion rules as a manual scan. Configured observation roots narrow that policy; they never broaden it. A created file must produce the same readable content identity twice within a bounded retry window before it is queued.
+Observation applies the same enabled-format, size, hidden-folder, configured Obsidian directory, Soundings-state, and user-exclusion rules as a manual scan. Configured observation roots narrow that policy; they never broaden it. Path-only checks (format, enabled formats, exclusions, observation roots) run before any read, so other new files cost nothing. A created file must produce the same readable content identity twice within a bounded retry window before it is queued. Checking stops at once for excluded or oversized files; empty, unreadable, or unsupported files are rechecked within the window because they may still be being written. Files that already exist when Obsidian starts are not queued; use a manual scan for them.
 
 Queued entries contain only the vault-relative path, format, byte length, and content hash in memory. Opening the inbox replans current files and destination collisions in the standard unselected review. No creation event opens a modal or converts a file automatically.

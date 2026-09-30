@@ -57,6 +57,10 @@ Every fix stays inside its existing layer.
    - `syncObservation` subscribes to `vault.on("create")` only inside `workspace.onLayoutReady`, guarded by the `unloaded` flag.
    - `handleCreated` runs a synchronous prefilter using the shared pure discovery policy (extension, enabled format, observation root, mandatory and user exclusions) before touching `pending`.
    - Stability retries continue only while the file is absent from the index or its evidence differs between attempts. Retries stop immediately on `excluded`, `too-large`, `unsupported`, or non-candidate results.
+   - **Implementation notes (deviation from draft):**
+     - Only `excluded`, `oversize`, and non-candidate results stop retrying. `empty`, `unreadable`, and `unsupported` keep retrying within the existing bounded window, because the create event often fires before a file is fully written, so a partial file can look empty, malformed, or unsupported. Size only grows during a write, so `oversize` is permanent.
+     - The prefilter is a new pure `isObservableCandidatePath` in `discovery.ts`, shared by `handleCreated` and `discoverStableTranscript`.
+     - `onLayoutReady` sets a `layoutReady` flag before calling `syncObservation`. `syncObservation` also refuses after unload, so a layout callback that fires after the plugin is disabled subscribes nothing.
    - `setSettings` restarts observation, and clears the inbox, only when `observationEnabled` or `observationRoots` changed; otherwise the observer keeps running. The dead default parameter is removed so callers pass `clearInbox` explicitly.
 
 8. **Unload guard and modal ownership.**

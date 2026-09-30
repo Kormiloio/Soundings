@@ -44,7 +44,7 @@ Soundings creates each note beside its source. If the intended Markdown destinat
 
 In **Settings → Soundings**, you can opt in to **Observe new transcripts** and optionally list vault-relative **Observation roots**, one per line. Empty roots mean the whole otherwise-permitted vault. While Obsidian and Soundings are open, newly created supported files are checked after they stabilize and queued in memory. Soundings shows a coalesced local notice; run **Soundings: Review transcript inbox** to recheck the queued paths in the standard review plan. The plan starts with zero selected items and never converts automatically.
 
-Observation is off by default. It does not run while Obsidian is closed, and disabling Soundings or observation cancels pending checks and clears the in-memory inbox. A later manual vault scan recovers files missed while observation was inactive.
+Observation is off by default. It starts only after Obsidian finishes loading the vault, so existing files are not re-queued at startup. It does not run while Obsidian is closed. Disabling Soundings or observation, or changing the observation roots, cancels pending checks and clears the in-memory inbox; other settings changes keep it. A later manual vault scan recovers files missed while observation was inactive.
 
 ### Manual enrichment (companion notes)
 

@@ -22,6 +22,12 @@ import { ObsidianVaultAdapter } from "./obsidian/vault-adapter";
 import { ProgressModal, ResultsModal, ReviewModal } from "./obsidian/review-modal";
 import { SoundingsSettingTab } from "./obsidian/settings-tab";
 
+function observationSettingsChanged(previous: SoundingsSettings, next: SoundingsSettings): boolean {
+  return previous.observationEnabled !== next.observationEnabled
+    || previous.observationRoots.length !== next.observationRoots.length
+    || previous.observationRoots.some((root, index) => root !== next.observationRoots[index]);
+}
+
 export default class SoundingsPlugin extends Plugin {
   settings: SoundingsSettings = DEFAULT_SETTINGS;
   settingsPolicy?: SoundingsSettingsPolicy;
@@ -31,6 +37,7 @@ export default class SoundingsPlugin extends Plugin {
   private observationEvent?: EventRef;
   private inboxNoticeOutstanding = false;
   private unloaded = false;
+  private layoutReady = false;
   private readonly ownedModals = new Set<Modal>();
   private readonly digest: DigestFunction = async (algorithm, data) => {
     const subtle = activeWindow.crypto?.subtle;
@@ -76,13 +83,17 @@ export default class SoundingsPlugin extends Plugin {
         return true;
       }
     });
-    this.syncObservation();
+    // Obsidian emits "create" for every existing file while the vault loads; subscribe only afterwards.
+    this.app.workspace.onLayoutReady(() => {
+      this.layoutReady = true;
+      this.syncObservation();
+    });
   }
 
   onunload(): void {
     this.unloaded = true;
     this.runs.cancel();
-    this.stopObservation();
+    this.stopObservation(true);
     for (const modal of [...this.ownedModals]) modal.close();
     this.ownedModals.clear();
   }
@@ -103,28 +114,33 @@ export default class SoundingsPlugin extends Plugin {
     if (!policy) throw new Error("safe-settings-policy-unavailable");
     const validation = validateSettings(settings, policy.mandatoryExcludedPaths);
     if (!validation.settings) throw new Error("invalid-soundings-settings");
+    const previous = this.settings;
     this.settings = validation.settings;
     await this.saveData(validation.settings);
-    this.stopObservation();
-    this.syncObservation();
+    // Other settings are read lazily by the observer and re-checked at inbox review, so queued
+    // candidates survive unrelated changes.
+    if (observationSettingsChanged(previous, validation.settings)) {
+      this.stopObservation(true);
+      this.syncObservation();
+    }
   }
 
   private syncObservation(): void {
     if (!this.settingsPolicy || !this.settings.observationEnabled) {
-      this.stopObservation();
+      this.stopObservation(true);
       return;
     }
-    if (this.observationEvent) return;
+    if (this.unloaded || !this.layoutReady || this.observationEvent) return;
     this.observationEvent = this.app.vault.on("create", (file) => {
       if (file instanceof TFile) void this.observer?.handleCreated(file.path);
     });
     this.registerEvent(this.observationEvent);
   }
 
-  private stopObservation(): void {
+  private stopObservation(clearInbox: boolean): void {
     if (this.observationEvent) this.app.vault.offref(this.observationEvent);
     this.observationEvent = undefined;
-    this.observer?.stop();
+    this.observer?.stop(clearInbox);
     this.inboxNoticeOutstanding = false;
   }
 
