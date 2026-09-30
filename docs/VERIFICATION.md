@@ -8,7 +8,17 @@ Recorded 2026-09-29 during pre-release review. GitHub release `0.2.0` (tag `0.2.
 
 ## Soundings 0.2.1 automated candidate
 
-The `release-0-2-1` automated gate passed on 2026-09-29: production build and TypeScript checks, 244 automated tests across 29 files, runtime audit, production and full dependency audits with zero vulnerabilities, strict OpenSpec validation, and `git diff --check`. New coverage proves per-speaker blocks for multi-voice cues, ignored WebVTT header metadata, whitespace-only cue separators with fail-closed stray chunks, single-pass character-reference decoding, line-delimited frontmatter identification (delimiter-like values, CRLF, BOM), enrichment draft retention for every non-created outcome with refreshed evidence after stale sources, bare-tag release triggers, read-only dependency installation, job-scoped publish permissions, and SHA-pinned actions. Single-voice golden outputs are unchanged. Packaged desktop acceptance of staged `0.2.1` assets is pending.
+The `release-0-2-1` automated gate passed on 2026-09-29: production build and TypeScript checks, 244 automated tests across 29 files, runtime audit, production and full dependency audits with zero vulnerabilities, strict OpenSpec validation, and `git diff --check`. New coverage proves per-speaker blocks for multi-voice cues, ignored WebVTT header metadata, whitespace-only cue separators with fail-closed stray chunks, single-pass character-reference decoding, line-delimited frontmatter identification (delimiter-like values, CRLF, BOM), enrichment draft retention for every non-created outcome with refreshed evidence after stale sources, bare-tag release triggers, read-only dependency installation, job-scoped publish permissions, and SHA-pinned actions. Single-voice golden outputs are unchanged. GitHub CI passed on pull request `Kormiloio/Soundings#1`.
+
+Packaged desktop acceptance passed on 2026-09-30 in a disposable vault using Obsidian desktop 1.13.7 on macOS 26.7 arm64 and only the staged `0.2.1` runtime assets:
+
+- `main.js`: `5abecb496ce7ca2dd3eb261aed2eff224a52112be3c35c10880bcd99e7084b0c`
+- `manifest.json`: `b7cc87c78f05d393d242408a3e592120d1add318ddba78ff54ad47e4005829d2`
+- `styles.css`: `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`
+- The scan listed `Calls/existing.vtt` as `destination-exists`, omitted `.hidden/secret.vtt`, and classified the YouTube-style header file as eligible.
+- Explicit conversion created every selected note. `multi-voice.md` rendered separate Alice, Bob, Alice blocks; `youtube-header.md` contained no header metadata; `whitespace-separator.md` contained two blocks and no timing syntax; `entities.md` rendered `&lt;b&gt;` and `<tag>` exactly.
+- Manual enrichment opened for `Meetings/standup---notes.md`. With the companion destination created externally after review, publication was refused and the form stayed open with the typed summary intact. After the blocker was removed, publication created `Meetings/standup---notes - Enrichment.md` with the full-path backlink `[[Meetings/standup---notes|Back to Transcript Note]]`.
+- All ten pre-existing files, including every transcript source, `Calls/existing.md`, and the hidden transcript, retained their recorded SHA-256 hashes.
 
 ## Soundings 0.2.0 manual-enrichment automated candidate
 
