@@ -3,7 +3,7 @@
 ## 0. Changeset approval
 - [x] 0.1 Record code-review and security-review findings for `0.2.1` in `proposal.md`
 - [x] 0.2 Draft design, spec deltas, and tasks; pass `openspec validate harden-0-2-2 --strict`
-- [ ] 0.3 Owner approves the changeset scope before implementation begins
+- [x] 0.3 Owner approves the changeset scope before implementation begins (approved 2026-09-30)
 
 ## 1. Bounded parsing and rendering (security finding 1, 3)
 - [ ] 1.1 Add failing regression tests: 1 MB `<v.`, `<v `, and `<` inputs classify within 500 ms; 150,000 tilde runs render
