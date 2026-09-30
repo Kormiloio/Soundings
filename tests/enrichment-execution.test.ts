@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildEnrichmentPlan } from "../src/core/enrichment-planning";
 import { executeEnrichmentPlan } from "../src/core/enrichment-execution";
+import { validateEnrichmentDraft } from "../src/core/enrichment-draft";
 import type { PublicationAdapter } from "../src/core/execution";
 import { identifySourceNote } from "../src/core/enrichment-evidence";
 import { sha256 } from "../src/core/hash";
@@ -39,9 +40,38 @@ async function evidenceFor(path: string, body: string) {
 }
 
 describe("enrichment execution", () => {
+  it("plans a maximum-size valid draft without mutating the vault", async () => {
+    const sourcePath = "meetings/maximum.md";
+    const body = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 2\n---\n# Maximum';
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set(sourcePath, encoder.encode(body));
+    const sourceBefore = vault.files.get(sourcePath);
+    const validation = validateEnrichmentDraft({
+      summary: "s".repeat(10_000),
+      decisions: ["d".repeat(10_000), "e".repeat(10_000), "f".repeat(10_000), "g".repeat(10_000)]
+    });
+    expect(validation.errors).toEqual([]);
+    expect(validation.draft).toBeDefined();
+
+    const evidence = await evidenceFor(sourcePath, body);
+    const plan = buildEnrichmentPlan(
+      sourcePath,
+      evidence,
+      validation.draft!,
+      new Set(vault.files.keys()),
+      new Date(0),
+      "maximum"
+    );
+
+    expect(plan.status).toBe("ready");
+    expect(plan.renderedMarkdown.length).toBeGreaterThan(50_000);
+    expect(vault.files.get(sourcePath)).toEqual(sourceBefore);
+    expect(vault.files.has("meetings/maximum - Enrichment.md")).toBe(false);
+  });
+
   it("creates and verifies a companion note", async () => {
     const sourcePath = "meetings/note.md";
-    const body = '---\ntype: "meeting-transcript"\nsoundings_version: 1\n---\n# Title';
+    const body = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# Title';
     const vault = new MemoryPublicationAdapter();
     vault.files.set(sourcePath, encoder.encode(body));
     const evidence = await evidenceFor(sourcePath, body);
@@ -61,8 +91,8 @@ describe("enrichment execution", () => {
   it("refuses stale source evidence", async () => {
     const sourcePath = "note.md";
     const vault = new MemoryPublicationAdapter();
-    vault.files.set(sourcePath, encoder.encode('---\ntype: "meeting-transcript"\nsoundings_version: 1\n---\n# New'));
-    const evidence = await evidenceFor(sourcePath, '---\ntype: "meeting-transcript"\nsoundings_version: 1\n---\n# Old');
+    vault.files.set(sourcePath, encoder.encode('---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# New'));
+    const evidence = await evidenceFor(sourcePath, '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# Old');
     const draft = Object.freeze({
       summary: "x",
       decisions: [] as readonly string[],
@@ -77,7 +107,7 @@ describe("enrichment execution", () => {
 
   it("refuses destination races", async () => {
     const sourcePath = "note.md";
-    const body = '---\ntype: "meeting-transcript"\nsoundings_version: 1\n---\n# Title';
+    const body = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# Title';
     const vault = new MemoryPublicationAdapter();
     vault.files.set(sourcePath, encoder.encode(body));
     vault.createHook = (path) => {
@@ -97,7 +127,7 @@ describe("enrichment execution", () => {
 
   it("cancels before publication", async () => {
     const sourcePath = "note.md";
-    const body = '---\ntype: "meeting-transcript"\nsoundings_version: 1\n---\n# Title';
+    const body = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# Title';
     const vault = new MemoryPublicationAdapter();
     vault.files.set(sourcePath, encoder.encode(body));
     const evidence = await evidenceFor(sourcePath, body);
@@ -121,7 +151,7 @@ describe("enrichment execution", () => {
 
   it("reports verification failures without leaking bodies", async () => {
     const sourcePath = "note.md";
-    const body = '---\ntype: "meeting-transcript"\nsoundings_version: 1\n---\n# Title';
+    const body = '---\ntype: "meeting-transcript"\nsource: "transcript"\nsoundings_version: 1\n---\n# Title';
     const vault = new MemoryPublicationAdapter();
     vault.files.set(sourcePath, encoder.encode(body));
     vault.corruptReadback = true;

@@ -59,6 +59,29 @@ Each eligible planned conversion SHALL record evidence sufficient to detect a mi
 - **WHEN** Soundings builds the plan
 - **THEN** the plan marks it eligible and records its path, format, byte length, and a content identity value
 
+### Requirement: Parse-aware candidate classification
+Soundings SHALL parse each readable, size-permitted supported candidate during discovery before classifying it as eligible. A candidate with malformed content SHALL be classified as unreadable, a recognized WebVTT file containing unsupported structures SHALL be classified as unsupported, and only a successfully parsed candidate SHALL be classified as eligible and receive source evidence.
+
+#### Scenario: Parsable candidate is eligible before review
+- **GIVEN** a readable supported transcript passes exclusions and size checks and can be parsed successfully
+- **WHEN** Soundings builds the review plan
+- **THEN** the candidate is classified as eligible with content-free source evidence
+
+#### Scenario: Malformed WebVTT is unreadable before review
+- **GIVEN** a `.vtt` candidate lacks a valid `WEBVTT` signature or contains malformed cue timing
+- **WHEN** Soundings builds the review plan
+- **THEN** the candidate is classified as unreadable and cannot be selected for conversion
+
+#### Scenario: Unsupported WebVTT structure is reported before review
+- **GIVEN** a recognized WebVTT candidate contains an unsupported control record or cue markup
+- **WHEN** Soundings builds the review plan
+- **THEN** the candidate is classified as unsupported and cannot be selected for conversion
+
+#### Scenario: Parse-aware discovery remains non-mutating
+- **GIVEN** a scan evaluates eligible, malformed, and unsupported candidates
+- **WHEN** Soundings parses and classifies them for review
+- **THEN** no source or destination file is created, modified, moved, renamed, or deleted
+
 ### Requirement: Reviewable plan and explicit selection
 Soundings SHALL show classification counts and let the user search and filter the current plan by vault-relative path and classification. It SHALL show each visible candidate's source, intended destination, classification, and reason, and SHALL execute only eligible items the user explicitly selects from the current plan. Every newly opened or refreshed plan SHALL begin with no selected candidates. **Select all eligible shown** SHALL select only currently visible eligible items, and **Clear selection** SHALL clear every selection in the plan.
 

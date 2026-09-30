@@ -1,0 +1,69 @@
+name: Bug Report
+description: Report a reproducible issue or defect in Soundings.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue with Soundings!
+        
+        **Important privacy reminder:**
+        Never include private transcript text, generated note bodies, private vault paths, or credentials in this issue. Use synthetic or anonymized filenames and sanitized error descriptions.
+  - type: input
+    id: soundings_version
+    attributes:
+      label: Soundings Version
+      description: What version of Soundings are you using? (e.g., 0.2.0)
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: input
+    id: obsidian_version
+    attributes:
+      label: Obsidian Desktop Version
+      description: What version of Obsidian are you using? (e.g., 1.13.7)
+      placeholder: "1.13.7"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem Description
+      description: A clear and concise description of what happened and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the issue using synthetic or anonymized files.
+      placeholder: |
+        1. Place synthetic 'meeting.vtt' in a folder.
+        2. Run 'Soundings: Scan vault for transcripts'.
+        3. Observe classification...
+    validations:
+      required: true
+  - type: textarea
+    id: outcomes
+    attributes:
+      label: Sanitized Outcome Metadata
+      description: Outcome counts, status badges, or error messages (omit note contents).
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy_attestation
+    attributes:
+      label: Privacy and Safety Confirmation
+      options:
+        - label: I confirm this issue contains no confidential transcript text, note content, credentials, or private vault paths.
+          required: true

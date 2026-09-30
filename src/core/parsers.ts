@@ -20,14 +20,17 @@ export function parseTxt(text: string): Result<ParsedTranscript, "empty"> {
 const TIMING = /^(\d{2,}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})\s+-->\s+(\d{2,}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})(?:\s+.*)?$/;
 const ALLOWED_TAG = /^\/?(?:b|i|u|c(?:\.[^ >]+)*|lang(?:\s+[^>]+)?|ruby|rt)$/i;
 
+const CHARACTER_REFERENCES: Readonly<Record<string, string>> = Object.freeze({
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  lrm: "\u200e",
+  rlm: "\u200f",
+  nbsp: "\u00a0"
+});
+
 function decodeEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&lrm;/g, "\u200e")
-    .replace(/&rlm;/g, "\u200f")
-    .replace(/&nbsp;/g, "\u00a0");
+  return text.replace(/&(amp|lt|gt|lrm|rlm|nbsp);/g, (_match, name: string) => CHARACTER_REFERENCES[name]);
 }
 
 function validTimestamp(value: string): boolean {
@@ -43,37 +46,55 @@ function validTimestamp(value: string): boolean {
   return false;
 }
 
+const VOICE_START = /<v(?:\.[^\s>]+)?\s+([^>]+)>/gi;
+
+function stripCueMarkup(text: string): Result<string, "unsupported-vtt"> {
+  let unsupported = false;
+  const stripped = text
+    .replace(/<\/?v(?:\.([^\s>]+))?\s*[^>]*>/gi, "")
+    .replace(/<([^>]+)>/g, (_match, tag: string) => {
+      if (!ALLOWED_TAG.test(tag.trim())) unsupported = true;
+      return "";
+    });
+  return unsupported ? { ok: false, error: "unsupported-vtt" } : { ok: true, value: decodeEntities(stripped) };
+}
+
 function parseCuePayload(
   payload: string,
   timing: TranscriptBlock["timing"]
-): Result<TranscriptBlock, "unsupported-vtt"> {
+): Result<readonly TranscriptBlock[], "unsupported-vtt"> {
+  const segments: Array<{ readonly speaker?: string; readonly raw: string }> = [];
+  let cursor = 0;
   let speaker: string | undefined;
-  let text = payload;
-
-  const firstVoice = text.match(/<v(?:\.([^\s>]+))?\s+([^>]+)>/i);
-  if (firstVoice) {
-    speaker = decodeEntities(firstVoice[2].trim());
+  for (const match of payload.matchAll(VOICE_START)) {
+    const start = match.index ?? 0;
+    if (start > cursor || speaker !== undefined) segments.push({ speaker, raw: payload.slice(cursor, start) });
+    speaker = decodeEntities(match[1].trim());
+    cursor = start + match[0].length;
   }
+  segments.push({ speaker, raw: payload.slice(cursor) });
 
-  text = text.replace(/<\/?v(?:\.([^\s>]+))?\s*[^>]*>/gi, "");
-
-  let unsupported = false;
-  text = text.replace(/<([^>]+)>/g, (_match, tag: string) => {
-    if (!ALLOWED_TAG.test(tag.trim())) unsupported = true;
-    return "";
-  });
-
-  if (unsupported) return { ok: false, error: "unsupported-vtt" };
-  return { ok: true, value: { text: decodeEntities(text), ...(speaker ? { speaker } : {}), timing } };
+  const multiple = segments.length > 1;
+  const blocks: TranscriptBlock[] = [];
+  for (const segment of segments) {
+    const stripped = stripCueMarkup(segment.raw);
+    if (!stripped.ok || stripped.value === undefined) return { ok: false, error: "unsupported-vtt" };
+    const text = multiple ? stripped.value.trim() : stripped.value;
+    if (multiple && text.length === 0) continue;
+    blocks.push({ text, ...(segment.speaker ? { speaker: segment.speaker } : {}), timing });
+  }
+  return { ok: true, value: blocks };
 }
 
 export function parseVtt(text: string): Result<ParsedTranscript, "empty" | "malformed-vtt" | "unsupported-vtt"> {
   if (text.length === 0) return { ok: false, error: "empty" };
   const lines = text.split("\n");
   if (!/^WEBVTT(?:\s.*)?$/.test(lines[0])) return { ok: false, error: "malformed-vtt" };
-  const body = lines.slice(1).join("\n").trim();
+  let bodyStart = 1;
+  while (bodyStart < lines.length && lines[bodyStart].trim() !== "" && !lines[bodyStart].includes("-->")) bodyStart += 1;
+  const body = lines.slice(bodyStart).join("\n").trim();
   if (body.length === 0) return { ok: false, error: "empty" };
-  const chunks = body.split(/\n{2,}/);
+  const chunks = body.split(/\n(?:[ \t]*\n)+/);
   const blocks: TranscriptBlock[] = [];
   for (const chunk of chunks) {
     const cue = chunk.split("\n");
@@ -89,7 +110,7 @@ export function parseVtt(text: string): Result<ParsedTranscript, "empty" | "malf
     if (payload.length === 0) return { ok: false, error: "malformed-vtt" };
     const parsed = parseCuePayload(payload, Object.freeze({ start: timingMatch[1], end: timingMatch[2] }));
     if (!parsed.ok || !parsed.value) return { ok: false, error: parsed.error ?? "unsupported-vtt" };
-    blocks.push(parsed.value);
+    blocks.push(...parsed.value);
   }
   if (blocks.length === 0) return { ok: false, error: "empty" };
   return { ok: true, value: { format: "vtt", blocks: Object.freeze(blocks) } };

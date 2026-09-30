@@ -7,6 +7,30 @@ export interface SourceNoteEvidence {
   readonly soundingsVersion: number;
 }
 
+const SUPPORTED_SOUNDINGS_VERSIONS = new Set([1, 2]);
+
+function frontmatterValue(frontmatter: string, key: string): string | undefined {
+  const prefix = `${key}:`;
+  const matches = frontmatter
+    .split(/\r?\n/u)
+    .filter((line) => line.startsWith(prefix))
+    .map((line) => line.slice(prefix.length).trim());
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+function frontmatterBlock(content: string): string | undefined {
+  const lines = (content.charCodeAt(0) === 0xfeff ? content.slice(1) : content).split(/\r?\n/u);
+  if (lines[0]?.trimEnd() !== "---") return undefined;
+  for (let index = 1; index < lines.length; index += 1) {
+    if (lines[index].trimEnd() === "---") return lines.slice(1, index).join("\n");
+  }
+  return undefined;
+}
+
+function isScalar(value: string | undefined, expected: string): boolean {
+  return value === expected || value === JSON.stringify(expected);
+}
+
 export async function identifySourceNote(
   path: string,
   bytes: Uint8Array,
@@ -22,18 +46,24 @@ export async function identifySourceNote(
     return { ok: false, error: "invalid-soundings-note" };
   }
 
-  const frontmatterMatch = content.match(/^---\s*([\s\S]*?)\s*---/);
-  if (!frontmatterMatch) return { ok: false, error: "invalid-soundings-note" };
+  const frontmatter = frontmatterBlock(content);
+  if (frontmatter === undefined) return { ok: false, error: "invalid-soundings-note" };
 
-  const yaml = frontmatterMatch[1];
-  const typeMatch = yaml.match(/^type:\s*(?:"meeting-transcript"|meeting-transcript)/m);
-  if (!typeMatch) return { ok: false, error: "invalid-soundings-note" };
+  if (!isScalar(frontmatterValue(frontmatter, "type"), "meeting-transcript")) {
+    return { ok: false, error: "invalid-soundings-note" };
+  }
+  if (!isScalar(frontmatterValue(frontmatter, "source"), "transcript")) {
+    return { ok: false, error: "invalid-soundings-note" };
+  }
 
-  const versionMatch = yaml.match(/^soundings_version:\s*(\d+)/m);
-  if (!versionMatch) return { ok: false, error: "invalid-soundings-note" };
-
-  const version = parseInt(versionMatch[1], 10);
-  if (isNaN(version)) return { ok: false, error: "invalid-soundings-note" };
+  const rawVersion = frontmatterValue(frontmatter, "soundings_version");
+  if (!rawVersion || !/^[0-9]+$/u.test(rawVersion)) {
+    return { ok: false, error: "invalid-soundings-note" };
+  }
+  const version = Number(rawVersion);
+  if (!SUPPORTED_SOUNDINGS_VERSIONS.has(version)) {
+    return { ok: false, error: "invalid-soundings-note" };
+  }
 
   return {
     ok: true,

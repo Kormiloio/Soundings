@@ -98,13 +98,14 @@ Report bugs or request features through [GitHub Issues](https://github.com/Kormi
 
 ## Development
 
-Soundings is written in TypeScript and requires Node.js 20 or later for development.
+Soundings is written in TypeScript and requires Node.js 20.19.0 or later for development.
 
 ```bash
 npm install
 npm run check
 npm run audit:runtime
-npm run release:prepare
+npm run spec:validate
+npm run release:prepare -- --tag <version>
 ```
 
 Generated `main.js` and release staging files are intentionally not committed. See [Release and Community submission](docs/RELEASING.md) for the complete maintainer workflow.

@@ -9,7 +9,7 @@ const encoder = new TextEncoder();
 
 describe("source note identification", () => {
   it("identifies a valid Soundings note", async () => {
-    const content = "---\ntype: \"meeting-transcript\"\nsoundings_version: 1\n---\n# Title";
+    const content = "---\ntype: \"meeting-transcript\"\nsource: \"transcript\"\nsoundings_version: 1\n---\n# Title";
     const bytes = encoder.encode(content);
     const result = await identifySourceNote("note.md", bytes, 5_000_000, testDigest);
     expect(result.ok).toBe(true);
@@ -21,7 +21,7 @@ describe("source note identification", () => {
   });
 
   it("rejects oversized notes", async () => {
-    const content = "---\ntype: \"meeting-transcript\"\nsoundings_version: 1\n---\n# Title";
+    const content = "---\ntype: \"meeting-transcript\"\nsource: \"transcript\"\nsoundings_version: 1\n---\n# Title";
     const bytes = encoder.encode(content);
     const result = await identifySourceNote("note.md", bytes, 10, testDigest);
     expect(result.ok).toBe(false);
@@ -36,7 +36,7 @@ describe("source note identification", () => {
   });
 
   it("rejects notes with wrong type", async () => {
-    const content = "---\ntype: \"something-else\"\nsoundings_version: 1\n---\n# Title";
+    const content = "---\ntype: \"something-else\"\nsource: \"transcript\"\nsoundings_version: 1\n---\n# Title";
     const bytes = encoder.encode(content);
     const result = await identifySourceNote("note.md", bytes, 5_000_000, testDigest);
     expect(result.ok).toBe(false);
@@ -44,7 +44,7 @@ describe("source note identification", () => {
   });
 
   it("rejects notes with missing version", async () => {
-    const content = "---\ntype: \"meeting-transcript\"\n---\n# Title";
+    const content = "---\ntype: \"meeting-transcript\"\nsource: \"transcript\"\n---\n# Title";
     const bytes = encoder.encode(content);
     const result = await identifySourceNote("note.md", bytes, 5_000_000, testDigest);
     expect(result.ok).toBe(false);
@@ -52,10 +52,45 @@ describe("source note identification", () => {
   });
 
   it("rejects notes with invalid version format", async () => {
-    const content = "---\ntype: \"meeting-transcript\"\nsoundings_version: abc\n---\n# Title";
+    const content = "---\ntype: \"meeting-transcript\"\nsource: \"transcript\"\nsoundings_version: abc\n---\n# Title";
     const bytes = encoder.encode(content);
     const result = await identifySourceNote("note.md", bytes, 5_000_000, testDigest);
     expect(result.ok).toBe(false);
     expect(result.error).toBe("invalid-soundings-note");
+  });
+
+  it("accepts the configured-output schema", async () => {
+    const content = "---\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 2\n---\n# Title";
+    const result = await identifySourceNote("note.md", encoder.encode(content), 5_000_000, testDigest);
+    expect(result.value?.soundingsVersion).toBe(2);
+  });
+
+  it.each([
+    ["type prefix", "type: meeting-transcript-lookalike\nsource: transcript\nsoundings_version: 1"],
+    ["wrong source", "type: meeting-transcript\nsource: imported\nsoundings_version: 1"],
+    ["unsupported schema", "type: meeting-transcript\nsource: transcript\nsoundings_version: 999"],
+    ["version suffix", "type: meeting-transcript\nsource: transcript\nsoundings_version: 1beta"],
+    ["duplicate type", "type: meeting-transcript\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 1"]
+  ])("rejects %s metadata", async (_label, frontmatter) => {
+    const result = await identifySourceNote("note.md", encoder.encode(`---\n${frontmatter}\n---\n# Title`), 5_000_000, testDigest);
+    expect(result).toEqual({ ok: false, error: "invalid-soundings-note" });
+  });
+
+  it.each([
+    ["delimiter-like value", "---\ntype: meeting-transcript\nsource: transcript\nsource_file: \"standup---notes.vtt\"\nsoundings_version: 1\n---\n# T"],
+    ["CRLF line endings", "---\r\ntype: meeting-transcript\r\nsource: transcript\r\nsoundings_version: 1\r\n---\r\n# T"],
+    ["byte-order mark", "\ufeff---\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 1\n---\n# T"]
+  ])("identifies frontmatter with %s", async (_label, content) => {
+    const result = await identifySourceNote("note.md", encoder.encode(content), 5_000_000, testDigest);
+    expect(result.ok).toBe(true);
+  });
+
+  it.each([
+    ["unclosed frontmatter", "---\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 1\n# T"],
+    ["frontmatter not at start", "\n---\ntype: meeting-transcript\nsource: transcript\nsoundings_version: 1\n---"],
+    ["inline fence", "--- type: meeting-transcript\nsource: transcript\nsoundings_version: 1\n---"]
+  ])("rejects %s", async (_label, content) => {
+    const result = await identifySourceNote("note.md", encoder.encode(content), 5_000_000, testDigest);
+    expect(result).toEqual({ ok: false, error: "invalid-soundings-note" });
   });
 });

@@ -86,6 +86,13 @@ describe("release readiness", () => {
     await expect(run(root)).rejects.toMatchObject({ stderr: expect.stringContaining("versions must match") });
   });
 
+  it("fails closed when the release tag is missing", async () => {
+    const root = await createCandidate();
+    await expect(execFileAsync(process.execPath, [script, "--root", root, "--output", join(root, "release", "0.1.2")])).rejects.toMatchObject({
+      stderr: expect.stringContaining("Release tag is required")
+    });
+  });
+
   it("fails closed when the release tag differs", async () => {
     const root = await createCandidate();
     await expect(run(root, "v0.1.0")).rejects.toMatchObject({ stderr: expect.stringContaining("Release tag must exactly match") });

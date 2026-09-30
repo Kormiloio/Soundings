@@ -174,6 +174,13 @@ export class Setting {
     this.settingEl.children.push(text.inputEl);
     return this;
   }
+  addTextArea(builder: (text: FakeTextComponent) => void): this {
+    const text = new FakeTextComponent();
+    runtimeControls.texts.push(text);
+    builder(text);
+    this.settingEl.children.push(text.inputEl);
+    return this;
+  }
   addDropdown(builder: (dropdown: FakeDropdownComponent) => void): this {
     const dropdown = new FakeDropdownComponent();
     runtimeControls.dropdowns.push(dropdown);

@@ -1,0 +1,32 @@
+name: Feature Request
+description: Suggest an idea or enhancement for Soundings.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Soundings adheres to hard non-negotiable safety rules:
+        - Safe, local-only, create-only operations.
+        - Never modify, rename, delete, or overwrite source transcripts or existing notes.
+        - Privacy-first: no telemetry, external network calls, or credential harvesting.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Workflow Gap
+      description: What problem are you trying to solve or what workflow would this improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature, settings, or UX workflow you'd like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've explored.
+    validations:
+      required: false

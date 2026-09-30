@@ -24,12 +24,12 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 - **Markdown renderer:** produces versioned frontmatter and deterministic note sections.
 - **Conversion executor:** revalidates evidence and publishes only to an absent destination.
 - **Diagnostics:** content-free outcome records and user-facing summaries.
-- **Enrichment boundary:** manual local companion-note enrichment (in progress); future provider-backed enrichment remains separately approved and outside the converter core.
+- **Enrichment boundary:** manual local companion-note enrichment (shipped); future provider-backed enrichment remains separately approved and outside the converter core.
 
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-2. Complete release provenance and GitHub artifact attestations (`automate-release-provenance`).
+2. Ship corrective release `0.2.1` (`release-0-2-1`) through the attested workflow, completing release provenance (`automate-release-provenance`).
 3. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`).
 4. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
 5. Design guarded speaker-to-person entity linking against existing vault notes.
@@ -60,6 +60,10 @@ Immutable release `0.1.2` passed 101 automated tests across 16 suites, runtime a
 The completed `add-reviewed-transcript-inbox` change keeps observation off by default and uses the same pure single-path discovery policy as manual scans. Stable new-file evidence is serialized into a content-free in-memory inbox; a coalesced notice and command hand current files to the existing zero-selection review. Observation is lifecycle-bound, local-only, and cannot call conversion. All 135 automated tests and every production, security, strict-spec, event-storm, disposable-desktop lifecycle, dismissal, deduplication, notification, and explicit create/read-back check passed with protected hashes unchanged.
 
 The completed `improve-vtt-compatibility-and-discovery` change expands WebVTT parser compatibility to support optional hours in timestamps, unclosed voice tags, and multiple voice lines per cue. It moves parsing into the discovery phase so that the review plan accurately classifies items as `eligible`, `unsupported`, or `unreadable` before any conversion is attempted. The production build, runtime security audit, strict OpenSpec validation, and 205 automated tests pass. A repeated 5,000-file rehearsal with zero mutations confirmed stability.
+
+Release `0.2.0` was published from commit `4b74b86`. Its `main.js` (`eb42c8fa…`) reproduces byte-for-byte from that commit but differs from the build recorded in packaged desktop acceptance (`06da240b…`), which included exact source-note identification and full-path companion backlinks. The `v0.1.3` release was tagged with a `v` prefix and is not installable through Obsidian.
+
+The active `release-0-2-1` change ships that verified hardening plus per-speaker WebVTT attribution, header-metadata and whitespace-separator handling, single-pass character-reference decoding, manual-enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a split read-only build / job-scoped publish release workflow with SHA-pinned actions, bare-tag enforcement, and version-scoped release notes. The production build, runtime and dependency audits, strict OpenSpec validation, and 244 automated tests across 29 files pass, and packaged desktop acceptance on Obsidian 1.13.7 (macOS 26.7 arm64) passed with unchanged source hashes; attested publication remains.
 
 ## Definition of done
 

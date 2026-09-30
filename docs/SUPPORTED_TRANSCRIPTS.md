@@ -11,11 +11,14 @@
 ## WebVTT (`.vtt`)
 
 - A valid `WEBVTT` signature is required.
-- Zoom-style hour-based timestamps, cue identifiers, and cue settings are accepted.
+- Hour-based (`hh:mm:ss.ttt`) and hourless (`mm:ss.ttt`) timestamps, cue identifiers, and cue settings are accepted.
+- Header metadata lines directly below `WEBVTT` (for example `Kind:` and `Language:`) are ignored up to the first blank line.
+- A line that is empty or contains only spaces or tabs separates cues.
 - Cue text remains ordered and repeated cues remain repeated.
-- Explicit WebVTT voice spans become speaker headings.
+- Explicit WebVTT voice spans become speaker headings. When one cue contains several voice spans, each span becomes its own block under its own speaker with the cue's timing; text before the first voice span has no speaker.
+- Character references (`&amp;`, `&lt;`, `&gt;`, `&lrm;`, `&rlm;`, `&nbsp;`) are decoded exactly once.
 - Timing syntax and format-control records are omitted from note prose.
-- Unsupported style/region blocks, unknown tags, malformed cues, empty files, and invalid UTF-8 are refused rather than guessed.
+- Unsupported style/region blocks, unknown tags (including inline karaoke timestamp tags such as `<00:00:01.500>` used by auto-generated captions), malformed cues, empty files, and invalid UTF-8 are refused rather than guessed.
 
 ## Generated Markdown
 
