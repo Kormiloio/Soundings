@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.2.2 published
+**Document status:** Soundings 0.2.2 published; 0.2.3 corrective release proposed
 **Last updated:** 2026-10-01
 
 ## 1. Product summary
@@ -154,7 +154,8 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 6. **Local Companion Enrichment:** manual, local, create-only companion notes for reviewed summary and action-item capture.
 7. **Release Provenance & CI Automation:** GitHub Actions CI, build verification, and cryptographic GitHub artifact attestations.
 7a. **Post-release Hardening (0.2.2):** bounded linear-time parsing, startup-quiet observation, case-insensitive collision identity, lifecycle guards, note-structure escaping, and fail-closed release tooling, fixing the `0.2.1` code and security review findings.
-8. **Ergonomic Transcript Display:** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search.
+7b. **Community Scorecard Correction (0.2.3):** clear the `0.2.0` scorecard's type-safety warning, add a zero-warning type-aware lint gate, and confirm companion-note publication before rescanning the listing.
+8. **Ergonomic Transcript Display (planned 0.3.0):** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search.
 9. **Expanded Offline Caption Formats:** `.srt` (SubRip) parsing support, followed by offline structured JSON transcript schemas (Whisper / Otter / Zoom).
 10. **Guarded Vault Entity Linking:** opt-in linking of verified speaker names to existing Person notes within configured folders, strictly without automatic note creation.
 11. **Mobile Evaluation:** separately approved Android, iOS, and iPadOS performance and vault-API acceptance.
