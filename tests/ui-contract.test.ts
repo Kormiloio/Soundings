@@ -105,7 +105,8 @@ describe("Obsidian UI and lifecycle contracts", () => {
     const observation = await source("src/core/observation.ts");
     expect(main).toContain('this.app.vault.on("create"');
     expect(main).toContain("this.app.vault.offref(this.observationEvent)");
-    expect(main).toContain("this.observer?.stop()");
+    expect(main).toContain("this.observer?.stop(clearInbox)");
+    expect(main).toContain("this.app.workspace.onLayoutReady(");
     expect(main).toContain("if (!this.settingsPolicy || !this.settings.observationEnabled)");
     expect(main).toContain("canProcess: () => !this.runs.isActive");
     expect(observation).not.toContain("executePlan");

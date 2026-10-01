@@ -7,7 +7,10 @@ import type { ConversionPlan, ExecutionOutcome, PlanItem } from "./types";
 
 export interface PublicationAdapter {
   readBinary(path: string): Promise<Uint8Array>;
+  /** Exact lookup in the vault index. */
   exists(path: string): boolean;
+  /** Storage-level lookup that sees unindexed files and case variants on case-insensitive filesystems. */
+  existsOnDisk(path: string): Promise<boolean>;
   createBinary(path: string, bytes: Uint8Array): Promise<void>;
 }
 
@@ -24,6 +27,17 @@ function outcome(item: PlanItem, status: ExecutionOutcome["status"], reason: str
   return Object.freeze({ sourcePath: item.sourcePath, destinationPath: item.destinationPath ?? "", status, reason });
 }
 
+export async function destinationPresence(
+  adapter: PublicationAdapter,
+  path: string
+): Promise<"present" | "absent" | "unknown"> {
+  try {
+    return await adapter.existsOnDisk(path) ? "present" : "absent";
+  } catch {
+    return "unknown";
+  }
+}
+
 async function executeItem(
   item: PlanItem,
   adapter: PublicationAdapter,
@@ -35,8 +49,10 @@ async function executeItem(
   }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
 
+  // The plan holds the caller's profile by reference. If that object is mutated after preview, the
+  // settings fingerprint can still match while rendering would use an unreviewed profile.
   if (item.outputProfileFingerprint !== outputProfileFingerprint(outputProfile)) {
-    return outcome(item, "stale", "Settings changed after preview.");
+    return outcome(item, "stale", "Output profile changed after preview.");
   }
 
   let source: Uint8Array;
@@ -57,24 +73,31 @@ async function executeItem(
   if (source.byteLength !== item.evidence.byteLength || currentHash !== item.evidence.sha256) {
     return outcome(item, "stale", "Source changed after preview.");
   }
-  if (adapter.exists(item.destinationPath)) return outcome(item, "blocked", "Destination already exists.");
+  const presence = await destinationPresence(adapter, item.destinationPath);
+  if (presence === "unknown") return outcome(item, "failed", "Destination could not be checked.");
+  if (presence === "present" || adapter.exists(item.destinationPath)) return outcome(item, "blocked", "Destination already exists.");
 
-  const parsed = parseTranscript(item.format, source);
-  if (!parsed.ok || !parsed.value) return outcome(item, "failed", `Transcript parsing failed: ${parsed.error ?? "unknown"}.`);
-  const rendered = renderMarkdown(parsed.value, {
-    sourceFile: item.sourcePath.slice(item.sourcePath.lastIndexOf("/") + 1),
-    sourceFormat: item.format,
-    title: item.title,
-    convertedAt: (options.now ?? (() => new Date()))().toISOString(),
-    ...(item.project ? { project: item.project } : {})
-  }, outputProfile);
-  const bytes = new TextEncoder().encode(rendered);
+  let bytes: Uint8Array;
+  try {
+    const parsed = parseTranscript(item.format, source);
+    if (!parsed.ok || !parsed.value) return outcome(item, "failed", `Transcript parsing failed: ${parsed.error ?? "unknown"}.`);
+    const rendered = renderMarkdown(parsed.value, {
+      sourceFile: item.sourcePath.slice(item.sourcePath.lastIndexOf("/") + 1),
+      sourceFormat: item.format,
+      title: item.title,
+      convertedAt: (options.now ?? (() => new Date()))().toISOString(),
+      ...(item.project ? { project: item.project } : {})
+    }, outputProfile);
+    bytes = new TextEncoder().encode(rendered);
+  } catch {
+    return outcome(item, "failed", "Transcript could not be rendered (render-failed).");
+  }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
 
   try {
     await adapter.createBinary(item.destinationPath, bytes);
   } catch {
-    return adapter.exists(item.destinationPath)
+    return adapter.exists(item.destinationPath) || await destinationPresence(adapter, item.destinationPath) === "present"
       ? outcome(item, "blocked", "Destination appeared during publication.")
       : outcome(item, "failed", "Destination could not be created.");
   }
@@ -109,7 +132,12 @@ export async function executePlan(
       outcomes.push(outcome(item, "canceled", "Conversion was canceled."));
       continue;
     }
-    outcomes.push(await executeItem(item, adapter, options, plan.outputProfile));
+    try {
+      outcomes.push(await executeItem(item, adapter, options, plan.outputProfile));
+    } catch {
+      // An unexpected error may occur after creation, so the destination must be inspected.
+      outcomes.push(outcome(item, "needs-attention", "Unexpected error; inspect the destination before retrying."));
+    }
     options.onProgress?.(outcomes.filter((entry) => entry.status !== "skipped").length, selected.length);
   }
   return Object.freeze(outcomes);

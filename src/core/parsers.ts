@@ -5,8 +5,8 @@ export type ParseError = "unsupported-encoding" | "empty" | "malformed-vtt" | "u
 export function decodeUtf8(bytes: Uint8Array): Result<string, "unsupported-encoding"> {
   try {
     const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-    const withoutBom = decoded.charCodeAt(0) === 0xfeff ? decoded.slice(1) : decoded;
-    return { ok: true, value: withoutBom.replace(/\r\n?/g, "\n") };
+    // TextDecoder already removes exactly one leading byte-order mark; a second U+FEFF is content.
+    return { ok: true, value: decoded.replace(/\r\n?/g, "\n") };
   } catch {
     return { ok: false, error: "unsupported-encoding" };
   }
@@ -18,7 +18,9 @@ export function parseTxt(text: string): Result<ParsedTranscript, "empty"> {
 }
 
 const TIMING = /^(\d{2,}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})\s+-->\s+(\d{2,}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})(?:\s+.*)?$/;
-const ALLOWED_TAG = /^\/?(?:b|i|u|c(?:\.[^ >]+)*|lang(?:\s+[^>]+)?|ruby|rt)$/i;
+// Equivalent to the 0.2.1 language without ambiguous repetition, so matching cannot backtrack.
+const ALLOWED_TAG = /^\/?(?:b|i|u|c(?:\.[^ >]+)?|lang(?:\s[^>]*)?|ruby|rt)$/i;
+const MAX_TAG_LENGTH = 256;
 
 const CHARACTER_REFERENCES: Readonly<Record<string, string>> = Object.freeze({
   amp: "&",
@@ -46,40 +48,108 @@ function validTimestamp(value: string): boolean {
   return false;
 }
 
-const VOICE_START = /<v(?:\.[^\s>]+)?\s+([^>]+)>/gi;
+type CueToken =
+  | { readonly kind: "text"; readonly value: string }
+  | { readonly kind: "tag"; readonly body: string };
 
-function stripCueMarkup(text: string): Result<string, "unsupported-vtt"> {
-  let unsupported = false;
-  const stripped = text
-    .replace(/<\/?v(?:\.([^\s>]+))?\s*[^>]*>/gi, "")
-    .replace(/<([^>]+)>/g, (_match, tag: string) => {
-      if (!ALLOWED_TAG.test(tag.trim())) unsupported = true;
-      return "";
-    });
-  return unsupported ? { ok: false, error: "unsupported-vtt" } : { ok: true, value: decodeEntities(stripped) };
+// Single left-to-right pass: a tag runs from "<" to the next ">", as in 0.2.1.
+// A "<" with no later ">" is literal text and "<>" is literal. A tag body that is longer than
+// MAX_TAG_LENGTH or contains "<" is refused, because its boundaries are ambiguous.
+function tokenizeCue(payload: string): Result<readonly CueToken[], "unsupported-vtt"> {
+  const tokens: CueToken[] = [];
+  let textStart = 0;
+  let searchFrom = 0;
+  while (searchFrom < payload.length) {
+    const open = payload.indexOf("<", searchFrom);
+    if (open === -1) break;
+    const close = payload.indexOf(">", open + 1);
+    if (close === -1) break;
+    if (close === open + 1) {
+      searchFrom = close + 1;
+      continue;
+    }
+    const body = payload.slice(open + 1, close);
+    if (body.length > MAX_TAG_LENGTH || body.includes("<")) return { ok: false, error: "unsupported-vtt" };
+    if (open > textStart) tokens.push({ kind: "text", value: payload.slice(textStart, open) });
+    tokens.push({ kind: "tag", body });
+    textStart = close + 1;
+    searchFrom = close + 1;
+  }
+  if (textStart < payload.length) tokens.push({ kind: "text", value: payload.slice(textStart) });
+  return { ok: true, value: tokens };
+}
+
+function isWhitespace(character: string | undefined): boolean {
+  return character !== undefined && /\s/.test(character);
+}
+
+// Returns the raw annotation of a voice start tag (`v`, optional `.class`, whitespace, annotation), else undefined.
+function voiceAnnotation(body: string): string | undefined {
+  if (body[0] !== "v" && body[0] !== "V") return undefined;
+  let index = 1;
+  if (body[index] === ".") {
+    const classStart = index + 1;
+    index = classStart;
+    while (index < body.length && !isWhitespace(body[index])) index += 1;
+    if (index === classStart) return undefined;
+  }
+  if (!isWhitespace(body[index]) || body.length - index < 2) return undefined;
+  return body.slice(index);
+}
+
+// A voice tag is `v` followed by whitespace, a class period, or the end of the tag; `<video>` is not.
+function isVoiceMarkup(body: string): boolean {
+  const name = body[0] === "/" ? body.slice(1) : body;
+  if (name[0] !== "v" && name[0] !== "V") return false;
+  return name.length === 1 || name[1] === "." || isWhitespace(name[1]);
+}
+
+function isVoiceClose(body: string): boolean {
+  return body[0] === "/" && isVoiceMarkup(body);
 }
 
 function parseCuePayload(
   payload: string,
   timing: TranscriptBlock["timing"]
 ): Result<readonly TranscriptBlock[], "unsupported-vtt"> {
-  const segments: Array<{ readonly speaker?: string; readonly raw: string }> = [];
-  let cursor = 0;
-  let speaker: string | undefined;
-  for (const match of payload.matchAll(VOICE_START)) {
-    const start = match.index ?? 0;
-    if (start > cursor || speaker !== undefined) segments.push({ speaker, raw: payload.slice(cursor, start) });
-    speaker = decodeEntities(match[1].trim());
-    cursor = start + match[0].length;
+  const tokens = tokenizeCue(payload);
+  if (!tokens.ok || !tokens.value) return { ok: false, error: "unsupported-vtt" };
+
+  type Segment = { readonly speaker?: string; readonly parts: string[]; hasRaw: boolean; closed: boolean };
+  const segments: Segment[] = [];
+  let current: Segment = { parts: [], hasRaw: false, closed: false };
+  for (const token of tokens.value) {
+    if (token.kind === "text") {
+      // Text after a closing voice tag belongs to no speaker; whitespace alone does not start a segment.
+      if (current.closed && token.value.trim().length > 0) {
+        segments.push(current);
+        current = { parts: [], hasRaw: false, closed: false };
+      }
+      current.parts.push(token.value);
+      current.hasRaw = true;
+      continue;
+    }
+    if (isVoiceClose(token.body)) {
+      if (current.speaker !== undefined) current.closed = true;
+      current.hasRaw = true;
+      continue;
+    }
+    const annotation = voiceAnnotation(token.body);
+    if (annotation !== undefined) {
+      if (current.hasRaw || current.speaker !== undefined) segments.push(current);
+      current = { speaker: decodeEntities(annotation.trim()), parts: [], hasRaw: false, closed: false };
+      continue;
+    }
+    if (!isVoiceMarkup(token.body) && !ALLOWED_TAG.test(token.body.trim())) return { ok: false, error: "unsupported-vtt" };
+    current.hasRaw = true;
   }
-  segments.push({ speaker, raw: payload.slice(cursor) });
+  segments.push(current);
 
   const multiple = segments.length > 1;
   const blocks: TranscriptBlock[] = [];
   for (const segment of segments) {
-    const stripped = stripCueMarkup(segment.raw);
-    if (!stripped.ok || stripped.value === undefined) return { ok: false, error: "unsupported-vtt" };
-    const text = multiple ? stripped.value.trim() : stripped.value;
+    const decoded = decodeEntities(segment.parts.join(""));
+    const text = multiple ? decoded.trim() : decoded;
     if (multiple && text.length === 0) continue;
     blocks.push({ text, ...(segment.speaker ? { speaker: segment.speaker } : {}), timing });
   }

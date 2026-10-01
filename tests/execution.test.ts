@@ -26,6 +26,10 @@ class MemoryPublicationAdapter implements PublicationAdapter {
     return this.files.has(path);
   }
 
+  async existsOnDisk(path: string): Promise<boolean> {
+    return this.files.has(path);
+  }
+
   async createBinary(path: string, bytes: Uint8Array): Promise<void> {
     await this.createHook?.(path, bytes);
     if (this.files.has(path)) throw new Error("exists");
@@ -44,6 +48,43 @@ async function item(path: string, body: string): Promise<DiscoveryItem> {
     evidence: { path, format, byteLength: bytes.byteLength, sha256: await sha256(bytes, testDigest) }
   };
 }
+
+describe("per-item isolation", () => {
+  it("reports an unexpected render error as failed and continues the batch", async () => {
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set("one.txt", encoder.encode("one"));
+    vault.files.set("two.txt", encoder.encode("two"));
+    const plan = buildPlan([await item("one.txt", "one"), await item("two.txt", "two")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    let calls = 0;
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set(["one.txt", "two.txt"]),
+      settings: DEFAULT_SETTINGS,
+      digest: testDigest,
+      now: () => (calls++ === 0 ? new Date(Number.NaN) : new Date(0))
+    });
+    expect(outcomes.map((entry) => entry.status)).toEqual(["failed", "created"]);
+    expect(outcomes[0].reason).toContain("render-failed");
+    expect(vault.files.has("one.md")).toBe(false);
+    expect(vault.files.has("two.md")).toBe(true);
+  });
+
+  it("reports an unexpected adapter error as needs-attention and continues the batch", async () => {
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set("one.txt", encoder.encode("one"));
+    vault.files.set("two.txt", encoder.encode("two"));
+    const plan = buildPlan([await item("one.txt", "one"), await item("two.txt", "two")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
+    const exists = vault.exists.bind(vault);
+    vault.exists = (path: string) => {
+      if (path === "one.md") throw new Error("index failure with private body");
+      return exists(path);
+    };
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set(["one.txt", "two.txt"]), settings: DEFAULT_SETTINGS, digest: testDigest, now: () => new Date(0)
+    });
+    expect(outcomes.map((entry) => entry.status)).toEqual(["needs-attention", "created"]);
+    expect(JSON.stringify(outcomes)).not.toContain("private body");
+  });
+});
 
 describe("safe execution", () => {
   it("creates and verifies only selected eligible notes", async () => {
@@ -84,7 +125,7 @@ describe("safe execution", () => {
     expect(vault.files.has("one.md")).toBe(false);
   });
 
-  it("refuses stale output profiles after preview", async () => {
+  it("refuses settings whose output profile changed after preview (plan settings fingerprint)", async () => {
     const vault = new MemoryPublicationAdapter();
     vault.files.set("one.txt", encoder.encode("one"));
     const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
@@ -94,6 +135,21 @@ describe("safe execution", () => {
       digest: testDigest
     });
     expect(outcomes[0]).toMatchObject({ status: "stale", reason: "Settings changed after preview." });
+    expect(vault.files.has("one.md")).toBe(false);
+  });
+
+  it("refuses a mutable output profile changed after preview even when settings still match (item fingerprint)", async () => {
+    const vault = new MemoryPublicationAdapter();
+    vault.files.set("one.txt", encoder.encode("one"));
+    const profile = { ...DEFAULT_OUTPUT_PROFILE, staticTags: [] as string[] };
+    const planningSettings = { ...DEFAULT_SETTINGS, outputProfile: profile };
+    const plan = buildPlan([await item("one.txt", "one")], new Set(), planningSettings, new Date(0), () => "p1");
+    const reviewedSettings = { ...DEFAULT_SETTINGS, outputProfile: { ...profile, staticTags: [] } };
+    profile.timestampPolicy = "retain";
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set(["one.txt"]), settings: reviewedSettings, digest: testDigest
+    });
+    expect(outcomes[0]).toMatchObject({ status: "stale", reason: "Output profile changed after preview." });
     expect(vault.files.has("one.md")).toBe(false);
   });
 

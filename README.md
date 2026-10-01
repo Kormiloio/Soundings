@@ -44,11 +44,11 @@ Soundings creates each note beside its source. If the intended Markdown destinat
 
 In **Settings → Soundings**, you can opt in to **Observe new transcripts** and optionally list vault-relative **Observation roots**, one per line. Empty roots mean the whole otherwise-permitted vault. While Obsidian and Soundings are open, newly created supported files are checked after they stabilize and queued in memory. Soundings shows a coalesced local notice; run **Soundings: Review transcript inbox** to recheck the queued paths in the standard review plan. The plan starts with zero selected items and never converts automatically.
 
-Observation is off by default. It does not run while Obsidian is closed, and disabling Soundings or observation cancels pending checks and clears the in-memory inbox. A later manual vault scan recovers files missed while observation was inactive.
+Observation is off by default. It starts only after Obsidian finishes loading the vault, so existing files are not re-queued at startup. It does not run while Obsidian is closed. Disabling Soundings or observation, or changing the observation roots, cancels pending checks and clears the in-memory inbox; other settings changes keep it. A later manual vault scan recovers files missed while observation was inactive.
 
 ### Manual enrichment (companion notes)
 
-With a Soundings-generated transcript note active, run **Soundings: Add manual enrichment** from the command palette. Enter summary, decisions, action items, and follow-ups locally, review the exact companion destination and rendered Markdown, then publish. Soundings creates a separate ` - Enrichment.md` note beside the transcript note and links back to it. It never edits the transcript source, the transcript note, or an existing companion file.
+With a Soundings-generated transcript note active, run **Soundings: Add manual enrichment** from the command palette. Enter summary, decisions, action items, and follow-ups locally, review the exact companion destination and rendered Markdown, then publish. Soundings creates a separate ` - Enrichment.md` note beside the transcript note and links back to it. It never edits the transcript source, the transcript note, or an existing companion file. Lines you type that would change the note's layout (such as `~~~`, a backtick fence, `---`, or `===`) are escaped so they stay visible as text. Enrichment is unavailable for a note whose name contains `[ ] | # ^ < >`, because the backlink could not point at it safely; rename the note first.
 
 ## What Soundings creates
 

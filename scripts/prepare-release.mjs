@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { access, copyFile, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { access, copyFile, lstat, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 const EXPECTED_ASSETS = ["main.js", "manifest.json", "styles.css"];
 
@@ -39,10 +39,23 @@ async function requireRegularFile(path, label) {
   }
 }
 
-function ensureSafeOutput(root, output) {
-  const child = relative(root, output);
-  requireValue(child !== "" && child !== ".", "Release output must not be the repository root.");
-  requireValue(!child.startsWith("..") && !isAbsolute(child), "Release output must remain inside the repository root.");
+// Staging recursively replaces its output, so the only permitted output is release/<version> inside
+// the repository, and neither release/ nor the version folder may be a symbolic link.
+async function ensureSafeOutput(root, output, version) {
+  const releaseRoot = join(root, "release");
+  const expected = join(releaseRoot, version);
+  requireValue(output === expected, `Release output must be release/${version} inside the repository.`);
+  for (const path of [releaseRoot, expected]) {
+    let info;
+    try {
+      info = await lstat(path);
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    requireValue(!info.isSymbolicLink(), `Release staging refuses the symbolic link at ${path === releaseRoot ? "release/" : `release/${version}`}.`);
+    requireValue(info.isDirectory(), `Release staging requires ${path === releaseRoot ? "release/" : `release/${version}`} to be a folder.`);
+  }
 }
 
 async function sha256(path) {
@@ -89,7 +102,7 @@ async function prepareRelease({ root: requestedRoot, output: requestedOutput, ta
   for (const asset of EXPECTED_ASSETS) await requireRegularFile(join(root, asset), asset);
 
   const output = resolve(requestedOutput ?? join(root, "release", manifest.version));
-  ensureSafeOutput(root, output);
+  await ensureSafeOutput(root, output, manifest.version);
   await rm(output, { recursive: true, force: true });
   await mkdir(output, { recursive: true });
   for (const asset of EXPECTED_ASSETS) await copyFile(join(root, asset), join(output, asset));

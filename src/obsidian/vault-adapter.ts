@@ -31,6 +31,10 @@ export class ObsidianVaultAdapter implements DiscoveryAdapter, PublicationAdapte
     return this.vault.getAbstractFileByPath(path) !== null;
   }
 
+  async existsOnDisk(path: string): Promise<boolean> {
+    return this.vault.adapter.exists(path);
+  }
+
   async createBinary(path: string, bytes: Uint8Array): Promise<void> {
     const owned = new Uint8Array(bytes);
     await this.vault.createBinary(path, owned.buffer);

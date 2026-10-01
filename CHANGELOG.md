@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.2.2 — 2026-09-30
+
+Soundings `0.2.2` is a hardening patch for `0.2.1`, from a full code and security review. It adds no features, no network access, and no new way of changing your vault. Every new refusal leaves your files untouched and explains why.
+
+### 🔒 Safety and stability
+- **No more freezes on hostile captions**: A small crafted `.vtt` file could freeze Obsidian during a scan, or, with observation on, as soon as it synced in. Caption markup is now read in a single pass, and 1 MB adversarial files classify in milliseconds. A cue tag longer than 256 characters, or a tag containing a second `<` (for example `a <<i>x</i>`), is refused. A lone `<` is still kept as text.
+- **One bad file no longer stops a batch**: A transcript that fails to render is reported as failed and the remaining selected files still convert.
+- **Letter case and accents count as the same name**: `Bar.txt` next to an existing `bar.md`, or `Foo.txt` next to `foo.vtt`, is now blocked instead of shown as ready. The same applies to names that differ only in how accented characters are encoded. Soundings also checks storage directly just before writing, so a file Obsidian has not indexed still blocks conversion.
+- **No hidden notes**: A name that would become a dot-file after cleanup (for example `?.env.txt` → `.env.md`) is refused, because Obsidian would hide it.
+- **Disabling Soundings stops everything**: Dialogs close when the plugin unloads, and a review or enrichment form left open can no longer write afterwards. Closing the progress dialog with Escape now cancels the run.
+
+### 🗣️ WebVTT faithfulness
+- Text after a closing `</v>` no longer goes to the previous speaker.
+- Tags that merely start with `v`, such as `<video>`, are refused like other unknown tags instead of being silently removed.
+- A second, genuine U+FEFF character at the start of a file is kept.
+
+### 👀 Observation
+- Observation starts after Obsidian finishes loading the vault, so existing transcripts are no longer re-queued on every launch.
+- New notes, images, and other non-transcript files are filtered by path alone, so sync bursts no longer make Soundings "busy".
+- Changing settings other than observation on/off or observation roots keeps the inbox.
+
+### 📝 Notes and enrichment
+- Speaker and title headings escape `%`, `$`, `=`, `~`, and `^`, so a speaker named `%%` cannot hide the rest of the transcript and `$5 … $10` does not render as math. Generated Markdown source changes only for headings that contain these characters.
+- Invisible control characters in filenames are written as `\uXXXX` escapes in frontmatter.
+- In manual enrichment, typed lines such as `~~~`, a backtick fence, `---`, or `===` stay visible text and no longer change the companion note's sections.
+- Manual enrichment is refused for a note whose name contains `[ ] | # ^ < >`, because the backlink could not point at it safely. Rename the note first.
+
+### ⚙️ Settings
+- Saved settings with the wrong type (for example `"false"` as text) reset to safe defaults field by field, with a notice naming them. A malformed settings file no longer prevents the plugin from loading.
+
+### 🧰 Release tooling
+- The runtime audit now requires the bundle to load only `obsidian`, and blocks more network, code-loading, and destructive vault patterns.
+- Release staging writes only to `release/<version>` and refuses symbolic links.
+
+### Notes
+- Existing notes are never modified. Only new conversions and new companion notes are affected.
+
 ## 0.2.1 — 2026-09-29
 
 Soundings `0.2.1` is a corrective patch for `0.2.0`. It makes WebVTT speaker attribution faithful, keeps manual-enrichment drafts safe, and ships the enrichment hardening that was verified for, but missing from, the published `0.2.0` assets.

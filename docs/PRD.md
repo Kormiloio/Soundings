@@ -2,8 +2,8 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.2.1 published
-**Last updated:** 2026-09-29
+**Document status:** Soundings 0.2.1 published; 0.2.2 hardening accepted for release
+**Last updated:** 2026-09-30
 
 ## 1. Product summary
 
@@ -105,20 +105,20 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 | FR-03 | Default exclusions include the active vault's configured Obsidian configuration directory, hidden folders, Soundings state, and user-configured exclusion patterns. | Must |
 | FR-04 | A scan classifies every discovered candidate without mutating the vault. | Must |
 | FR-05 | The user can review classification counts, search and filter a plan, and explicitly select individual or all visible eligible conversions before execution; every new or refreshed plan begins unselected. | Must |
-| FR-06 | The destination remains beside the source, replaces the final extension with `.md`, and deterministically normalizes basename characters rejected by Obsidian; the exact final path is shown during review and the source name is unchanged. | Must |
+| FR-06 | The destination remains beside the source, replaces the final extension with `.md`, and deterministically normalizes basename characters rejected by Obsidian and refuses a normalized name that would start with a period; the exact final path is shown during review and the source name is unchanged. | Must |
 | FR-07 | Conversion creates a new Markdown file only when the destination does not exist at execution time. | Must |
 | FR-08 | Soundings never overwrites, deletes, renames, moves, or edits a source transcript. | Must |
-| FR-09 | An existing destination is reported as a collision and remains untouched, regardless of its contents. | Must |
-| FR-10 | The executor revalidates source identity and destination absence immediately before creation. | Must |
+| FR-09 | An existing destination, including one that differs only by letter case or Unicode composition, is reported as a collision and remains untouched, regardless of its contents. | Must |
+| FR-10 | The executor revalidates source identity and destination absence in both the vault index and vault storage immediately before creation. | Must |
 | FR-11 | Plain-text conversion preserves source text with only documented encoding, line-ending, and structural normalization. | Must |
 | FR-12 | WebVTT conversion removes format control records, preserves cue text in order, and retains speaker attribution when reliably present. | Must |
 | FR-13 | Generated notes contain versioned YAML metadata, a title, reserved enrichment sections, and the converted transcript. | Must |
 | FR-14 | Project inference is configurable and uses an explicit folder rule; ambiguous values are omitted. | Should |
 | FR-15 | Results distinguish created, skipped, blocked, unsupported, and failed items with actionable reasons. | Must |
-| FR-16 | Manual scans and active conversions can be cancelled without corrupting or partially publishing a note. | Must |
-| FR-17 | Transcript observation is opt-in, runs only while Obsidian is open, applies the same discovery policy, retains content-free evidence in memory, and hands candidates to an unselected reviewed plan without automatic conversion. | Should |
+| FR-16 | Manual scans and active conversions can be cancelled without corrupting or partially publishing a note; dismissing the progress dialog cancels the run, and unloading the plugin closes its dialogs and prevents any later scan, conversion, or companion publication from them. | Must |
+| FR-17 | Transcript observation is opt-in, runs only while Obsidian is open and after the vault layout is ready, applies the same discovery policy (path-only checks before any read), retains content-free evidence in memory, and hands candidates to an unselected reviewed plan without automatic conversion. | Should |
 | FR-18 | The foundation plugin makes no network requests and collects no telemetry. | Must |
-| FR-19 | The plugin provides settings for supported formats, exclusions, maximum source size, and project inference without exposing unsafe overwrite behavior. | Must |
+| FR-19 | The plugin provides settings for supported formats, exclusions, maximum source size, and project inference without exposing unsafe overwrite behavior; malformed saved settings load with per-field safe defaults and never enable a disabled capability. | Must |
 | FR-20 | A user can inspect the source path and intended destination for every planned conversion. | Must |
 | FR-21 | Obsidian desktop exposes one labeled Soundings ribbon control and retains the command-palette command; both start the same reviewed scan without selecting or converting candidates automatically. | Must |
 | FR-22 | Each public release provides an MIT license, complete user guidance including vault-enumeration disclosure, matching version metadata, and exactly the three Obsidian runtime assets under an immutable release tag. | Must |
@@ -127,6 +127,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 
 - **Create-only publication:** destination creation must use an API contract that fails when the path already exists. A check followed by an overwriting write is not sufficient.
 - **No source mutation:** the plugin must not offer source deletion or archival in the foundation release.
+- **Bounded processing:** parsing and rendering run in time proportional to source size; untrusted markup cannot stall Obsidian.
 - **Fail closed:** source changes, destination appearance, parse uncertainty that risks text loss, cancellation, and plugin unload prevent publication or produce an explicit failure.
 - **Local processing:** transcript bytes remain on the device and inside the vault. The plugin has no analytics or remote dependency.
 - **Content-free diagnostics:** normal logs and notices may contain paths, sizes, hashes, parser outcomes, and error categories but not transcript or generated-note bodies.
@@ -152,6 +153,7 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 5. **Configurable Output Profiles & Discovery:** customizable frontmatter tags, titles, destination patterns, reserved sections, and pre-execution WebVTT classification.
 6. **Local Companion Enrichment:** manual, local, create-only companion notes for reviewed summary and action-item capture.
 7. **Release Provenance & CI Automation:** GitHub Actions CI, build verification, and cryptographic GitHub artifact attestations.
+7a. **Post-release Hardening (0.2.2):** bounded linear-time parsing, startup-quiet observation, case-insensitive collision identity, lifecycle guards, note-structure escaping, and fail-closed release tooling, fixing the `0.2.1` code and security review findings.
 8. **Ergonomic Transcript Display:** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search.
 9. **Expanded Offline Caption Formats:** `.srt` (SubRip) parsing support, followed by offline structured JSON transcript schemas (Whisper / Otter / Zoom).
 10. **Guarded Vault Entity Linking:** opt-in linking of verified speaker names to existing Person notes within configured folders, strictly without automatic note creation.
@@ -215,3 +217,15 @@ The completed `add-reviewed-transcript-inbox` change adds off-by-default create-
 The completed `add-local-manual-enrichment` change adds a command scoped to an active Soundings transcript note, a keyboard-accessible local entry form, a full companion-note preview, and create-only publication of an adjacent ` - Enrichment.md` file with source-evidence and destination revalidation. It does not edit transcript sources or existing notes, makes no model or network request, and keeps enrichment diagnostics content-free.
 
 Release `0.2.0` was published from commit `4b74b86`; its `main.js` (`eb42c8fa…`) differs from the build that passed packaged desktop acceptance (`06da240b…`), which added exact source-note identification and full-path companion backlinks. The corrective `release-0-2-1` change ships that verified hardening together with per-speaker WebVTT attribution, header-metadata and separator fixes, single-pass character-reference decoding, enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a least-privilege attested release workflow that accepts only bare version tags. Packaged desktop acceptance of the staged `0.2.1` assets passed, and immutable release `0.2.1` was published on 2026-09-30 with verified GitHub artifact attestations.
+
+The `harden-0-2-2` change fixes the findings of a full code and security review of `0.2.1`. It introduces no feature, network access, or new vault mutation.
+- A single-pass WebVTT markup scanner and a non-backtracking tag allowlist remove a parser freeze reachable from a small shared or synced file.
+- Rendering and per-item isolation keep one bad file from aborting a batch.
+- Collisions are compared case- and Unicode-insensitively; dot-leading destinations are refused; a storage-level existence check runs before every create.
+- Unload closes Soundings dialogs and blocks later writes, and dismissing progress cancels the run.
+- Observation starts after layout-ready and filters non-transcripts by path.
+- Headings, frontmatter, and enrichment text are escaped against Obsidian syntax, and unlinkable enrichment sources are refused.
+- Saved settings are type-checked.
+- The runtime audit and release staging are fail-closed.
+
+Two fingerprint checks first judged redundant were kept as the only guards against publishing unreviewed output from mutable input. The automated gate passes with 427 tests across 36 files. Packaged desktop acceptance of the staged `0.2.2` assets passed on Obsidian 1.13.7 (macOS 26.7 arm64), except that Escape-cancel was not observable and companion publication was not verified; both are recorded in `docs/VERIFICATION.md`.

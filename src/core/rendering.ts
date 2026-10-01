@@ -1,11 +1,20 @@
 import type { NoteMetadata, ParsedTranscript, TranscriptBlock } from "./types";
 import { DEFAULT_OUTPUT_PROFILE, type OutputProfile, type ReservedSection } from "./settings";
 
+// JSON.stringify leaves C1 controls and Unicode line/paragraph separators raw; YAML parsers may reject
+// or split on them, so they are written as \uXXXX escapes inside the double-quoted scalar.
+const YAML_UNSAFE_CHARACTERS = /[\u0080-\u009f\u2028\u2029]/g;
+
 export function yamlScalar(value: string | number): string {
-  return typeof value === "number" ? String(value) : JSON.stringify(value);
+  if (typeof value === "number") return String(value);
+  return JSON.stringify(value).replace(YAML_UNSAFE_CHARACTERS, (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
-const MARKDOWN_HEADING_PUNCTUATION = new Set(["\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", ".", "!", "|", "<", ">"]);
+// Markdown punctuation plus Obsidian inline syntax: comments (%%), math ($), highlights (==),
+// strikethrough (~~), and block references (^).
+const MARKDOWN_HEADING_PUNCTUATION = new Set([
+  "\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", ".", "!", "|", "<", ">", "%", "$", "=", "~", "^"
+]);
 
 export function safeHeading(value: string): string {
   const singleLine = value.replace(/[\r\n]+/g, " ");
@@ -14,7 +23,12 @@ export function safeHeading(value: string): string {
 }
 
 function literalBlock(text: string): string {
-  const longest = Math.max(0, ...[...text.matchAll(/~+/g)].map((match) => match[0].length));
+  let longest = 0;
+  let run = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    run = text.charCodeAt(index) === 0x7e ? run + 1 : 0;
+    if (run > longest) longest = run;
+  }
   const fence = "~".repeat(Math.max(3, longest + 1));
   return `${fence}text\n${text}\n${fence}`;
 }

@@ -1,8 +1,9 @@
-import { Notice, Plugin, TFile, type EventRef } from "obsidian";
+import { Notice, Plugin, TFile, type EventRef, type Modal } from "obsidian";
 import { discoverTranscripts } from "./core/discovery";
 import { executeEnrichmentPlan, type EnrichmentOutcome } from "./core/enrichment-execution";
 import { identifySourceNote, type SourceNoteEvidence } from "./core/enrichment-evidence";
-import type { EnrichmentPlan } from "./core/enrichment-planning";
+import { UNLINKABLE_REASON, type EnrichmentPlan } from "./core/enrichment-planning";
+import { isLinkableVaultPath } from "./core/enrichment-rendering";
 import { executePlan, RunCoordinator } from "./core/execution";
 import { sha256 } from "./core/hash";
 import type { DigestFunction } from "./core/hash";
@@ -13,6 +14,7 @@ import {
   DEFAULT_SETTINGS,
   editableExcludedPaths,
   migrateSavedSettings,
+  sanitizeSavedSettings,
   validateSettings,
   type SoundingsSettings,
   type SoundingsSettingsPolicy
@@ -22,6 +24,12 @@ import { ObsidianVaultAdapter } from "./obsidian/vault-adapter";
 import { ProgressModal, ResultsModal, ReviewModal } from "./obsidian/review-modal";
 import { SoundingsSettingTab } from "./obsidian/settings-tab";
 
+function observationSettingsChanged(previous: SoundingsSettings, next: SoundingsSettings): boolean {
+  return previous.observationEnabled !== next.observationEnabled
+    || previous.observationRoots.length !== next.observationRoots.length
+    || previous.observationRoots.some((root, index) => root !== next.observationRoots[index]);
+}
+
 export default class SoundingsPlugin extends Plugin {
   settings: SoundingsSettings = DEFAULT_SETTINGS;
   settingsPolicy?: SoundingsSettingsPolicy;
@@ -30,6 +38,9 @@ export default class SoundingsPlugin extends Plugin {
   private observer?: ObservationProcessor;
   private observationEvent?: EventRef;
   private inboxNoticeOutstanding = false;
+  private unloaded = false;
+  private layoutReady = false;
+  private readonly ownedModals = new Set<Modal>();
   private readonly digest: DigestFunction = async (algorithm, data) => {
     const subtle = activeWindow.crypto?.subtle;
     if (!subtle) throw new Error("secure-hash-unavailable");
@@ -74,12 +85,30 @@ export default class SoundingsPlugin extends Plugin {
         return true;
       }
     });
-    this.syncObservation();
+    // Obsidian emits "create" for every existing file while the vault loads; subscribe only afterwards.
+    this.app.workspace.onLayoutReady(() => {
+      this.layoutReady = true;
+      this.syncObservation();
+    });
   }
 
   onunload(): void {
+    this.unloaded = true;
     this.runs.cancel();
-    this.stopObservation();
+    this.stopObservation(true);
+    for (const modal of [...this.ownedModals]) modal.close();
+    this.ownedModals.clear();
+  }
+
+  /** Tracks a modal so unload closes it; closed modals are forgotten. */
+  private own<T extends Modal>(modal: T): T {
+    this.ownedModals.add(modal);
+    const onClose = modal.onClose.bind(modal);
+    modal.onClose = () => {
+      this.ownedModals.delete(modal);
+      onClose();
+    };
+    return modal;
   }
 
   async setSettings(settings: SoundingsSettings): Promise<void> {
@@ -87,28 +116,33 @@ export default class SoundingsPlugin extends Plugin {
     if (!policy) throw new Error("safe-settings-policy-unavailable");
     const validation = validateSettings(settings, policy.mandatoryExcludedPaths);
     if (!validation.settings) throw new Error("invalid-soundings-settings");
+    const previous = this.settings;
     this.settings = validation.settings;
     await this.saveData(validation.settings);
-    this.stopObservation();
-    this.syncObservation();
+    // Other settings are read lazily by the observer and re-checked at inbox review, so queued
+    // candidates survive unrelated changes.
+    if (observationSettingsChanged(previous, validation.settings)) {
+      this.stopObservation(true);
+      this.syncObservation();
+    }
   }
 
   private syncObservation(): void {
     if (!this.settingsPolicy || !this.settings.observationEnabled) {
-      this.stopObservation();
+      this.stopObservation(true);
       return;
     }
-    if (this.observationEvent) return;
+    if (this.unloaded || !this.layoutReady || this.observationEvent) return;
     this.observationEvent = this.app.vault.on("create", (file) => {
       if (file instanceof TFile) void this.observer?.handleCreated(file.path);
     });
     this.registerEvent(this.observationEvent);
   }
 
-  private stopObservation(): void {
+  private stopObservation(clearInbox: boolean): void {
     if (this.observationEvent) this.app.vault.offref(this.observationEvent);
     this.observationEvent = undefined;
-    this.observer?.stop();
+    this.observer?.stop(clearInbox);
     this.inboxNoticeOutstanding = false;
   }
 
@@ -136,6 +170,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async startManualEnrichment(sourcePath: string): Promise<void> {
+    if (this.unloaded) return;
     if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return;
@@ -145,18 +180,23 @@ export default class SoundingsPlugin extends Plugin {
       new Notice("Soundings cannot add enrichment until the vault is ready.");
       return;
     }
+    if (!isLinkableVaultPath(sourcePath)) {
+      new Notice(`Soundings: ${UNLINKABLE_REASON}`);
+      return;
+    }
     const evidence = await this.identifyEnrichmentSource(adapter, sourcePath);
+    if (this.unloaded) return;
     if (!evidence) {
       new Notice("Manual enrichment requires an active Soundings transcript note.");
       return;
     }
-    new EnrichmentModal(this.app, sourcePath, {
+    this.own(new EnrichmentModal(this.app, sourcePath, {
       sourceEvidence: evidence,
       existingPaths: () => new Set(adapter.listFiles().map((file) => file.path)),
       planId: () => activeWindow.crypto.randomUUID(),
       publish: (plan) => this.publishEnrichment(plan),
       reidentify: () => this.identifyEnrichmentSource(adapter, sourcePath)
-    }).open();
+    })).open();
   }
 
   private async identifyEnrichmentSource(
@@ -179,6 +219,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async publishEnrichment(plan: EnrichmentPlan): Promise<EnrichmentOutcome | undefined> {
+    if (this.unloaded) return undefined;
     if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return undefined;
@@ -202,6 +243,7 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async reviewInbox(): Promise<void> {
+    if (this.unloaded) return;
     const adapter = this.vaultAdapter;
     const observer = this.observer;
     if (!this.settingsPolicy || !adapter || !observer) {
@@ -218,14 +260,15 @@ export default class SoundingsPlugin extends Plugin {
       const plan = await planTranscriptInbox(
         observer.inbox, adapter, this.settings, this.digest, new Date(), () => activeWindow.crypto.randomUUID(), signal
       );
+      if (this.unloaded) return;
       if (!plan) {
         new Notice("Soundings transcript inbox has no current eligible files.");
         return;
       }
-      new ReviewModal(this.app, plan, {
+      this.own(new ReviewModal(this.app, plan, {
         refresh: () => this.reviewInbox(),
         convert: (selected) => this.convertPlan(plan, selected)
-      }).open();
+      })).open();
     } catch {
       new Notice("Soundings could not review the transcript inbox. No files were changed.");
     } finally {
@@ -234,23 +277,30 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async loadSettings(): Promise<void> {
-    const stored = await this.loadData() as Partial<SoundingsSettings> | null;
+    const raw: unknown = await this.loadData();
     const policy = this.settingsPolicy;
     if (!policy) {
       this.settings = DEFAULT_SETTINGS;
       new Notice("Soundings could not verify the vault configuration directory. Scanning is disabled.");
       return;
     }
-    const storedExclusions = stored?.excludedPaths
+    // Wrong-typed saved fields take safe defaults; nothing is written back until the user saves.
+    const { input: stored, resetFields } = sanitizeSavedSettings(raw);
+    const storedExclusions = stored.excludedPaths
       ? editableExcludedPaths({ excludedPaths: stored.excludedPaths }, policy.mandatoryExcludedPaths)
       : [];
-    const validation = migrateSavedSettings({ ...(stored ?? {}), excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
+    const validation = migrateSavedSettings({ ...stored, excludedPaths: storedExclusions }, policy.mandatoryExcludedPaths);
     const safeDefaults = validateSettings({}, policy.mandatoryExcludedPaths).settings;
     this.settings = validation.settings ?? safeDefaults ?? DEFAULT_SETTINGS;
-    if (validation.errors.length > 0) new Notice("Soundings ignored invalid saved settings and restored safe defaults.");
+    if (resetFields.length > 0) {
+      new Notice(`Soundings reset invalid saved settings to safe defaults: ${resetFields.join(", ")}.`);
+    } else if (validation.errors.length > 0) {
+      new Notice("Soundings ignored invalid saved settings and restored safe defaults.");
+    }
   }
 
   private async scanAndReview(): Promise<void> {
+    if (this.unloaded) return;
     if (!this.settingsPolicy) {
       new Notice("Soundings cannot scan until the vault configuration directory is valid.");
       return;
@@ -263,16 +313,17 @@ export default class SoundingsPlugin extends Plugin {
     const adapter = new ObsidianVaultAdapter(this.app.vault);
     try {
       const discovery = await discoverTranscripts(adapter, this.settings, signal, 50, this.digest);
+      if (this.unloaded) return;
       if (discovery.canceled) {
         new Notice("Soundings scan canceled. No files were changed.");
         return;
       }
       const existing = new Set(adapter.listFiles().map((file) => file.path));
       const plan = buildPlan(discovery.items, existing, this.settings, new Date(), () => activeWindow.crypto.randomUUID());
-      new ReviewModal(this.app, plan, {
+      this.own(new ReviewModal(this.app, plan, {
         refresh: () => this.scanAndReview(),
         convert: (selected) => this.convertPlan(plan, selected)
-      }).open();
+      })).open();
     } catch {
       new Notice("Soundings could not complete the scan. No files were changed.");
     } finally {
@@ -281,12 +332,13 @@ export default class SoundingsPlugin extends Plugin {
   }
 
   private async convertPlan(plan: ReturnType<typeof buildPlan>, selected: ReadonlySet<string>): Promise<void> {
+    if (this.unloaded) return;
     if (this.isBusy()) {
       new Notice("Soundings is already scanning or converting.");
       return;
     }
     const signal = this.runs.begin();
-    const progress = new ProgressModal(this.app, () => this.runs.cancel());
+    const progress = this.own(new ProgressModal(this.app, () => this.runs.cancel()));
     progress.open();
     try {
       const outcomes = await executePlan(plan, new ObsidianVaultAdapter(this.app.vault), {
@@ -299,10 +351,10 @@ export default class SoundingsPlugin extends Plugin {
       for (const outcome of outcomes) {
         if (outcome.status === "created") this.observer?.inbox.remove(outcome.sourcePath);
       }
-      progress.close();
-      new ResultsModal(this.app, outcomes).open();
+      progress.finish();
+      if (!this.unloaded) this.own(new ResultsModal(this.app, outcomes)).open();
     } catch {
-      progress.close();
+      progress.finish();
       new Notice("Soundings stopped after an unexpected error. Review the destination paths before retrying.");
     } finally {
       this.runs.finish(signal);

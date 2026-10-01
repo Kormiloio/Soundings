@@ -35,6 +35,8 @@ class DisposableVaultAdapter implements DiscoveryAdapter, PublicationAdapter {
 
   exists(path: string): boolean { return this.paths.has(path); }
 
+  async existsOnDisk(path: string): Promise<boolean> { return this.paths.has(path); }
+
   async createBinary(path: string, bytes: Uint8Array): Promise<void> {
     const absolute = this.absolute(path);
     await mkdir(dirname(absolute), { recursive: true });

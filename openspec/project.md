@@ -29,6 +29,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
+   - Active change `harden-0-2-2` (approved 2026-09-30; implementation, automated gate, and packaged desktop acceptance complete, with two recorded caveats) fixes the `0.2.1` review findings before new features ship: a linear-time WebVTT markup scanner, observation registered after layout-ready, case- and Unicode-insensitive collision identity, unload guards, note-structure escaping, typed settings, and fail-closed release tooling.
 2. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`).
 3. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
 4. Design guarded speaker-to-person entity linking against existing vault notes.
@@ -63,6 +64,15 @@ The completed `improve-vtt-compatibility-and-discovery` change expands WebVTT pa
 Release `0.2.0` was published from commit `4b74b86`. Its `main.js` (`eb42c8fa…`) reproduces byte-for-byte from that commit but differs from the build recorded in packaged desktop acceptance (`06da240b…`), which included exact source-note identification and full-path companion backlinks. The `v0.1.3` release was tagged with a `v` prefix and is not installable through Obsidian.
 
 The completed `release-0-2-1` change shipped that verified hardening plus per-speaker WebVTT attribution, header-metadata and whitespace-separator handling, single-pass character-reference decoding, manual-enrichment draft retention after unsuccessful publication, line-delimited frontmatter identification, and a split read-only build / job-scoped publish release workflow with SHA-pinned actions, bare-tag enforcement, and version-scoped release notes. The production build, runtime and dependency audits, strict OpenSpec validation, and 244 automated tests across 29 files pass, and packaged desktop acceptance on Obsidian 1.13.7 (macOS 26.7 arm64) passed with unchanged source hashes. Immutable release `0.2.1` was published on 2026-09-30 by the attested workflow with exactly the accepted asset hashes, and every attestation verifies against tag `0.2.1`.
+
+The `harden-0-2-2` implementation completes task groups 1–10 on branch `hardening/0.2.2` (draft pull request `Kormiloio/Soundings#3`).
+- **Bounds:** 1 MB adversarial WebVTT cues classify in milliseconds; 6 KB took about 12 s in `0.2.1`. A 400,000-case differential fuzz against `0.2.1` shows only intended, fail-closed differences.
+- **Identity and lifecycle:** collision checks are case- and Unicode-insensitive and backed by a storage-level existence check. Unload guards are covered by behavior tests driving the real `main.ts`, and observation stays quiet at startup.
+- **Output and settings:** note and enrichment structure is escaped, and saved settings are type-checked.
+- **Tooling:** the runtime audit enforces an `obsidian`-only bundle, and release staging is confined to `release/<version>`.
+- **Gate:** the production build, 427 automated tests across 36 files, runtime and production dependency audits, strict OpenSpec validation, release staging, and `git diff --check` pass.
+- **Acceptance:** packaged desktop acceptance on Obsidian 1.13.7 passed, except that Escape-cancel was not observable and companion publication was not verified (see `docs/VERIFICATION.md`).
+- **Remaining:** merge and immutable release.
 
 ## Definition of done
 
