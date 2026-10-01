@@ -71,4 +71,4 @@
 - [x] 11.4 Archive the change and sync spec deltas into `openspec/specs/`
 
 ## Owner actions (outside code)
-- [ ] O.1 Enable branch protection on `main` and tag protection for `x.y.z` tags in GitHub repository settings
+- [x] O.1 Enable branch protection on `main` and tag protection for `x.y.z` tags in GitHub repository settings. Done by the owner on 2026-10-01 with rulesets `Protect main` (24286731) and `Protect release tags` (24286885), both active and verified read-only through the GitHub API.

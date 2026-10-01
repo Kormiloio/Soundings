@@ -28,6 +28,10 @@ Recheck these pages immediately before publishing because directory requirements
 
    Staging writes only to `release/<version>/` inside the repository and replaces that folder. It refuses any other `--output` and refuses a symbolic-link `release/` or version folder. Never stage a version that is already published: that overwrites the local copy of the accepted assets. The published assets are immutable, and a byte-identical copy can be rebuilt from the release tag.
 
+   Repository rulesets enforce this process, as of 2026-10-01:
+   - **`Protect main`:** changes reach `main` only through a pull request whose `Build, Audit & Test` check passes on an up-to-date branch. No approval is required, so the solo maintainer can merge. Deletion and force-push are blocked, and there is no bypass.
+   - **`Protect release tags`:** only repository admins may create tags, and no tag may be moved, deleted, or force-pushed.
+
 4. Confirm `release/<version>/` contains exactly:
 
    - `main.js`
