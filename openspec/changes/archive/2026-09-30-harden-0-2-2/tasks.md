@@ -67,8 +67,8 @@
   - an unload with an open modal
   - create-only checks, with recorded hashes
 - [x] 11.2 Push the branch, open a pull request, and confirm CI passes
-- [ ] 11.3 After owner approval, merge and push tag `0.2.2`; verify three matching attested assets and unchanged prior releases
-- [ ] 11.4 Archive the change and sync spec deltas into `openspec/specs/`
+- [x] 11.3 After owner approval, merge and push tag `0.2.2`; verify three matching attested assets and unchanged prior releases
+- [x] 11.4 Archive the change and sync spec deltas into `openspec/specs/`
 
 ## Owner actions (outside code)
 - [ ] O.1 Enable branch protection on `main` and tag protection for `x.y.z` tags in GitHub repository settings

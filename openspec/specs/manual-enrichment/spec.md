@@ -7,7 +7,7 @@ Let users capture reviewed summaries, decisions, action items, and follow-ups lo
 ## Requirements
 
 ### Requirement: Enrichment starts from a verified Soundings note
-Soundings SHALL offer manual enrichment only for a readable Markdown note whose line-delimited frontmatter contains supported Soundings metadata and SHALL record content-free evidence sufficient to detect source-note changes before publication.
+Soundings SHALL offer manual enrichment only for a readable Markdown note whose line-delimited frontmatter contains supported Soundings metadata and whose vault path can be linked without escaping wikilink syntax, and SHALL record content-free evidence sufficient to detect source-note changes before publication.
 
 #### Scenario: Supported transcript note is selected
 - **GIVEN** the active note has supported Soundings metadata and a readable current identity
@@ -26,8 +26,14 @@ Soundings SHALL offer manual enrichment only for a readable Markdown note whose 
 - **THEN** Soundings reports a content-free actionable reason
 - **AND** creates or changes no file
 
+#### Scenario: Source note path cannot be linked safely
+- **GIVEN** a Soundings note whose vault path contains `[`, `]`, `|`, `#`, `^`, `<`, `>`, or a line break
+- **WHEN** the user invokes manual enrichment
+- **THEN** Soundings reports a content-free reason that the note name cannot be linked safely
+- **AND** creates or changes no file
+
 ### Requirement: Structured input is local and reviewed
-Soundings SHALL accept manual local input for the supported enrichment sections, validate size and structure, and show the complete rendered companion note and exact destination before publication. It SHALL make no model or network request. It SHALL retain the in-memory draft until publication succeeds or the user cancels.
+Soundings SHALL accept manual local input for the supported enrichment sections, validate size and structure, and show the complete rendered companion note and exact destination before publication. Entered text SHALL be encoded so it cannot open a code fence, create a setext heading or thematic break, or otherwise change the companion note's section structure. It SHALL make no model or network request. It SHALL retain the in-memory draft until publication succeeds or the user cancels.
 
 #### Scenario: User previews enrichment
 - **GIVEN** the user entered valid local enrichment fields
@@ -53,8 +59,14 @@ Soundings SHALL accept manual local input for the supported enrichment sections,
 - **THEN** the form remains open with every entered field intact and a content-free reason
 - **AND** after a stale outcome the next review uses freshly verified source evidence
 
+#### Scenario: Entered text contains Markdown structure syntax
+- **GIVEN** a Summary or list entry contains a line of `~~~`, three backticks, `---`, or `===`
+- **WHEN** the user reviews the companion note
+- **THEN** the preview shows the entered text visibly preserved
+- **AND** every section heading and the source-note link that follow remain intact
+
 ### Requirement: Companion publication is create-only
-Soundings SHALL derive a deterministic Obsidian-safe companion destination beside the transcript note, revalidate source-note evidence and destination absence immediately before publication, and create the companion atomically or fail without fallback overwrite behavior.
+Soundings SHALL derive a deterministic Obsidian-safe companion destination beside the transcript note, treat any existing path that differs from it only by letter case or Unicode composition as that destination, revalidate source-note evidence and destination absence in both the vault index and vault storage immediately before publication, and create the companion atomically or fail without fallback overwrite behavior.
 
 #### Scenario: Reviewed companion is created
 - **GIVEN** valid reviewed enrichment, unchanged source-note evidence, and an absent companion destination
@@ -78,6 +90,12 @@ Soundings SHALL derive a deterministic Obsidian-safe companion destination besid
 - **WHEN** Soundings settles the attempt
 - **THEN** Soundings reports a content-free canceled or failed outcome
 - **AND** does not mutate the source transcript or transcript note
+
+#### Scenario: Companion destination exists with different letter case
+- **GIVEN** `meetings/NOTE - enrichment.md` exists and the derived companion destination is `meetings/note - Enrichment.md`
+- **WHEN** Soundings plans or executes publication
+- **THEN** Soundings reports a collision without calling the create operation
+- **AND** the existing file remains byte-for-byte unchanged
 
 ### Requirement: Enrichment diagnostics remain content-free
 Soundings SHALL NOT log or include manual enrichment bodies, transcript bodies, note bodies, model prompts, or credentials in diagnostic records or result summaries.
