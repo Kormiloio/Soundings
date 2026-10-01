@@ -36,10 +36,10 @@
   - companion publication creates the file on disk
   - output-profile settings load and save unchanged
   - protected-content hashes before and after
-- [ ] 6.2 Open a pull request; CI (including lint) passes under the `Protect main` ruleset
-- [ ] 6.3 After owner approval, merge and push tag `0.2.3`; verify three matching attested assets and unchanged prior releases
-- [ ] 6.4 Owner rescans the Community listing against `0.2.3`; record the scorecard (target: Review **Passed**)
-- [ ] 6.5 Archive the change and sync the spec delta into `openspec/specs/`
+- [x] 6.2 Open a pull request; CI (including lint) passes under the `Protect main` ruleset
+- [x] 6.3 After owner approval, merge and push tag `0.2.3`; verify three matching attested assets and unchanged prior releases
+- [x] 6.4 Owner rescans the Community listing against `0.2.3`; record the scorecard (target: Review **Passed**). Achieved: Health Excellent and Review Passed with no warnings.
+- [x] 6.5 Archive the change and sync the spec delta into `openspec/specs/`
 
 ## Owner actions (outside code)
-- [ ] O.1 Enable GitHub private vulnerability reporting (**Settings → Code security → Private vulnerability reporting → Enable**) so that the **Report a vulnerability** route in `CONTRIBUTING.md` works. It was disabled when checked on 2026-10-01.
+- [x] O.1 (enabled by the owner 2026-10-01, confirmed through the API) Enable GitHub private vulnerability reporting (**Settings → Code security → Private vulnerability reporting → Enable**) so that the **Report a vulnerability** route in `CONTRIBUTING.md` works. It was disabled when checked on 2026-10-01.
