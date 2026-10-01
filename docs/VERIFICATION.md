@@ -17,13 +17,24 @@ Before any fix, the lint gate reproduced the Community scorecard finding for `0.
 
 Compared with published `0.2.2`, the staged `main.js` differs only in output-profile section and tag validation, which now adds a type guard and a `candidates` alias with identical results.
 
-Staged candidate assets (automated gate only, not yet accepted):
+Staged candidate assets, which are the assets installed for packaged acceptance:
 
 - `main.js`: `a3d26647e19a88d10fa7df2095e7132dc84d7c3d488945706a1c1f522e03a8fb`
 - `manifest.json`: `40d74fc73687b31d3878de5cc506b6359cc85a4fbd577f5f0988c528f9c4aeee`
 - `styles.css`: `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`
 
-Packaged desktop acceptance (task 6.1) is pending.
+Packaged desktop acceptance passed on 2026-10-01 using Obsidian desktop 1.13.7 on macOS 26.7 arm64.
+- **Vault:** a disposable vault with nine fixtures. Only the three staged `0.2.3` assets above were installed, with hashes verified after copying and again after the run.
+- **Config folder:** the vault used the default `.obsidian` configuration folder, the same deviation from RELEASING step 5 that was recorded for `0.2.2`.
+- **Untrusted saved settings:** the vault was pre-seeded with `enabledSections: ["summary", "bogus", 7]`.
+
+Results:
+- **Untrusted saved settings: pass.** On load, Obsidian showed "Soundings ignored invalid saved settings and restored safe defaults." All four section toggles appeared enabled. `data.json` was left byte-for-byte unchanged until the user saved.
+- **Valid output-profile save: pass.** After **Include Decisions section** was switched off and the static tag `meeting` added, with no errors, `data.json` held a fully validated profile: sections `summary`, `action-items`, `follow-ups`; tags `["meeting"]`; observation still off; mandatory exclusions present. The invalid values were gone.
+- **Scan: pass.** Four candidates: eligible 2 (`Meetings/Standup.vtt`, `Meetings/Notes.txt`), unsupported 1 (`Adversarial/voice-class-freeze.vtt`, which classified instantly), destination-exists 1 (`Collisions/Bar.txt` beside `bar.md`). Nothing was preselected, and the `.hidden/` and `.obsidian/` transcripts were not listed. The plan header reflected the saved profile.
+- **Conversion: pass.** One selected item reported `created: 1`. `Meetings/Notes.md` has `tags: ["meeting"]` and `soundings_version: 2`. Its sections are Summary, Action Items, and Follow-ups with no Decisions section, and its transcript is faithful.
+- **Companion publication: pass.** **Publish companion note** closed the form, showed the creation notice, and wrote `Enrichment/Weekly sync - Enrichment.md` with frontmatter, the entered summary, all four sections, and the backlink `[[Enrichment/Weekly sync|Back to Transcript Note]]`.
+- **Protected content: pass.** Against the pre-launch SHA-256 baseline, 13 files were unchanged, 0 changed, and 0 removed. Only the two created notes were added.
 
 ## Soundings 0.2.2 automated candidate
 

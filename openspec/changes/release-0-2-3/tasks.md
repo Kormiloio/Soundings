@@ -30,7 +30,7 @@
 - [x] 5.4 Run build, lint, full tests, runtime and dependency audits, strict OpenSpec validation, release staging, and `git diff --check`
 
 ## 6. Acceptance and publication
-- [ ] 6.1 Packaged desktop acceptance of the staged `0.2.3` assets in a disposable vault. Cover:
+- [x] 6.1 (passed 2026-10-01, no caveats) Packaged desktop acceptance of the staged `0.2.3` assets in a disposable vault. Cover:
   - scan and classification smoke check
   - one create-only conversion with read-back
   - companion publication creates the file on disk
