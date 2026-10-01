@@ -20,20 +20,32 @@ New coverage proves:
 
 Single-voice golden outputs are unchanged.
 
-Staged candidate assets (automated gate only, not yet accepted):
+Staged candidate assets, which are the assets installed for packaged acceptance:
 
 - `main.js`: `000f022fdb418c7c7ba7471d4df55df31663be42f3ef07f4904cf19ee56ba204`
 - `manifest.json`: `d825e0788e124a7ba89116d0ced403e39c642ac28cd79ae22b3e800c2eb8feb2`
 - `styles.css`: `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`
 
-Packaged desktop acceptance (task 11.1) is pending. It must use only these staged files in a disposable vault. It must record the Obsidian and macOS versions, the per-check results, and SHA-256 hashes of every pre-existing file before and after, covering:
-- a scan of an adversarial `.vtt` stays responsive
-- with observation enabled, a restart queues nothing and shows no notice
-- `Bar.txt` beside `bar.md` is blocked
-- manual enrichment on a note named with `#` is refused with its reason
-- disabling the plugin with a review open closes it, and nothing is written afterwards
-- Escape on the progress dialog cancels the remaining items
-- one selected create-only conversion reads back correctly
+Packaged desktop acceptance ran on 2026-09-30 using Obsidian desktop 1.13.7 (installer 1.13.4) on macOS 26.7 arm64.
+- **Vault:** a disposable vault with 321 generated fixtures. Only the three staged `0.2.2` assets above were installed, with hashes verified after copying. Observation was pre-enabled for `Inbox`.
+- **Deviation from RELEASING step 5:** the vault used the default `.obsidian` configuration folder. Changing Obsidian's configuration-folder override affects the application, not just one vault. `0.2.2` does not change configuration-directory handling, which automated tests cover and which was last accepted on a custom folder with `0.1.2`.
+- **Pre-check:** before launch, the real discovery and planning core was run against the vault from Node and produced every expected classification. It scanned 322 files in 40 ms and made no changes.
+
+Results:
+- **Startup quiet: pass.** Opening the vault with `Inbox/Existing before launch.txt` present showed no inbox notice. **Review transcript inbox** reported no current eligible files. **Reload app without saving** again showed no notice.
+- **New file observed: pass.** A transcript created in `Inbox/` while Obsidian was open raised the notice. The inbox review listed only that file, eligible and unselected. Closing it wrote nothing.
+- **Adversarial scan: pass.** The scan opened responsively with 316 candidates: eligible 309, unsupported 3 (`voice-class-freeze.vtt`, `class-tag-backtracking.vtt`, `video-tag.vtt`), destination-invalid 1 (`?.env.txt`), destination-exists 1 (`Bar.txt` beside `bar.md`), destination-ambiguous 2 (`Foo.txt`, `foo.vtt`), and 0 selected. Blocked items had no selection control. The `.hidden/` and `.obsidian/` transcripts were not listed.
+- **Unload with an open review: pass.** With `Unload/Review target.txt` selected, `app.plugins.disablePlugin("soundings")` closed the review by itself, and `Unload/Review target.md` was not created.
+- **Selected conversion: pass.** Five selected items reported `created: 5`. On disk:
+  - `after-close.md` attributes "hi" to Alice, "narrator" to no speaker, and "yo" to Bob.
+  - `percent-speaker.md` writes the heading `\%\%` and keeps Bob's later line.
+  - `Budget $5 to $10.md` writes `Budget \$5 to \$10`.
+  - `many-tildes.md` (300 KB) is one closed fence.
+  - Reading view showed a literal `%%` heading with the later line visible, and a non-math title.
+- **Escape on progress: not observable.** All 300 batch notes were created within about one second, before Escape could be pressed. Cancel-on-dismiss is covered by the automated `main.ts` lifecycle test.
+- **Unlinkable enrichment source: pass.** **Add manual enrichment** on `Enrichment/Meeting #3.md` showed the rename notice and opened no form.
+- **Companion publication: not verified.** For `Enrichment/Weekly sync.md`, the form preview showed all five summary lines (including `~~~`, `---`, and `===`) as text, with every section heading and the backlink. However, no `Weekly sync - Enrichment.md` existed on disk after publication was reported, and no matching file was found elsewhere. The repository owner chose to proceed to release with this check recorded as not verified. Companion publication is covered by the automated suite, and its code path is unchanged from accepted `0.2.1` apart from the new escaping and the unlinkable-source check.
+- **Protected content: pass.** Comparing SHA-256 hashes against the pre-launch baseline: 324 files unchanged and 0 removed. The one changed file, `.obsidian/community-plugins.json`, was rewritten by Obsidian with identical content. Additions were only the 300 batch notes, the five selected notes, and the observed `Inbox/New after launch.txt`. `Collisions/bar.md` kept its hash `3cf134663a373849a3f499055f949cf2d64fdc65c8c33a9bc677878f3b919bf0`.
 
 During verification on 2026-09-30, a smoke test of `release:prepare -- --tag 0.2.1` replaced the local, gitignored `release/0.2.1/` staging copy with a branch build. It was restored from a clean rebuild of tag `0.2.1`, whose `main.js`, `manifest.json`, and `styles.css` reproduced the published SHA-256 hashes exactly. The published release was not affected.
 

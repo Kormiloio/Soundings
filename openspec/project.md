@@ -29,7 +29,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-   - Active change `harden-0-2-2` (approved 2026-09-30; implementation and automated gate complete, packaged desktop acceptance pending) fixes the `0.2.1` review findings before new features ship: a linear-time WebVTT markup scanner, observation registered after layout-ready, case- and Unicode-insensitive collision identity, unload guards, note-structure escaping, typed settings, and fail-closed release tooling.
+   - Active change `harden-0-2-2` (approved 2026-09-30; implementation, automated gate, and packaged desktop acceptance complete, with two recorded caveats) fixes the `0.2.1` review findings before new features ship: a linear-time WebVTT markup scanner, observation registered after layout-ready, case- and Unicode-insensitive collision identity, unload guards, note-structure escaping, typed settings, and fail-closed release tooling.
 2. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`).
 3. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
 4. Design guarded speaker-to-person entity linking against existing vault notes.
@@ -71,7 +71,8 @@ The `harden-0-2-2` implementation completes task groups 1–10 on branch `harden
 - **Output and settings:** note and enrichment structure is escaped, and saved settings are type-checked.
 - **Tooling:** the runtime audit enforces an `obsidian`-only bundle, and release staging is confined to `release/<version>`.
 - **Gate:** the production build, 427 automated tests across 36 files, runtime and production dependency audits, strict OpenSpec validation, release staging, and `git diff --check` pass.
-- **Remaining:** packaged desktop acceptance, merge, and immutable release (task group 11).
+- **Acceptance:** packaged desktop acceptance on Obsidian 1.13.7 passed, except that Escape-cancel was not observable and companion publication was not verified (see `docs/VERIFICATION.md`).
+- **Remaining:** merge and immutable release.
 
 ## Definition of done
 

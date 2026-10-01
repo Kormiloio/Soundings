@@ -59,14 +59,14 @@
 - [x] 10.4 Run build, full tests, runtime and dependency audits, strict OpenSpec validation, and `git diff --check`
 
 ## 11. Acceptance and publication
-- [ ] 11.1 Stage `0.2.2` and complete packaged desktop acceptance in a disposable vault. Cover:
+- [x] 11.1 Stage `0.2.2` and complete packaged desktop acceptance in a disposable vault (2026-09-30). All checks passed except two recorded in `docs/VERIFICATION.md`: Escape-cancel was not observable, and companion publication was not verified; the owner chose to proceed. Cover:
   - an adversarial `.vtt` scan stays responsive
   - observation is quiet at startup
   - case-variant collision refusal
   - an unlinkable enrichment refusal
   - an unload with an open modal
   - create-only checks, with recorded hashes
-- [ ] 11.2 Push the branch, open a pull request, and confirm CI passes
+- [x] 11.2 Push the branch, open a pull request, and confirm CI passes
 - [ ] 11.3 After owner approval, merge and push tag `0.2.2`; verify three matching attested assets and unchanged prior releases
 - [ ] 11.4 Archive the change and sync spec deltas into `openspec/specs/`
 
