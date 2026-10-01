@@ -6,8 +6,8 @@
 - [x] 0.3 Owner approves the changeset scope before implementation begins (approved 2026-10-01)
 
 ## 1. Companion-publication verification (`0.2.2` caveat)
-- [ ] 1.1 In the `0.2.2` acceptance vault, publish a companion for `Enrichment/Weekly sync.md` and confirm the file and its bytes on disk
-- [ ] 1.2 If it fails: reproduce it in an automated test, fix it within create-only revalidation, and amend the design and the `manual-enrichment` spec delta. If it passes: record the result
+- [x] 1.1 In the `0.2.2` acceptance vault, publish a companion for `Enrichment/Weekly sync.md` and confirm the file and its bytes on disk
+- [x] 1.2 If it fails: reproduce it in an automated test, fix it within create-only revalidation, and amend the design and the `manual-enrichment` spec delta. If it passes: record the result. **Passed 2026-10-01:** the companion note was created with correct content and the source note was unchanged. No code change was needed, and the result is recorded in `docs/VERIFICATION.md`
 
 ## 2. Lint gate
 - [ ] 2.1 Add pinned `eslint`, `typescript-eslint`, and (if available) `eslint-plugin-obsidianmd` dev dependencies; run `npm audit`

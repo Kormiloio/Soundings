@@ -27,6 +27,7 @@ The scanner's finding is a static-typing issue in pure core code, so the fix sta
    - The first implementation task is a desktop check in the existing `0.2.2` acceptance vault: publish a companion for `Enrichment/Weekly sync.md` and confirm `Weekly sync - Enrichment.md` exists on disk with the expected bytes.
    - If it does not, reproduce the failure in an automated test, then fix it within the existing create-only and revalidation boundaries, and amend this design and the `manual-enrichment` spec delta.
    - If it does, record the result and make no code change.
+   - **Outcome (2026-10-01):** it passed. The `0.2.2` caveat came from a form that had not been submitted. This change makes no manual-enrichment code or spec change.
 
 5. **`CONTRIBUTING.md`.** A one-page guide covering:
    - local setup (`npm ci`, `npm run check`, `npm run lint`)

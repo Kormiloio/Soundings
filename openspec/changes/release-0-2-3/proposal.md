@@ -20,7 +20,7 @@ Packaged acceptance of `0.2.2` also left one check unverified: manual-enrichment
 
 - Make output-profile validation type-safe: iterate untrusted arrays as `unknown` and narrow each element with a type guard before typed use. Fix every other `no-unsafe-*` finding the lint gate reports in runtime source.
 - Add a lint gate: pinned `eslint` and `typescript-eslint` dev dependencies with the type-checked recommended rules, plus Obsidian's published plugin lint rules where available. It runs as `npm run lint` in CI and the release build and must report **zero** warnings and errors on `src/`.
-- Confirm companion-note publication in the desktop app. If it does not create the companion note, diagnose and fix it in this change, with a regression test.
+- Confirm companion-note publication in the desktop app. If it does not create the companion note, diagnose and fix it in this change, with a regression test. **Confirmed working on 2026-10-01; no fix needed.**
 - Add a short `CONTRIBUTING.md` describing setup, the spec-first workflow, and the pull-request rules.
 - Bump to `0.2.3`; update the changelog, PRD, `openspec/project.md`, and verification docs.
 - After publication, the owner rescans the Community listing against `0.2.3`.
