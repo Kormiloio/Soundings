@@ -94,7 +94,7 @@ Soundings SHALL provide a completed submission checklist and evidence record for
 - **AND** no account connection, policy acceptance, ownership choice, reviewer response, or directory publication is performed on the owner's behalf
 
 ### Requirement: Corrective releases clear actionable Community findings
-Each corrective release prepared for the existing Soundings Community draft SHALL use a new immutable semantic version, preserve every earlier published tag and asset, reproduce its committed production bundle, and receive a completed Community review with no actionable source warning or failure before the owner is asked to publish the listing.
+Each corrective release prepared for the Soundings Community listing SHALL use a new immutable semantic version, preserve every earlier published tag and asset, reproduce its committed production bundle, and receive a completed Community review with no actionable source warning or failure before the owner is asked to publish the listing or treat the corrective release as complete.
 
 #### Scenario: Corrective patch is ready for owner publication
 - **GIVEN** the Community review identified actionable source warnings in release `0.1.1`
@@ -121,6 +121,12 @@ Each corrective release prepared for the existing Soundings Community draft SHAL
 - **THEN** those recommendations are recorded accurately
 - **AND** they are not misreported as failures or used to weaken vault-wide discovery, local-only processing, or create-only publication
 
+#### Scenario: Published listing reports a type-safety warning
+- **GIVEN** the Community scorecard for the listed release reports `@typescript-eslint/no-unsafe-argument` in runtime source
+- **WHEN** corrective release `0.2.3` is built, accepted, published with verified assets, and rescanned
+- **THEN** the review reports no actionable source warning or failure
+- **AND** releases `0.1.0` through `0.2.2` remain unchanged
+
 ### Requirement: Automated releases are verified and attested
 For a new explicit semantic-version tag, Soundings SHALL run build, automated tests, runtime audit, dependency audit, strict OpenSpec validation, and version-driven release preparation from the tagged source. It SHALL publish exactly `main.js`, `manifest.json`, and `styles.css` only when all gates pass and SHALL attach verifiable GitHub artifact attestations for the installable assets.
 
@@ -143,7 +149,7 @@ For a new explicit semantic-version tag, Soundings SHALL run build, automated te
 - **AND** does not replace the tag, assets, attestations, or prior release
 
 ### Requirement: Continuous integration protects release readiness
-Soundings SHALL run the production build, automated tests, runtime audit, strict OpenSpec validation, and release-contract tests for proposed changes before they can be treated as release-ready.
+Soundings SHALL run the production build, a type-aware lint of runtime source that reports zero warnings and errors, automated tests, runtime audit, strict OpenSpec validation, and release-contract tests for proposed changes before they can be treated as release-ready. The release build SHALL run the same lint before staging assets.
 
 #### Scenario: Pull request satisfies continuous checks
 - **GIVEN** a proposed repository change preserves all release contracts
@@ -155,6 +161,16 @@ Soundings SHALL run the production build, automated tests, runtime audit, strict
 - **WHEN** continuous integration runs the runtime audit
 - **THEN** the change fails the required check
 - **AND** no release asset is published
+
+#### Scenario: Runtime source passes an untyped value to a typed parameter
+- **GIVEN** a proposed change passes a value typed `any` into a typed parameter in runtime source
+- **WHEN** continuous integration or the release build runs the lint gate
+- **THEN** the check fails before any release asset is staged or published
+
+#### Scenario: Lint tooling stays out of the bundle
+- **GIVEN** the lint gate's development dependencies are installed
+- **WHEN** the production bundle is built and the runtime audit runs
+- **THEN** the bundle still loads only `obsidian`
 
 ### Requirement: Release publication is installable and least-privilege
 Automated release publication SHALL run only for a bare `x.y.z` tag that equals the manifest version and is reachable from `main`. Dependency installation, build, and verification SHALL run without repository write permission, identity tokens, or persisted credentials. Only a separate publishing job that installs no dependencies SHALL hold release-write and attestation permissions, and it SHALL publish the exact bytes produced and verified by the build job. Workflow actions SHALL be pinned to full commit SHAs.

@@ -36,6 +36,21 @@ Results:
 - **Companion publication: pass.** **Publish companion note** closed the form, showed the creation notice, and wrote `Enrichment/Weekly sync - Enrichment.md` with frontmatter, the entered summary, all four sections, and the backlink `[[Enrichment/Weekly sync|Back to Transcript Note]]`.
 - **Protected content: pass.** Against the pre-launch SHA-256 baseline, 13 files were unchanged, 0 changed, and 0 removed. Only the two created notes were added.
 
+Immutable release `0.2.3` was published on 2026-10-01 (04:33 UTC) by release workflow run `36815628115` from tag `0.2.3` (merge commit `ba1ce8f` of pull request `Kormiloio/Soundings#6`). The tag push was accepted under the `Protect release tags` ruleset through the repository-admin bypass.
+- It exposes exactly `main.js`, `manifest.json`, and `styles.css` with the accepted hashes above.
+- `gh attestation verify` succeeded for all three against `refs/tags/0.2.3`, and the downloaded assets reproduced the accepted SHA-256 hashes.
+- The release notes contain only the `## 0.2.3` section.
+- Releases `0.2.2`, `0.2.1`, and `0.2.0` retain their original digests.
+
+The owner rescanned the Community listing on 2026-10-01, and the public scorecard was checked read-only afterwards:
+- **Listing:** current version **0.2.3**.
+- **Health: Excellent.** Hygiene: "Readme, license, contributing guide, and description all present."
+- **Review: Passed.** Six checks passed: verified artifact attestations for `main.js` and `styles.css`, no suspicious network patterns, no vulnerable dependencies, no obfuscation, and a byte-for-byte build reproduction.
+- **Warnings:** none. The `0.2.0` `@typescript-eslint/no-unsafe-argument` warnings at `src/core/settings.ts:101-102` and the missing-attestation recommendation are both cleared.
+- **Remaining items:** only the disclosure "Malware scan not available" and the expected vault-enumeration recommendation, which is inherent to recursive transcript discovery and disclosed in the README.
+
+Private vulnerability reporting was enabled by the owner on 2026-10-01 and confirmed through the GitHub API.
+
 ## Soundings 0.2.2 automated candidate
 
 The `harden-0-2-2` automated gate passed on 2026-09-30 on branch `hardening/0.2.2`: `npm ci`, production build and TypeScript checks, 427 automated tests across 36 files, the runtime audit (bundle loads only `obsidian`), production dependency audit with zero vulnerabilities, strict OpenSpec validation, release staging, and `git diff --check`. The full dependency audit reports two moderate `moment` advisories reachable only through the `obsidian` type package; `moment` is not imported and is absent from `main.js`.
