@@ -10,10 +10,10 @@
 - [x] 1.2 If it fails: reproduce it in an automated test, fix it within create-only revalidation, and amend the design and the `manual-enrichment` spec delta. If it passes: record the result. **Passed 2026-10-01:** the companion note was created with correct content and the source note was unchanged. No code change was needed, and the result is recorded in `docs/VERIFICATION.md`
 
 ## 2. Lint gate
-- [ ] 2.1 Add pinned `eslint`, `typescript-eslint`, and (if available) `eslint-plugin-obsidianmd` dev dependencies; run `npm audit`
-- [ ] 2.2 Add `eslint.config.mjs` (type-checked recommended rules plus Obsidian rules) and `npm run lint` with `--max-warnings=0` on `src/`
-- [ ] 2.3 Confirm the gate reproduces the `0.2.0` finding at `src/core/settings.ts:101-102` before any fix
-- [ ] 2.4 Run `npm run lint` in CI after the build and in the release build job before staging; update workflow contract tests
+- [x] 2.1 Add pinned `eslint`, `typescript-eslint`, and (if available) `eslint-plugin-obsidianmd` dev dependencies; run `npm audit`
+- [x] 2.2 Add `eslint.config.mjs` (type-checked recommended rules plus Obsidian rules) and `npm run lint` with `--max-warnings=0` on `src/`
+- [x] 2.3 Confirm the gate reproduces the `0.2.0` finding at `src/core/settings.ts:101-102` before any fix
+- [x] 2.4 Run `npm run lint` in CI after the build and in the release build job before staging; update workflow contract tests
 
 ## 3. Type-safety fixes
 - [ ] 3.1 Add an `isReservedSection` type guard and iterate untrusted arrays as `unknown` in output-profile validation; existing settings tests pass unchanged

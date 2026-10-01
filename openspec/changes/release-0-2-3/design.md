@@ -20,6 +20,17 @@ The scanner's finding is a static-typing issue in pure core code, so the fix sta
    - Tests and scripts are excluded at first to keep scope small, which is acceptable because they never ship. Runtime source must be clean.
    - Before relying on the Obsidian plugin's rules, confirm by implementation that its recommended set reproduces the `0.2.0` finding on the `0.2.2` code. If the package is unavailable or incompatible, use `typescript-eslint` alone and record the gap.
    - *Alternative rejected:* a single regex rule in `audit-rules.mjs` for this pattern. It cannot track types and would miss the next case.
+   - **Implementation notes (2026-10-01):**
+     - **Versions:** ESLint is pinned to the 9.x line (`9.39.5`, with matching `@eslint/js`), not 10.x, because `eslint-plugin-obsidianmd@0.4.2` requires ESLint 9. `typescript-eslint` is `8.71.0`. All are exact-pinned.
+     - **Obsidian plugin:** `eslint-plugin-obsidianmd` comes from `obsidianmd/eslint-plugin` (MIT). Its `recommended` flat config already bundles ESLint recommended, `typescript-eslint` `recommendedTypeChecked`, and the Obsidian rules (41 rules, including `package.json` checks), so the config uses it directly. It installed without a peer conflict. It nests a private `obsidian@1.12.3`; the root `obsidian@1.13.1` pin is unchanged.
+     - **Audit:** the nested copy adds the same moderate `moment` advisory, now 3 dev-only findings. `npm audit --omit=dev` still reports 0, and none of it ships in `main.js`.
+     - **Gate wiring:** `npm run lint` is `eslint . --max-warnings=0`, ignoring tests, scripts, build output, and staging. `npm run check` now runs build, lint, and tests, so the release job's existing `npm run check` lints before staging. CI runs lint as its own step after the build. A workflow contract test enforces the script, the exact pins, and step order.
+     - **Reproduction:** before any fix, the gate reported exactly the scanner's finding, `no-unsafe-argument` at `src/core/settings.ts:101:37` and `102:27`. It also reported three errors added in `0.2.2`:
+       - `settings.ts:216`: an unnecessary type assertion in `sanitizeSavedSettings`
+       - `main.ts:106`: unsafe assignment in the `own()` modal helper
+       - `main.ts:109`: unsafe call in the same helper
+       All five are fixed in task group 3.
+     - **Sentence case:** the Obsidian `ui/sentence-case` rule flagged four strings that use the product name "Soundings" or a quoted command name. The scanner did not report those strings against `0.2.0`, where two of them already existed. The rule stays enabled with `brands` (`Soundings`, `Obsidian`, `WebVTT`, `Markdown`) and an `ignoreRegex` for quoted command names, rather than lowercasing a proper noun.
 
 3. **Fix all reported findings, not only the scanned lines.** Any other `no-unsafe-*`, `no-floating-promises`, or Obsidian-rule finding in `src/` is fixed in this change, without behavior changes. A finding that cannot be fixed safely is suppressed only with an inline justification, listed in this design, and approved in review.
 

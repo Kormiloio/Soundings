@@ -19,7 +19,7 @@ Recheck these pages immediately before publishing because directory requirements
 
    ```bash
    npm ci
-   npm run check
+   npm run check          # build, zero-warning type-aware lint (Obsidian rules), tests
    npm run audit:runtime
    npm run spec:validate
    npm run release:prepare -- --tag <version>

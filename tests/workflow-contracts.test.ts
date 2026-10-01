@@ -29,6 +29,28 @@ describe("GitHub Actions workflow contracts", () => {
     expect(`${ci}\n${release}`).not.toContain("npx openspec");
   });
 
+  it("runs the zero-warning type-aware lint gate in CI and before release staging", async () => {
+    const [ci, release, packageJsonText] = await Promise.all([
+      readFile(join(process.cwd(), ".github/workflows/ci.yml"), "utf8"),
+      readFile(join(process.cwd(), ".github/workflows/release.yml"), "utf8"),
+      readFile(join(process.cwd(), "package.json"), "utf8")
+    ]);
+    const packageJson = JSON.parse(packageJsonText) as {
+      scripts?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(packageJson.scripts?.lint).toBe("eslint . --max-warnings=0");
+    expect(packageJson.scripts?.check).toContain("npm run lint");
+    for (const name of ["eslint", "@eslint/js", "typescript-eslint", "eslint-plugin-obsidianmd"]) {
+      expect(packageJson.devDependencies?.[name]).toMatch(/^\d+\.\d+\.\d+$/);
+    }
+    expect(ci).toContain("run: npm run lint");
+    expect(ci.indexOf("run: npm run lint")).toBeLessThan(ci.indexOf("run: npm test"));
+    expect(release).toMatch(/npm run (?:check|lint)/);
+    expect(release.indexOf("npm run check")).toBeLessThan(release.indexOf("prepare-release.mjs"));
+  });
+
   it("restricts release.yml to bare semantic tags Obsidian can install", async () => {
     const release = await readFile(join(process.cwd(), ".github/workflows/release.yml"), "utf8");
     expect(release).toContain("- \"[0-9]+.[0-9]+.[0-9]+\"");
