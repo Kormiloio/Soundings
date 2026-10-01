@@ -21,7 +21,7 @@
 - [x] 3.3 Add a regression test proving wrong-typed sections are still rejected with the same messages
 
 ## 4. Repository hygiene
-- [ ] 4.1 Add `CONTRIBUTING.md` (setup, spec-first workflow, pull requests and rulesets, safety expectations)
+- [x] 4.1 Add `CONTRIBUTING.md` (setup, spec-first workflow, pull requests and rulesets, safety expectations)
 
 ## 5. Documentation and version
 - [ ] 5.1 Add `0.2.3` changelog notes
@@ -40,3 +40,6 @@
 - [ ] 6.3 After owner approval, merge and push tag `0.2.3`; verify three matching attested assets and unchanged prior releases
 - [ ] 6.4 Owner rescans the Community listing against `0.2.3`; record the scorecard (target: Review **Passed**)
 - [ ] 6.5 Archive the change and sync the spec delta into `openspec/specs/`
+
+## Owner actions (outside code)
+- [ ] O.1 Enable GitHub private vulnerability reporting (**Settings → Code security → Private vulnerability reporting → Enable**) so that the **Report a vulnerability** route in `CONTRIBUTING.md` works. It was disabled when checked on 2026-10-01.

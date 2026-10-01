@@ -54,6 +54,7 @@ The scanner's finding is a static-typing issue in pure core code, so the fix sta
    - **Outcome (2026-10-01):** it passed. The `0.2.2` caveat came from a form that had not been submitted. This change makes no manual-enrichment code or spec change.
 
 5. **`CONTRIBUTING.md`.** A one-page guide covering:
+   - **Implementation note:** the guide sends security reports to GitHub's private **Report a vulnerability** form instead of a public issue. Private vulnerability reporting was disabled when checked on 2026-10-01, so enabling it is owner task O.1, required before release.
    - local setup (`npm ci`, `npm run check`, `npm run lint`)
    - the spec-first workflow (`openspec/`, the PRD)
    - pull requests (CI must pass; `main` and release tags are protected by rulesets)
