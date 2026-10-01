@@ -29,7 +29,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-   - Active change `release-0-2-3` (approved 2026-10-01, in implementation) clears the Community scorecard's `no-unsafe-argument` warning in `src/core/settings.ts`, adds a zero-warning type-aware lint gate to CI and releases, confirms companion-note publication in the desktop app, and adds `CONTRIBUTING.md`. After publication the listing is rescanned against `0.2.3`.
+   - Active change `release-0-2-3` (approved 2026-10-01; implementation and automated gate complete, packaged acceptance pending) clears the Community scorecard's `no-unsafe-argument` warning in `src/core/settings.ts`, adds a zero-warning type-aware lint gate to CI and releases, confirms companion-note publication in the desktop app, and adds `CONTRIBUTING.md`. After publication the listing is rescanned against `0.2.3`.
    - Completed change `harden-0-2-2` (published as `0.2.2` on 2026-10-01; archived) fixed the `0.2.1` review findings before new features ship: a linear-time WebVTT markup scanner, observation registered after layout-ready, case- and Unicode-insensitive collision identity, unload guards, note-structure escaping, typed settings, and fail-closed release tooling.
 2. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`) as opt-in feature release `0.3.0`, after `0.2.3`.
 3. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
@@ -74,6 +74,14 @@ The completed `harden-0-2-2` change shipped as `0.2.2` through pull request `Kor
 - **Gate:** the production build, 427 automated tests across 36 files, runtime and production dependency audits, strict OpenSpec validation, release staging, and `git diff --check` pass.
 - **Acceptance:** packaged desktop acceptance on Obsidian 1.13.7 passed, except that Escape-cancel was not observable and companion publication was not verified (see `docs/VERIFICATION.md`).
 - **Release:** immutable release `0.2.2` was published on 2026-10-01 from merge commit `65d488e` by the attested workflow, with exactly the accepted asset hashes and verified attestations. The change is archived as `2026-09-30-harden-0-2-2`, and its deltas are merged into `openspec/specs/`.
+
+The `release-0-2-3` implementation completes task groups 1–5 on branch `release/0.2.3` (draft pull request `Kormiloio/Soundings#6`):
+- **Companion publication:** confirmed working in the desktop app, which resolves the `0.2.2` caveat with no code change.
+- **Lint gate:** a zero-warning type-aware gate using Obsidian's official ESLint rules runs in CI and inside `npm run check`. It reproduced the scorecard finding exactly before the fix.
+- **Fixes:** the finding and three more lint errors are fixed with no behavior change. The bundle differs from `0.2.2` only in section and tag validation.
+- **Guide:** `CONTRIBUTING.md` added.
+- **Gate:** build, lint, 437 automated tests across 37 files, runtime and production dependency audits, strict OpenSpec validation, release staging, and `git diff --check` pass.
+- **Remaining:** owner task O.1 (private vulnerability reporting), packaged acceptance, publication, and the Community rescan.
 
 ## Definition of done
 

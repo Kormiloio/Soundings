@@ -24,10 +24,10 @@
 - [x] 4.1 Add `CONTRIBUTING.md` (setup, spec-first workflow, pull requests and rulesets, safety expectations)
 
 ## 5. Documentation and version
-- [ ] 5.1 Add `0.2.3` changelog notes
-- [ ] 5.2 Update `docs/PRD.md`, `docs/RELEASING.md` (lint gate), `openspec/project.md` (checkpoint and test count), and `docs/VERIFICATION.md`
-- [ ] 5.3 Bump `package.json`, `package-lock.json`, `manifest.json`, and `versions.json` to `0.2.3`
-- [ ] 5.4 Run build, lint, full tests, runtime and dependency audits, strict OpenSpec validation, release staging, and `git diff --check`
+- [x] 5.1 Add `0.2.3` changelog notes
+- [x] 5.2 Update `docs/PRD.md`, `docs/RELEASING.md` (lint gate), `openspec/project.md` (checkpoint and test count), and `docs/VERIFICATION.md`
+- [x] 5.3 Bump `package.json`, `package-lock.json`, `manifest.json`, and `versions.json` to `0.2.3`
+- [x] 5.4 Run build, lint, full tests, runtime and dependency audits, strict OpenSpec validation, release staging, and `git diff --check`
 
 ## 6. Acceptance and publication
 - [ ] 6.1 Packaged desktop acceptance of the staged `0.2.3` assets in a disposable vault. Cover:

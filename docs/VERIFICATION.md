@@ -1,6 +1,29 @@
 # Foundation verification record
 
-**Last updated:** 2026-09-30
+**Last updated:** 2026-10-01
+
+## Soundings 0.2.3 automated candidate
+
+The `release-0-2-3` automated gate passed on 2026-10-01 on branch `release/0.2.3`:
+- `npm ci`
+- `npm run check`: production build and TypeScript checks with `strictBindCallApply`, the zero-warning type-aware lint (`eslint-plugin-obsidianmd` 0.4.2 recommended rules), and 437 automated tests across 37 files
+- the runtime audit (bundle loads only `obsidian`)
+- the production dependency audit, with zero vulnerabilities
+- strict OpenSpec validation, release staging, and `git diff --check`
+
+The full dependency audit reports three moderate `moment` advisories. All arrive through `obsidian` type packages (the root pin and the lint plugin's nested copy), and none reach `main.js`.
+
+Before any fix, the lint gate reproduced the Community scorecard finding for `0.2.0` exactly: `@typescript-eslint/no-unsafe-argument` at `src/core/settings.ts:101:37` and `102:27`. It also reported three errors added in `0.2.2`: an unnecessary assertion at `settings.ts:216`, and an unsafe assignment and call at `main.ts:106` and `:109`. All are fixed, and the lint reports zero errors and zero warnings. `tests/settings-type-safety.test.ts` passed on the pre-fix code and passes unchanged afterwards.
+
+Compared with published `0.2.2`, the staged `main.js` differs only in output-profile section and tag validation, which now adds a type guard and a `candidates` alias with identical results.
+
+Staged candidate assets (automated gate only, not yet accepted):
+
+- `main.js`: `a3d26647e19a88d10fa7df2095e7132dc84d7c3d488945706a1c1f522e03a8fb`
+- `manifest.json`: `40d74fc73687b31d3878de5cc506b6359cc85a4fbd577f5f0988c528f9c4aeee`
+- `styles.css`: `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`
+
+Packaged desktop acceptance (task 6.1) is pending.
 
 ## Soundings 0.2.2 automated candidate
 

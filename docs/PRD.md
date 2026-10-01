@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.2.2 published; 0.2.3 corrective release proposed
+**Document status:** Soundings 0.2.2 published; 0.2.3 corrective release implemented, packaged acceptance pending
 **Last updated:** 2026-10-01
 
 ## 1. Product summary
@@ -232,3 +232,5 @@ The `harden-0-2-2` change fixes the findings of a full code and security review 
 Two fingerprint checks first judged redundant were kept as the only guards against publishing unreviewed output from mutable input. The automated gate passes with 427 tests across 36 files. Packaged desktop acceptance of the staged `0.2.2` assets passed on Obsidian 1.13.7 (macOS 26.7 arm64), except that Escape-cancel was not observable; companion publication, first left unverified, was confirmed in the desktop app on 2026-10-01. Both are recorded in `docs/VERIFICATION.md`.
 
 Immutable release `0.2.2` was published on 2026-10-01 with exactly the accepted asset hashes and verified GitHub artifact attestations.
+
+The `release-0-2-3` change clears the only actionable finding in the Community scorecard for `0.2.0`, `@typescript-eslint/no-unsafe-argument` in output-profile validation, without changing behavior. Untrusted section and tag lists are narrowed with a type guard, an unnecessary assertion is removed, and `strictBindCallApply` is enabled. A zero-warning lint gate now runs on every pull request and release. It uses Obsidian's official ESLint rules with type-aware TypeScript checks and reproduced the scanner's finding before the fix. The change also adds `CONTRIBUTING.md`. The automated gate passes with 437 tests across 37 files. Packaged desktop acceptance, publication, and a Community rescan remain.
