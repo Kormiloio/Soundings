@@ -47,6 +47,12 @@ Results:
 - **Companion publication: not verified.** For `Enrichment/Weekly sync.md`, the form preview showed all five summary lines (including `~~~`, `---`, and `===`) as text, with every section heading and the backlink. However, no `Weekly sync - Enrichment.md` existed on disk after publication was reported, and no matching file was found elsewhere. The repository owner chose to proceed to release with this check recorded as not verified. Companion publication is covered by the automated suite, and its code path is unchanged from accepted `0.2.1` apart from the new escaping and the unlinkable-source check.
 - **Protected content: pass.** Comparing SHA-256 hashes against the pre-launch baseline: 324 files unchanged and 0 removed. The one changed file, `.obsidian/community-plugins.json`, was rewritten by Obsidian with identical content. Additions were only the 300 batch notes, the five selected notes, and the observed `Inbox/New after launch.txt`. `Collisions/bar.md` kept its hash `3cf134663a373849a3f499055f949cf2d64fdc65c8c33a9bc677878f3b919bf0`.
 
+Immutable release `0.2.2` was published on 2026-10-01 (02:44 UTC) by release workflow run `36807188533` from tag `0.2.2` (merge commit `65d488e` of pull request `Kormiloio/Soundings#3` on `main`).
+- It exposes exactly `main.js`, `manifest.json`, and `styles.css` with the accepted hashes above.
+- `gh attestation verify` succeeded for all three against `refs/tags/0.2.2`, and the downloaded assets reproduced the accepted SHA-256 hashes.
+- The release notes contain only the `## 0.2.2` changelog section.
+- Releases `0.2.1`, `0.2.0`, and `0.1.2` retain their original asset digests.
+
 During verification on 2026-09-30, a smoke test of `release:prepare -- --tag 0.2.1` replaced the local, gitignored `release/0.2.1/` staging copy with a branch build. It was restored from a clean rebuild of tag `0.2.1`, whose `main.js`, `manifest.json`, and `styles.css` reproduced the published SHA-256 hashes exactly. The published release was not affected.
 
 ## Published 0.2.0 asset discrepancy
