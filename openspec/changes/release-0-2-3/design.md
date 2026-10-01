@@ -11,6 +11,19 @@ The scanner's finding is a static-typing issue in pure core code, so the fix sta
    - Narrow each element with a type guard, `isReservedSection(value: unknown): value is ReservedSection`, which checks `typeof value === "string"` and membership in `RESERVED_SECTIONS`.
    - Error messages and accepted values stay identical, and existing settings tests must pass unchanged.
    - *Alternative rejected:* an inline `as ReservedSection` cast. It silences the rule without proving the type, and earlier Community scans flagged unnecessary assertions.
+   - **Implementation notes (2026-10-01):**
+     - **Type guard:** `isReservedSection` checks membership in a `ReadonlySet<string>` view of `RESERVED_SECTIONS`, so no assertion is needed anywhere.
+     - **Untrusted arrays:** both `enabledSections` and `staticTags` are read as `unknown` and iterated as `readonly unknown[]`.
+     - **Assertion removed:** the unnecessary `as Partial<SoundingsSettings>` in `sanitizeSavedSettings` is gone.
+     - **Compiler flag:** the two `main.ts` findings came from `.bind()` returning `any`, because `strictBindCallApply` was off (the project enables individual strict flags rather than `strict`). Enabling `strictBindCallApply` in `tsconfig.json` types `bind` correctly and clears both without touching the `own()` helper. The full type check, including tests, passes with it.
+     - **Behavior pinning:** `tests/settings-type-safety.test.ts` was written and passed against the pre-fix code before any change, and passes unchanged afterwards. It covers:
+       - rejected values and their messages, in order
+       - non-array sections
+       - `null` falling back to the default sections (existing `??` behavior, kept)
+       - de-duplication and canonical order
+       - non-string tags
+       - saved-settings sanitization
+     - **No suppressions:** none were needed, and `npm run lint` reports zero errors and zero warnings.
 
 2. **Zero-warning type-aware lint gate.**
    - Add pinned, exact-version dev dependencies: `eslint`, `typescript-eslint`, and Obsidian's published plugin lint rules (`eslint-plugin-obsidianmd`) if available on npm.

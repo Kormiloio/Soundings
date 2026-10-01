@@ -16,9 +16,9 @@
 - [x] 2.4 Run `npm run lint` in CI after the build and in the release build job before staging; update workflow contract tests
 
 ## 3. Type-safety fixes
-- [ ] 3.1 Add an `isReservedSection` type guard and iterate untrusted arrays as `unknown` in output-profile validation; existing settings tests pass unchanged
-- [ ] 3.2 Fix every other runtime finding from the lint gate without behavior change; list any justified suppression in the design
-- [ ] 3.3 Add a regression test proving wrong-typed sections are still rejected with the same messages
+- [x] 3.1 Add an `isReservedSection` type guard and iterate untrusted arrays as `unknown` in output-profile validation; existing settings tests pass unchanged
+- [x] 3.2 Fix every other runtime finding from the lint gate without behavior change; list any justified suppression in the design
+- [x] 3.3 Add a regression test proving wrong-typed sections are still rejected with the same messages
 
 ## 4. Repository hygiene
 - [ ] 4.1 Add `CONTRIBUTING.md` (setup, spec-first workflow, pull requests and rulesets, safety expectations)
