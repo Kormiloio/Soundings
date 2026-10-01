@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.3 — 2026-10-01
+
+Soundings `0.2.3` is a small corrective release. It behaves exactly like `0.2.2` for you, and it clears the one warning Obsidian's automated Community review reported.
+
+### 🔍 Community review
+- **Type-safety warning fixed**: Obsidian's scanner flagged that settings validation passed an untyped value into a typed check (`no-unsafe-argument` in `src/core/settings.ts`). The values were already validated, so nothing was unsafe at runtime, but the check now proves the type instead of assuming it. Accepted and rejected settings are unchanged.
+- **Same review rules, run locally**: every change is now linted with Obsidian's official ESLint rules and type-aware TypeScript checks before it can be merged or released, so this kind of warning cannot slip through again.
+
+### 📄 Project
+- Added a contributing guide covering setup, safety rules, the spec-first workflow, and private security reporting.
+
+### Notes
+- No change to how transcripts are found, converted, or written. Existing notes are never modified.
+
 ## 0.2.2 — 2026-09-30
 
 Soundings `0.2.2` is a hardening patch for `0.2.1`, from a full code and security review. It adds no features, no network access, and no new way of changing your vault. Every new refusal leaves your files untouched and explains why.

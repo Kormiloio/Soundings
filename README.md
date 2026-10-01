@@ -94,7 +94,7 @@ Hidden folders, Soundings state, user exclusions, and the active vault's configu
 
 ## Support
 
-Report bugs or request features through [GitHub Issues](https://github.com/Kormiloio/Soundings/issues). Do not include confidential transcript text, generated note bodies, credentials, or private vault paths in an issue.
+Report bugs or request features through [GitHub Issues](https://github.com/Kormiloio/Soundings/issues), and see [Contributing](CONTRIBUTING.md) for development guidance and private security reporting. Do not include confidential transcript text, generated note bodies, credentials, or private vault paths in an issue.
 
 ## Development
 

@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.2.2 published
+**Document status:** Soundings 0.2.2 published; 0.2.3 corrective release accepted for publication
 **Last updated:** 2026-10-01
 
 ## 1. Product summary
@@ -154,7 +154,8 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 6. **Local Companion Enrichment:** manual, local, create-only companion notes for reviewed summary and action-item capture.
 7. **Release Provenance & CI Automation:** GitHub Actions CI, build verification, and cryptographic GitHub artifact attestations.
 7a. **Post-release Hardening (0.2.2):** bounded linear-time parsing, startup-quiet observation, case-insensitive collision identity, lifecycle guards, note-structure escaping, and fail-closed release tooling, fixing the `0.2.1` code and security review findings.
-8. **Ergonomic Transcript Display:** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search.
+7b. **Community Scorecard Correction (0.2.3):** clear the `0.2.0` scorecard's type-safety warning, add a zero-warning type-aware lint gate, and confirm companion-note publication before rescanning the listing.
+8. **Ergonomic Transcript Display (planned 0.3.0):** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search.
 9. **Expanded Offline Caption Formats:** `.srt` (SubRip) parsing support, followed by offline structured JSON transcript schemas (Whisper / Otter / Zoom).
 10. **Guarded Vault Entity Linking:** opt-in linking of verified speaker names to existing Person notes within configured folders, strictly without automatic note creation.
 11. **Mobile Evaluation:** separately approved Android, iOS, and iPadOS performance and vault-API acceptance.
@@ -228,6 +229,8 @@ The `harden-0-2-2` change fixes the findings of a full code and security review 
 - Saved settings are type-checked.
 - The runtime audit and release staging are fail-closed.
 
-Two fingerprint checks first judged redundant were kept as the only guards against publishing unreviewed output from mutable input. The automated gate passes with 427 tests across 36 files. Packaged desktop acceptance of the staged `0.2.2` assets passed on Obsidian 1.13.7 (macOS 26.7 arm64), except that Escape-cancel was not observable and companion publication was not verified; both are recorded in `docs/VERIFICATION.md`.
+Two fingerprint checks first judged redundant were kept as the only guards against publishing unreviewed output from mutable input. The automated gate passes with 427 tests across 36 files. Packaged desktop acceptance of the staged `0.2.2` assets passed on Obsidian 1.13.7 (macOS 26.7 arm64), except that Escape-cancel was not observable; companion publication, first left unverified, was confirmed in the desktop app on 2026-10-01. Both are recorded in `docs/VERIFICATION.md`.
 
 Immutable release `0.2.2` was published on 2026-10-01 with exactly the accepted asset hashes and verified GitHub artifact attestations.
+
+The `release-0-2-3` change clears the only actionable finding in the Community scorecard for `0.2.0`, `@typescript-eslint/no-unsafe-argument` in output-profile validation, without changing behavior. Untrusted section and tag lists are narrowed with a type guard, an unnecessary assertion is removed, and `strictBindCallApply` is enabled. A zero-warning lint gate now runs on every pull request and release. It uses Obsidian's official ESLint rules with type-aware TypeScript checks and reproduced the scanner's finding before the fix. The change also adds `CONTRIBUTING.md`. The automated gate passes with 437 tests across 37 files. Packaged desktop acceptance passed on Obsidian 1.13.7 (macOS 26.7 arm64) with no caveats. Publication and a Community rescan remain.

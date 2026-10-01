@@ -74,7 +74,11 @@ export interface OutputProfileValidation {
 const TITLE_PATTERNS = new Set<TitlePattern>(["source-name", "parent-folder-source-name"]);
 const DESTINATION_NAME_PATTERNS = new Set<DestinationNamePattern>(["source-name", "source-name-note"]);
 const TIMESTAMP_POLICIES = new Set<TimestampPolicy>(["omit", "retain"]);
-const RESERVED_SECTION_SET = new Set<ReservedSection>(RESERVED_SECTIONS);
+const RESERVED_SECTION_NAMES: ReadonlySet<string> = new Set<string>(RESERVED_SECTIONS);
+
+function isReservedSection(value: unknown): value is ReservedSection {
+  return typeof value === "string" && RESERVED_SECTION_NAMES.has(value);
+}
 const STATIC_TAG = /^[\p{L}\p{N}_-]+(?:\/[\p{L}\p{N}_-]+)*$/u;
 
 function isStaticTag(value: string): boolean {
@@ -94,12 +98,14 @@ export function validateOutputProfile(input?: Partial<OutputProfile>): OutputPro
   const timestampPolicy = input?.timestampPolicy ?? DEFAULT_OUTPUT_PROFILE.timestampPolicy;
   if (!TIMESTAMP_POLICIES.has(timestampPolicy)) errors.push(`Unsupported timestamp policy: ${String(timestampPolicy)}.`);
 
-  const requestedSections = input?.enabledSections ?? DEFAULT_OUTPUT_PROFILE.enabledSections;
+  // Saved data is untrusted: Array.isArray narrows to any[], so iterate as unknown and narrow each element.
+  const requestedSections: unknown = input?.enabledSections ?? DEFAULT_OUTPUT_PROFILE.enabledSections;
   const sectionSet = new Set<ReservedSection>();
   if (Array.isArray(requestedSections)) {
-    for (const section of requestedSections) {
-      if (!RESERVED_SECTION_SET.has(section)) errors.push(`Unknown reserved section: ${String(section)}.`);
-      else sectionSet.add(section);
+    const candidates: readonly unknown[] = requestedSections;
+    for (const section of candidates) {
+      if (isReservedSection(section)) sectionSet.add(section);
+      else errors.push(`Unknown reserved section: ${String(section)}.`);
     }
   } else {
     errors.push(`Expected an array for enabled sections, but received: ${typeof requestedSections}.`);
@@ -108,9 +114,10 @@ export function validateOutputProfile(input?: Partial<OutputProfile>): OutputPro
 
   const staticTags: string[] = [];
   const seenTags = new Set<string>();
-  const rawTags = input?.staticTags ?? DEFAULT_OUTPUT_PROFILE.staticTags;
+  const rawTags: unknown = input?.staticTags ?? DEFAULT_OUTPUT_PROFILE.staticTags;
   if (Array.isArray(rawTags)) {
-    for (const rawTag of rawTags) {
+    const candidates: readonly unknown[] = rawTags;
+    for (const rawTag of candidates) {
       if (typeof rawTag !== "string") {
         errors.push(`Invalid static tag type: ${typeof rawTag}. Expected string.`);
         continue;
@@ -213,7 +220,7 @@ export function sanitizeSavedSettings(raw: unknown): SavedSettingsSanitization {
     if (hasExpectedType(value)) input[field] = value;
     else resetFields.push(field);
   }
-  return { input: input as Partial<SoundingsSettings>, resetFields: Object.freeze(resetFields) };
+  return { input, resetFields: Object.freeze(resetFields) };
 }
 
 function stringListField(value: unknown, fallback: readonly string[], label: string, errors: string[]): readonly string[] {
