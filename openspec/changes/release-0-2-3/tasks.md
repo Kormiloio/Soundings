@@ -3,7 +3,7 @@
 ## 0. Changeset approval
 - [x] 0.1 Record the 2026-10-01 Community scorecard findings for `0.2.0` and the open `0.2.2` companion-publication caveat in `proposal.md`
 - [x] 0.2 Draft design, spec delta, and tasks; pass `openspec validate release-0-2-3 --strict`
-- [ ] 0.3 Owner approves the changeset scope before implementation begins
+- [x] 0.3 Owner approves the changeset scope before implementation begins (approved 2026-10-01)
 
 ## 1. Companion-publication verification (`0.2.2` caveat)
 - [ ] 1.1 In the `0.2.2` acceptance vault, publish a companion for `Enrichment/Weekly sync.md` and confirm the file and its bytes on disk

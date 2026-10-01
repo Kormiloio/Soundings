@@ -29,7 +29,7 @@ Turn transcripts already organized inside an Obsidian vault into navigable Markd
 ## Active focus
 
 1. Maintain the published desktop Community plugin without weakening its local-only and create-only boundaries.
-   - Active change `release-0-2-3` (awaiting approval) clears the Community scorecard's `no-unsafe-argument` warning in `src/core/settings.ts`, adds a zero-warning type-aware lint gate to CI and releases, confirms companion-note publication in the desktop app, and adds `CONTRIBUTING.md`. After publication the listing is rescanned against `0.2.3`.
+   - Active change `release-0-2-3` (approved 2026-10-01, in implementation) clears the Community scorecard's `no-unsafe-argument` warning in `src/core/settings.ts`, adds a zero-warning type-aware lint gate to CI and releases, confirms companion-note publication in the desktop app, and adds `CONTRIBUTING.md`. After publication the listing is rescanned against `0.2.3`.
    - Completed change `harden-0-2-2` (published as `0.2.2` on 2026-10-01; archived) fixed the `0.2.1` review findings before new features ship: a linear-time WebVTT markup scanner, observation registered after layout-ready, case- and Unicode-insensitive collision identity, unload guards, note-structure escaping, typed settings, and fail-closed release tooling.
 2. Introduce ergonomic transcript callouts in Output Profiles (`> [!quote]- Full Transcript`) as opt-in feature release `0.3.0`, after `0.2.3`.
 3. Add SubRip (`.srt`) format parsing to expand offline caption compatibility.
