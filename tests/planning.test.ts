@@ -123,7 +123,7 @@ describe("planning", () => {
     expect(isPlanCurrent(plan, { ...DEFAULT_SETTINGS, maxSourceBytes: 10 })).toBe(false);
     expect(plan.outputProfile).toEqual(DEFAULT_OUTPUT_PROFILE);
     expect(plan.outputProfileSummary).toBe(
-      "Title: Source name; destination: Source name.md; sections: Summary, Decisions, Action Items, Follow-ups; tags: none; WebVTT timestamps: omit."
+      "Title: Source name; destination: Source name.md; sections: Summary, Decisions, Action Items, Follow-ups; tags: none; WebVTT timestamps: omit; transcript: plain."
     );
     expect(plan.items[0].outputProfileFingerprint).toBe(plan.outputProfileFingerprint);
   });
@@ -147,7 +147,7 @@ describe("planning", () => {
       classification: "eligible"
     });
     expect(plan.outputProfileSummary).toBe(
-      "Title: Parent folder — Source name; destination: Source name - Note.md; sections: Summary, Action Items; tags: project/alpha; WebVTT timestamps: retain."
+      "Title: Parent folder — Source name; destination: Source name - Note.md; sections: Summary, Action Items; tags: project/alpha; WebVTT timestamps: retain; transcript: plain."
     );
     expect(isPlanCurrent(plan, customized)).toBe(true);
     expect(isPlanCurrent(plan, DEFAULT_SETTINGS)).toBe(false);

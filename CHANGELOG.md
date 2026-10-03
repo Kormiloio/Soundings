@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 — 2026-10-02
+
+- Add an optional **Transcript display** setting: **Folded callout** places the full transcript in a collapsed **Full Transcript** quote callout beneath the Transcript heading, with speaker headings and retained timestamps inside.
+- Keep plain output as the default, including for existing saved settings. Existing notes are never rewritten.
+- Include transcript display in the review summary and invalidate reviewed plans when it changes.
+- Verify containment with CommonMark structural tests, adversarial transcripts, and the 5 MB source limit.
+
 ## 0.2.3 — 2026-10-01
 
 Soundings `0.2.3` is a small corrective release. It behaves exactly like `0.2.2` for you, and it clears the one warning Obsidian's automated Community review reported.

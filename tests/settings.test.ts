@@ -22,7 +22,8 @@ describe("settings", () => {
       destinationNamePattern: "source-name",
       enabledSections: ["summary", "decisions", "action-items", "follow-ups"],
       staticTags: [],
-      timestampPolicy: "omit"
+      timestampPolicy: "omit",
+      transcriptDisplay: "plain"
     });
     expect(DEFAULT_SETTINGS).not.toHaveProperty("automaticConversion");
   });

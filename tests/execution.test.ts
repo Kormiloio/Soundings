@@ -5,6 +5,8 @@ import { buildPlan } from "../src/core/planning";
 import { DEFAULT_SETTINGS, DEFAULT_OUTPUT_PROFILE } from "../src/core/settings";
 import type { DiscoveryItem } from "../src/core/discovery";
 import { testDigest } from "./test-crypto";
+import { identifySourceNote } from "../src/core/enrichment-evidence";
+import { buildEnrichmentPlan } from "../src/core/enrichment-planning";
 
 const encoder = new TextEncoder();
 
@@ -87,6 +89,29 @@ describe("per-item isolation", () => {
 });
 
 describe("safe execution", () => {
+  it("publishes a reviewed folded note without changing its source and accepts it for enrichment", async () => {
+    const vault = new MemoryPublicationAdapter();
+    const source = "hello\n\n> [!note] literal";
+    vault.files.set("one.txt", encoder.encode(source));
+    const settings = { ...DEFAULT_SETTINGS, outputProfile: { ...DEFAULT_OUTPUT_PROFILE, transcriptDisplay: "folded-callout" as const } };
+    const plan = buildPlan([await item("one.txt", source)], new Set(), settings, new Date(0), () => "folded");
+    expect(plan.outputProfileSummary).toContain("transcript: folded callout");
+    const outcomes = await executePlan(plan, vault, {
+      selectedSourcePaths: new Set(["one.txt"]), settings, now: () => new Date(0), digest: testDigest
+    });
+    expect(outcomes[0].status).toBe("created");
+    expect(vault.files.get("one.txt")).toEqual(encoder.encode(source));
+    const bytes = vault.files.get("one.md")!;
+    expect(new TextDecoder().decode(bytes)).toContain("> [!quote]- Full Transcript\n> ~~~text\n> hello\n>\n> > [!note] literal\n> ~~~");
+    const identified = await identifySourceNote("one.md", bytes, settings.maxSourceBytes, (data) => sha256(data, testDigest));
+    expect(identified.ok).toBe(true);
+    expect(identified.value?.soundingsVersion).toBe(2);
+    const enrichment = buildEnrichmentPlan("one.md", identified.value!, {
+      summary: "Reviewed summary", decisions: [], actionItems: [], followUps: []
+    }, new Set(), new Date(0), "enrich-folded");
+    expect(enrichment.status).toBe("ready");
+    expect(enrichment.destinationPath).toBe("one - Enrichment.md");
+  });
   it("creates and verifies only selected eligible notes", async () => {
     const vault = new MemoryPublicationAdapter();
     vault.files.set("one.txt", encoder.encode("hello"));
@@ -125,13 +150,16 @@ describe("safe execution", () => {
     expect(vault.files.has("one.md")).toBe(false);
   });
 
-  it("refuses settings whose output profile changed after preview (plan settings fingerprint)", async () => {
+  it.each([
+    { timestampPolicy: "retain" as const },
+    { transcriptDisplay: "folded-callout" as const }
+  ])("refuses settings whose output profile changed after preview (plan settings fingerprint) %#", async (change) => {
     const vault = new MemoryPublicationAdapter();
     vault.files.set("one.txt", encoder.encode("one"));
     const plan = buildPlan([await item("one.txt", "one")], new Set(), DEFAULT_SETTINGS, new Date(0), () => "p1");
     const outcomes = await executePlan(plan, vault, {
       selectedSourcePaths: new Set(["one.txt"]),
-      settings: { ...DEFAULT_SETTINGS, outputProfile: { ...DEFAULT_OUTPUT_PROFILE, timestampPolicy: "retain" } },
+      settings: { ...DEFAULT_SETTINGS, outputProfile: { ...DEFAULT_OUTPUT_PROFILE, ...change } },
       digest: testDigest
     });
     expect(outcomes[0]).toMatchObject({ status: "stale", reason: "Settings changed after preview." });
