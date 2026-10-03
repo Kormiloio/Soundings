@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 — Unreleased
+## 0.3.0 — 2026-10-02
 
 - Add an optional **Transcript display** setting: **Folded callout** places the full transcript in a collapsed **Full Transcript** quote callout beneath the Transcript heading, with speaker headings and retained timestamps inside.
 - Keep plain output as the default, including for existing saved settings. Existing notes are never rewritten.
