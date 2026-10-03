@@ -8,6 +8,7 @@ import {
   type ReservedSection,
   type SoundingsSettings,
   type TimestampPolicy,
+  type TranscriptDisplay,
   type TitlePattern
 } from "../core/settings";
 import type { TranscriptFormat } from "../core/types";
@@ -15,7 +16,7 @@ import type { TranscriptFormat } from "../core/types";
 type SoundingsSettingKey =
   | "txt" | "vtt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot"
   | "observationEnabled" | "observationRoots" | "titlePattern" | "destinationNamePattern"
-  | "summary" | "decisions" | "action-items" | "follow-ups" | "staticTags" | "timestampPolicy";
+  | "summary" | "decisions" | "action-items" | "follow-ups" | "staticTags" | "timestampPolicy" | "transcriptDisplay";
 
 export interface SettingsOwner {
   settings: SoundingsSettings;
@@ -132,6 +133,16 @@ export class SoundingsSettingTab extends PluginSettingTab {
         }
       },
       {
+        name: "Transcript display",
+        desc: "Plain shows the full transcript; folded callout collapses it behind one click and stays searchable.",
+        control: {
+          type: "dropdown",
+          key: "transcriptDisplay",
+          options: { plain: "Plain", "folded-callout": "Folded callout" },
+          validate: (value) => this.validateControl("transcriptDisplay", value)
+        }
+      },
+      {
         name: "Transcript observation",
         searchable: false,
         render: (setting) => {
@@ -177,6 +188,7 @@ export class SoundingsSettingTab extends PluginSettingTab {
       case "follow-ups": return this.owner.settings.outputProfile.enabledSections.includes(settingKey);
       case "staticTags": return this.owner.settings.outputProfile.staticTags.join("\n");
       case "timestampPolicy": return this.owner.settings.outputProfile.timestampPolicy;
+      case "transcriptDisplay": return this.owner.settings.outputProfile.transcriptDisplay;
     }
   }
 
@@ -257,6 +269,7 @@ export class SoundingsSettingTab extends PluginSettingTab {
         staticTags: String(value).split("\n").map((tag) => tag.trim()).filter(Boolean)
       });
       case "timestampPolicy": return this.withOutputProfile({ timestampPolicy: String(value) as TimestampPolicy });
+      case "transcriptDisplay": return this.withOutputProfile({ transcriptDisplay: String(value) as TranscriptDisplay });
     }
   }
 

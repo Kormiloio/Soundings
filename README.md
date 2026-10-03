@@ -79,12 +79,13 @@ Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-rela
 - **Enabled sections:** Toggle the visibility of Summary, Decisions, Action Items, and Follow-ups sections.
 - **Static tags:** Add a list of validated YAML tags to every generated note.
 - **Timestamp policy:** Choose whether to omit or retain WebVTT cue timings.
+- **Transcript display:** Keep the default plain transcript or choose a folded callout labeled **Full Transcript**. Click to expand it; its contents remain searchable. This affects new conversions only. Existing notes are never rewritten.
 
 Hidden folders, Soundings state, user exclusions, and the active vault's configured Obsidian configuration folder remain excluded from scans and observation, even when that folder is not named `.obsidian`.
 
 ## Known limitations
 
-- Version 0.2.0 is desktop-only.
+- Version 0.3.0 is desktop-only.
 - Existing `.md` destinations are always blocked, including previous Soundings output.
 - Updating a source does not update an existing generated note.
 - Plain-text transcripts are preserved without speaker inference.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseTranscript, parseVtt } from "../src/core/parsers";
 import { renderMarkdown } from "../src/core/rendering";
+import { DEFAULT_OUTPUT_PROFILE, DEFAULT_SETTINGS } from "../src/core/settings";
 import type { NoteMetadata } from "../src/core/types";
 
 const BUDGET_MS = 500;
@@ -93,6 +94,16 @@ describe("bounded WebVTT markup processing", () => {
 });
 
 describe("bounded fence sizing", () => {
+  it("renders the folded path at the configured source limit within the time budget", () => {
+    const text = "text\n\n".repeat(Math.ceil(DEFAULT_SETTINGS.maxSourceBytes / 6)).slice(0, DEFAULT_SETTINGS.maxSourceBytes);
+    const parsed = parseTranscript("txt", new TextEncoder().encode(text));
+    expect(parsed.ok).toBe(true);
+    const { result, elapsed } = timed(() => renderMarkdown(parsed.value!, metadata, {
+      ...DEFAULT_OUTPUT_PROFILE, transcriptDisplay: "folded-callout"
+    }));
+    expect(elapsed).toBeLessThan(BUDGET_MS);
+    expect(result).toContain("> [!quote]- Full Transcript\n> ~~~text\n");
+  });
   it("renders 150,000 separate tilde runs without a stack error", () => {
     const text = "~ ".repeat(150_000) + "~~~~~~~";
     const parsed = parseTranscript("txt", new TextEncoder().encode(text));

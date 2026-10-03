@@ -22,6 +22,10 @@ export function safeHeading(value: string): string {
   return escaped.trim() || "Untitled";
 }
 
+function foldTranscript(text: string): string {
+  return text.split("\n").map((line) => line ? `> ${line}` : ">").join("\n");
+}
+
 function literalBlock(text: string): string {
   let longest = 0;
   let run = 0;
@@ -56,6 +60,7 @@ function noteSchemaVersion(profile: OutputProfile): number {
     && sectionsMatch
     && profile.staticTags.length === 0
     && profile.timestampPolicy === DEFAULT_OUTPUT_PROFILE.timestampPolicy
+    && profile.transcriptDisplay === DEFAULT_OUTPUT_PROFILE.transcriptDisplay
     ? 1
     : 2;
 }
@@ -78,8 +83,11 @@ export function renderMarkdown(
     "---"
   ].join("\n");
   const blocks = transcript.blocks.map((block) => renderBlock(block, profile)).join("\n\n");
+  const transcriptBody = profile.transcriptDisplay === "folded-callout"
+    ? `> [!quote]- Full Transcript\n${foldTranscript(blocks)}`
+    : blocks;
   const sections = profile.enabledSections.map((section) => SECTION_CONTENT[section]);
   const header = `\n\n# ${safeHeading(metadata.title)}\n\n`;
-  const body = [...sections, `## Transcript\n\n${blocks}`].join("\n\n");
+  const body = [...sections, `## Transcript\n\n${transcriptBody}`].join("\n\n");
   return `${frontmatter}${header}${body}\n`;
 }

@@ -27,6 +27,14 @@ async function convert(
 
 describe("golden conversions", () => {
   it.each([
+    ["plain-unicode.txt", "txt", "omit", "expected-folded-plain.md"],
+    ["zoom-voice.vtt", "vtt", "omit", "expected-folded-zoom.md"],
+    ["zoom-voice.vtt", "vtt", "retain", "expected-folded-timestamps.md"]
+  ] as const)("renders folded %s with %s timestamps", async (source, format, timestampPolicy, expected) => {
+    const profile: OutputProfile = { ...DEFAULT_OUTPUT_PROFILE, transcriptDisplay: "folded-callout", timestampPolicy };
+    expect(await convert(source, format, profile)).toBe(await readFile(join(root, expected), "utf8"));
+  });
+  it.each([
     ["plain-unicode.txt", "txt", "expected-plain.md"],
     ["zoom-voice.vtt", "vtt", "expected-zoom.md"]
   ] as const)("converts %s deterministically", async (source, format, expected) => {
@@ -41,7 +49,8 @@ describe("golden conversions", () => {
       destinationNamePattern: "source-name-note",
       enabledSections: ["summary", "action-items"],
       staticTags: ["project/alpha", "conversation"],
-      timestampPolicy: "retain"
+      timestampPolicy: "retain",
+      transcriptDisplay: "plain"
     };
     const first = await convert("zoom-voice.vtt", "vtt", profile, "Calls — zoom-voice");
     expect(first).toBe(await readFile(join(root, "expected-custom-profile.md"), "utf8"));

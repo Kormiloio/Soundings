@@ -25,6 +25,7 @@
 
 - The note is created beside its source by replacing only the final extension with `.md`.
 - Source text is placed in dynamic literal fences so HTML, Markdown, links, and Obsidian embeds remain inert.
+- Transcript display defaults to plain output. The optional folded callout uses `> [!quote]- Full Transcript` below `## Transcript`; every line, including blank lines, speaker headings, and retained timestamps, stays inside it. Source text remains literal, and the full transcript stays searchable in Obsidian. Existing notes are never rewritten.
 - YAML metadata is versioned and safely encoded; C1 control characters and Unicode line/paragraph separators in names are written as `\uXXXX` escapes.
 - Speaker and title headings escape Markdown punctuation and Obsidian inline syntax (`%%`, `$`, `==`, `~~`, `^`), so a speaker named `%%` cannot hide later text and `$5 … $10` does not render as math.
 - Summary, Decisions, Action Items, and Follow-ups are reserved but never fabricated.

@@ -21,7 +21,7 @@ describe("declarative Soundings settings", () => {
   it("indexes output controls and retains non-searchable explanations", () => {
     const { tab } = setup();
     const definitions = tab.getSettingDefinitions();
-    expect(controls(definitions)).toHaveLength(16);
+    expect(controls(definitions)).toHaveLength(17);
     expect(controls(definitions).map((item) => item.name)).toEqual([
       "Convert .txt transcripts",
       "Convert .vtt transcripts",
@@ -37,12 +37,13 @@ describe("declarative Soundings settings", () => {
       "Include Follow-ups section",
       "Static tags",
       "WebVTT timestamps",
+      "Transcript display",
       "Observe new transcripts",
       "Observation roots"
     ]);
     expect(definitions[0]).toMatchObject({ name: "Soundings safety", searchable: false });
     expect(definitions[7]).toMatchObject({ name: "Note output", searchable: false });
-    expect(definitions[16]).toMatchObject({ name: "Transcript observation", searchable: false });
+    expect(definitions[17]).toMatchObject({ name: "Transcript observation", searchable: false });
   });
 
   it("adapts individual controls through validated effective settings", async () => {
@@ -63,12 +64,16 @@ describe("declarative Soundings settings", () => {
     await tab.setControlValue("decisions", false);
     await tab.setControlValue("staticTags", "project/alpha\nnotes");
     await tab.setControlValue("timestampPolicy", "retain");
+    expect(tab.getControlValue("transcriptDisplay")).toBe("plain");
+    await tab.setControlValue("transcriptDisplay", "folded-callout");
+    expect(tab.getControlValue("transcriptDisplay")).toBe("folded-callout");
     expect(owner.settings.outputProfile).toEqual({
       titlePattern: "parent-folder-source-name",
       destinationNamePattern: "source-name-note",
       enabledSections: ["summary", "action-items", "follow-ups"],
       staticTags: ["project/alpha", "notes"],
-      timestampPolicy: "retain"
+      timestampPolicy: "retain",
+      transcriptDisplay: "folded-callout"
     });
   });
 
@@ -83,5 +88,8 @@ describe("declarative Soundings settings", () => {
     expect(await excluded.control?.validate?.("../outside" as never)).toContain("Invalid excluded path");
     expect(await obsRoots.control?.validate?.("/absolute" as never)).toContain("Invalid observation root");
     expect(await staticTags.control?.validate?.("#unsafe" as never)).toContain("Invalid static tag");
+    const display = definitions.find((item) => item.name === "Transcript display")!;
+    expect(display.control).toMatchObject({ type: "dropdown", options: { plain: "Plain", "folded-callout": "Folded callout" } });
+    expect(await display.control?.validate?.("unknown" as never)).toContain("Unsupported transcript display choice");
   });
 });

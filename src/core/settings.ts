@@ -5,6 +5,7 @@ export type ReservedSection = typeof RESERVED_SECTIONS[number];
 export type TitlePattern = "source-name" | "parent-folder-source-name";
 export type DestinationNamePattern = "source-name" | "source-name-note";
 export type TimestampPolicy = "omit" | "retain";
+export type TranscriptDisplay = "plain" | "folded-callout";
 
 export interface OutputProfile {
   readonly titlePattern: TitlePattern;
@@ -12,6 +13,7 @@ export interface OutputProfile {
   readonly enabledSections: readonly ReservedSection[];
   readonly staticTags: readonly string[];
   readonly timestampPolicy: TimestampPolicy;
+  readonly transcriptDisplay: TranscriptDisplay;
 }
 
 export interface SoundingsSettings {
@@ -33,7 +35,8 @@ export const DEFAULT_OUTPUT_PROFILE: OutputProfile = Object.freeze({
   destinationNamePattern: "source-name",
   enabledSections: RESERVED_SECTIONS,
   staticTags: Object.freeze([]),
-  timestampPolicy: "omit"
+  timestampPolicy: "omit",
+  transcriptDisplay: "plain"
 });
 
 export const DEFAULT_SETTINGS: SoundingsSettings = Object.freeze({
@@ -74,6 +77,7 @@ export interface OutputProfileValidation {
 const TITLE_PATTERNS = new Set<TitlePattern>(["source-name", "parent-folder-source-name"]);
 const DESTINATION_NAME_PATTERNS = new Set<DestinationNamePattern>(["source-name", "source-name-note"]);
 const TIMESTAMP_POLICIES = new Set<TimestampPolicy>(["omit", "retain"]);
+const TRANSCRIPT_DISPLAY_CHOICES = new Set<TranscriptDisplay>(["plain", "folded-callout"]);
 const RESERVED_SECTION_NAMES: ReadonlySet<string> = new Set<string>(RESERVED_SECTIONS);
 
 function isReservedSection(value: unknown): value is ReservedSection {
@@ -97,6 +101,12 @@ export function validateOutputProfile(input?: Partial<OutputProfile>): OutputPro
 
   const timestampPolicy = input?.timestampPolicy ?? DEFAULT_OUTPUT_PROFILE.timestampPolicy;
   if (!TIMESTAMP_POLICIES.has(timestampPolicy)) errors.push(`Unsupported timestamp policy: ${String(timestampPolicy)}.`);
+
+  const transcriptDisplay = input?.transcriptDisplay === undefined
+    ? DEFAULT_OUTPUT_PROFILE.transcriptDisplay : input.transcriptDisplay;
+  if (!TRANSCRIPT_DISPLAY_CHOICES.has(transcriptDisplay)) {
+    errors.push(`Unsupported transcript display choice: ${String(transcriptDisplay)}.`);
+  }
 
   // Saved data is untrusted: Array.isArray narrows to any[], so iterate as unknown and narrow each element.
   const requestedSections: unknown = input?.enabledSections ?? DEFAULT_OUTPUT_PROFILE.enabledSections;
@@ -141,7 +151,8 @@ export function validateOutputProfile(input?: Partial<OutputProfile>): OutputPro
       destinationNamePattern,
       enabledSections: Object.freeze(enabledSections),
       staticTags: Object.freeze(staticTags),
-      timestampPolicy
+      timestampPolicy,
+      transcriptDisplay
     }),
     errors
   };
@@ -331,7 +342,8 @@ export function outputProfileFingerprint(profile: OutputProfile): string {
     destinationNamePattern: profile.destinationNamePattern,
     enabledSections: profile.enabledSections,
     staticTags: profile.staticTags,
-    timestampPolicy: profile.timestampPolicy
+    timestampPolicy: profile.timestampPolicy,
+    transcriptDisplay: profile.transcriptDisplay
   });
 }
 
@@ -347,5 +359,6 @@ export function outputProfileSummary(profile: OutputProfile): string {
   const sections = profile.enabledSections.map((section) => sectionNames[section]).join(", ") || "none";
   const tags = profile.staticTags.join(", ") || "none";
   const timestamps = profile.timestampPolicy === "omit" ? "omit" : "retain";
-  return `Title: ${title}; destination: ${destination}; sections: ${sections}; tags: ${tags}; WebVTT timestamps: ${timestamps}.`;
+  const display = profile.transcriptDisplay === "plain" ? "plain" : "folded callout";
+  return `Title: ${title}; destination: ${destination}; sections: ${sections}; tags: ${tags}; WebVTT timestamps: ${timestamps}; transcript: ${display}.`;
 }

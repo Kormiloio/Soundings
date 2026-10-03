@@ -1,6 +1,32 @@
 # Foundation verification record
 
-**Last updated:** 2026-10-01
+**Last updated:** 2026-10-02
+
+## Soundings 0.3.0 automated candidate
+
+The `add-folded-transcript-callouts` candidate passed automated verification on 2026-10-02 on branch `release/0.3.0`:
+
+- Reproducible dependency installation with `npm ci --ignore-scripts --offline`.
+- `npm run check`: production build, TypeScript, zero-warning type-aware Obsidian lint, and 461 tests across 39 files.
+- Plain-output golden fixtures unchanged; three new folded fixtures cover text, multi-speaker WebVTT, and retained timestamps.
+- Exact-pinned `micromark` 4.0.2 proves one enclosing blockquote, literal source preservation, and no escaped transcript content for adversarial inputs and a 5,000,000-byte transcript. The structural parser test has a 30-second timeout; production rendering independently passes its 500 ms budget at that size.
+- Saved-profile migration, invalid display rejection, review summary, settings dropdown validation/persistence, stale-plan refusal, source preservation, and folded-note enrichment identification/planning pass.
+- Runtime audit: only `obsidian` is loaded; no network, telemetry, Node filesystem, or destructive vault APIs.
+- Production dependency audit: zero vulnerabilities. The full online audit reports the same three moderate development-only findings already recorded for 0.2.3, through `moment`, `obsidian`, and the lint plugin; they are absent from the shipped bundle.
+- Strict OpenSpec validation, release staging, and `git diff --check` pass.
+- The 5,000-file rehearsal recorded 4.7 ms for scanning and zero source mutations.
+
+Staged assets in `release/0.3.0/`:
+
+- `main.js`: `baff0763c27b29293efa33de831f7c852c80a23d05ccead1e8402a0eb31583fc`
+- `manifest.json`: `56c5c841267f2aeeea00f6d608e18f1fa8aef40b66f162871a68a3f72af62418`
+- `styles.css`: `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`
+
+Packaged desktop acceptance is **pending**. The initial Obsidian CLI probe reported that Obsidian was not running. A subsequent computer-use attempt reported "Computer Use permissions are not granted", so real-app acceptance could not begin.
+
+A disposable acceptance vault was prepared at `/private/tmp/soundings-030-acceptance.NgrOT5` with the exact three staged assets copied into `Config/plugins/soundings/` and their hashes verified against the candidate. It includes plain text, multi-speaker WebVTT, adversarial Markdown, a protected existing destination, and hidden/config-directory exclusion fixtures. `Protected-hashes.json` records the seven source/protected-file baselines; `Acceptance.md` contains the checklist. Configure that vault to use `Config` before enabling the plugin. No personal or work vault was modified.
+
+Collapsed rendering, click expansion, search, Outline, real-app enrichment, stale-plan behavior, and protected-file hashes must still be verified in the desktop app. PR/CI, publication, Community rescan, and archival remain pending. This is an unreleased candidate.
 
 ## Soundings 0.2.3 automated candidate
 
