@@ -25,7 +25,7 @@
 - [x] 4.3 Update `openspec/project.md` and `docs/VERIFICATION.md`; run build, lint, tests, audits, strict validation, release staging, and `git diff --check`. Passed 2026-10-02; full audit's existing development-only findings are recorded in `docs/VERIFICATION.md`.
 
 ## 5. Acceptance and publication
-- [ ] 5.1 Packaged desktop acceptance in a disposable vault. Cover:
+- [x] 5.1 Packaged desktop acceptance in a disposable vault. Passed 2026-10-02 with owner screenshots, CLI-assisted stale-plan settings change, and post-test hash verification; see `docs/VERIFICATION.md`. Cover:
   - default (plain) conversion unchanged
   - folded conversion renders collapsed with the label, expands on click, and shows speakers and text
   - Obsidian search finds a phrase inside a folded transcript

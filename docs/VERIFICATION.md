@@ -22,11 +22,24 @@ Staged assets in `release/0.3.0/`:
 - `manifest.json`: `56c5c841267f2aeeea00f6d608e18f1fa8aef40b66f162871a68a3f72af62418`
 - `styles.css`: `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`
 
-Packaged desktop acceptance is **pending**. The initial Obsidian CLI probe reported that Obsidian was not running. A subsequent computer-use attempt reported "Computer Use permissions are not granted", so real-app acceptance could not begin.
+Packaged desktop acceptance **passed on 2026-10-02** with the owner operating Obsidian and supplying screenshots. The initial sandboxed CLI probe could not connect, and computer-use permissions were unavailable. A later CLI connection outside the sandbox reached the running disposable vault for the stale-plan settings change.
 
-A disposable acceptance vault was prepared at `/private/tmp/soundings-030-acceptance.NgrOT5` with the exact three staged assets copied into `Config/plugins/soundings/` and their hashes verified against the candidate. It includes plain text, multi-speaker WebVTT, adversarial Markdown, a protected existing destination, and hidden/config-directory exclusion fixtures. `Protected-hashes.json` records the seven source/protected-file baselines; `Acceptance.md` contains the checklist. Configure that vault to use `Config` before enabling the plugin. No personal or work vault was modified.
+A disposable acceptance vault was prepared at `/private/tmp/soundings-030-acceptance.NgrOT5` with the exact three staged assets in `.soundings-test-config/plugins/soundings/` and their hashes verified against the candidate. It includes plain text, multi-speaker WebVTT, adversarial Markdown, a protected existing destination, and hidden/config-directory exclusion fixtures. `Protected-hashes.json` records the seven source/protected-file baselines; `Acceptance.md` contains the checklist. Configure that vault to use `.soundings-test-config` before enabling the plugin. The initially prepared `Config` folder was renamed after the owner's screenshot confirmed that Obsidian requires a dot-prefixed configuration folder; the protected baseline path was updated without changing fixture bytes. No personal or work vault was modified.
 
-Collapsed rendering, click expansion, search, Outline, real-app enrichment, stale-plan behavior, and protected-file hashes must still be verified in the desktop app. PR/CI, publication, Community rescan, and archival remain pending. This is an unreleased candidate.
+Owner-assisted packaged acceptance passed on Obsidian desktop 1.13.7, using the staged candidate in the disposable vault above:
+
+- **Settings default: pass.** The owner's screenshot shows Transcript display set to Plain, observation off, and the custom configuration directory named in exclusions.
+- **Plain conversion: pass.** The owner reported successful conversion; disk inspection confirms `Meetings/Plain.md` has schema 1, the reserved sections, and the original text in a literal fence.
+- **Folded display: pass.** The owner confirmed the callout starts collapsed and expands to show speakers and timestamps. The screenshot and disk inspection show Alice and Bob inside one Full Transcript callout, with retained times and schema 2.
+- **Search: pass.** The owner's screenshot shows the generated Folded note returned for `silver lantern`.
+- **Containment: pass.** The owner's reading-view screenshot shows all adversarial text, including the final `velvet anchor` sentinel, inside the callout's literal fence.
+- **Outline: recorded.** The owner's screenshot shows Transcript in Outline; Alice and Bob are visible inside the callout but absent from Outline. This is the anticipated callout-heading limitation.
+- **Manual enrichment: pass.** The owner reported successful companion publication. Disk inspection confirms `Meetings/Folded - Enrichment.md` exists with the entered test summary, all reserved enrichment sections, and the full-path backlink.
+- **Protected files: pass.** SHA-256 comparison against `Protected-hashes.json` after the stale-plan check confirms all seven baseline files unchanged, including all sources and the existing collision note. All three installed plugin assets still match the accepted staged hashes.
+- **Review exclusions/collisions: pass.** The owner's five-candidate review screenshot shows only the fresh stale-plan source eligible, four existing destinations blocked, and no hidden/config-directory fixtures offered.
+- **Stale plan: pass.** With the owner's folded-callout preview still open and the fresh source selected, the CLI invoked Soundings' validated `setSettings` method in the named disposable vault to change display to plain. The owner clicked Convert selected without refreshing; the results screenshot shows `stale: 1` and `Settings changed after preview.` Disk inspection confirms no `Meetings/Stale-plan.md` was created. The settings shortcut was blocked by the modal, so this check uses the real plugin settings method through the CLI rather than the dropdown.
+
+All named packaged desktop checks are complete. PR/CI, publication, Community rescan, and archival remain pending. This is an unreleased candidate.
 
 ## Soundings 0.2.3 automated candidate
 
