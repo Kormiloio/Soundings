@@ -1,6 +1,6 @@
 # Foundation verification record
 
-**Last updated:** 2026-10-02
+**Last updated:** 2026-10-03
 
 ## Soundings 0.3.0 automated candidate
 
@@ -50,7 +50,14 @@ The owner approved merge and publication. PR #8 merged at `8993112497938f0e75ce8
 - GitHub API snapshots before and after publication confirm all eight prior releases retain their target values, asset IDs, names, sizes, and SHA-256 digests. No previous release was modified.
 - Official Obsidian submission, plugin requirements, developer policies, and ownership documentation were rechecked immediately before publication.
 
-The owner's Community rescan against 0.3.0 and subsequent OpenSpec archival remain pending. The code and GitHub release are published; no claim of a new Community scorecard is made yet.
+On 2026-10-03 the owner supplied the completed Community scorecard after the requested 0.3.0 rescan. This result is owner-reported; it was not independently read from the authenticated Community page.
+
+- **Health: Excellent.** Readme, license, contributing guide, and description present; the scorecard reports active maintenance and 17 installations.
+- **Review: Passed.** All six scans passed: verified `main.js` and `styles.css` artifact attestations, no suspicious network patterns, no vulnerable dependencies, no obfuscation, and byte-for-byte reproduction of the released `main.js`.
+- **Remaining disclosure:** malware scanning is unavailable.
+- **Remaining other item:** vault enumeration exposes vault file paths, which is expected for transcript discovery and disclosed in the README. No actionable warning was included in the supplied scorecard.
+
+The release and Community gates are complete. The folded-transcript change is closed and archived as `2026-10-03-add-folded-transcript-callouts`, with its deltas merged into the main specifications.
 
 ## Soundings 0.2.3 automated candidate
 

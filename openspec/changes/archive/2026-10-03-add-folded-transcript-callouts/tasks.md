@@ -36,5 +36,5 @@
   - protected hashes unchanged
 - [x] 5.2 Open a pull request; CI passes under `Protect main`. PR `Kormiloio/Soundings#8`; `Build, Audit & Test` passed in workflow run `37089996415` for accepted candidate `8554f86`.
 - [x] 5.3 After owner approval, merge and push tag `0.3.0`; verify three attested assets and unchanged prior releases. PR #8 merged at `8993112`; workflow `37090532396` published the three matching assets. Fresh download hashes, all three attestations, and all eight prior-release snapshots verified; see `docs/VERIFICATION.md`.
-- [ ] 5.4 Owner rescans the Community listing; record the scorecard (target: Review Passed, no warnings)
-- [ ] 5.5 Archive the change and sync the deltas into `openspec/specs/`
+- [x] 5.4 Owner rescans the Community listing; record the scorecard (target: Review Passed, no warnings). Owner supplied the completed scorecard on 2026-10-03: Health Excellent, Review Passed, all six scans passed; only malware-scan disclosure and expected vault-enumeration item remain. Recorded in `docs/VERIFICATION.md`.
+- [x] 5.5 Archive the change and sync the deltas into `openspec/specs/`. Both capabilities synced and strict-validated; change archived as `2026-10-03-add-folded-transcript-callouts` with all 19 tasks complete.

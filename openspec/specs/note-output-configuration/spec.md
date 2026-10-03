@@ -6,7 +6,7 @@ Provide a constrained, validated output profile that lets users tailor determini
 ## Requirements
 
 ### Requirement: Output profiles use constrained choices
-Soundings SHALL support only documented built-in choices for reserved sections, static tags, title pattern, destination-name pattern, and WebVTT timestamp policy. The supported title patterns SHALL be `source-name` and `parent-folder-source-name`. The supported destination-name patterns SHALL be `source-name` and `source-name-note`. It SHALL NOT execute user-supplied code or interpolate arbitrary vault content.
+Soundings SHALL support only documented built-in choices for reserved sections, static tags, title pattern, destination-name pattern, WebVTT timestamp policy, and transcript display. The supported title patterns SHALL be `source-name` and `parent-folder-source-name`. The supported destination-name patterns SHALL be `source-name` and `source-name-note`. The supported transcript displays SHALL be `plain` (the default) and `folded-callout`. It SHALL NOT execute user-supplied code or interpolate arbitrary vault content.
 
 #### Scenario: Content-neutral title patterns are derived
 - **GIVEN** `Projects/Alpha/Excel Migration.txt` uses the `parent-folder-source-name` title pattern
@@ -32,6 +32,23 @@ Soundings SHALL support only documented built-in choices for reserved sections, 
 - **THEN** the invalid profile is rejected with an actionable error
 - **AND** no conversion begins
 
+#### Scenario: Saved profile predates transcript display
+- **GIVEN** saved settings contain an output profile without a transcript display value
+- **WHEN** Soundings migrates the settings
+- **THEN** the effective transcript display is `plain`
+- **AND** generated notes are byte-identical to those produced before the option existed
+
+#### Scenario: Unknown transcript display is supplied
+- **GIVEN** a saved or edited profile sets transcript display to a value other than `plain` or `folded-callout`
+- **WHEN** Soundings validates settings
+- **THEN** the value is rejected with an actionable error
+- **AND** no conversion uses it
+
+#### Scenario: Review shows the transcript display
+- **GIVEN** the transcript display is `folded-callout`
+- **WHEN** Soundings builds the conversion plan
+- **THEN** the output-profile summary states that transcripts are shown as a folded callout
+
 ### Requirement: Output settings are previewable
 Soundings SHALL expose the effective output-profile summary and exact final destination during review before a candidate can be selected.
 
@@ -48,12 +65,18 @@ Soundings SHALL expose the effective output-profile summary and exact final dest
 - **AND** neither candidate can be selected
 
 ### Requirement: Settings changes do not alter an existing plan silently
-Each conversion plan SHALL bind to the validated output profile used to derive and render it. Execution SHALL fail closed when the effective output profile has changed since planning.
+Each conversion plan SHALL bind to the validated output profile used to derive and render it, including its transcript display. Execution SHALL fail closed when the effective output profile has changed since planning.
 
 #### Scenario: Profile changes after review
 - **GIVEN** the user reviewed and selected a candidate under one output profile
 - **WHEN** the saved output profile changes before execution
 - **THEN** Soundings reports the item as stale or blocked
+- **AND** creates no destination
+
+#### Scenario: Transcript display changes after review
+- **GIVEN** the user reviewed and selected a candidate with transcript display `plain`
+- **WHEN** the transcript display changes to `folded-callout` before execution
+- **THEN** Soundings reports the item as stale
 - **AND** creates no destination
 
 ### Requirement: Saved settings are type-validated
