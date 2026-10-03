@@ -39,7 +39,18 @@ Owner-assisted packaged acceptance passed on Obsidian desktop 1.13.7, using the 
 - **Review exclusions/collisions: pass.** The owner's five-candidate review screenshot shows only the fresh stale-plan source eligible, four existing destinations blocked, and no hidden/config-directory fixtures offered.
 - **Stale plan: pass.** With the owner's folded-callout preview still open and the fresh source selected, the CLI invoked Soundings' validated `setSettings` method in the named disposable vault to change display to plain. The owner clicked Convert selected without refreshing; the results screenshot shows `stale: 1` and `Settings changed after preview.` Disk inspection confirms no `Meetings/Stale-plan.md` was created. The settings shortcut was blocked by the modal, so this check uses the real plugin settings method through the CLI rather than the dropdown.
 
-All named packaged desktop checks are complete. Pull request `Kormiloio/Soundings#8` was opened for the accepted candidate. Its required `Build, Audit & Test` check passed in 46 seconds in workflow run `37089996415` at candidate commit `8554f86`. Publication, Community rescan, and archival remain pending. This is an unreleased candidate.
+All named packaged desktop checks are complete. Pull request `Kormiloio/Soundings#8` was opened for the accepted candidate. Its required `Build, Audit & Test` check passed in 46 seconds in workflow run `37089996415` at candidate commit `8554f86`. Subsequent verification-only commits also passed CI; final candidate `474fa60` passed in workflow run `37090448713` before merge.
+
+The owner approved merge and publication. PR #8 merged at `8993112497938f0e75ce8d32f7f74aac7136bed8`; bare tag `0.3.0` points to that commit. The tag push was accepted through the repository-admin bypass of the restricted tag-creation rule. Release workflow run `37090532396` completed successfully and published Soundings 0.3.0 at 2026-10-03 02:39:57 UTC (2026-10-02 in America/New_York).
+
+- Published release: `https://github.com/Kormiloio/Soundings/releases/tag/0.3.0`, neither draft nor prerelease, with exactly `main.js`, `manifest.json`, and `styles.css`.
+- A fresh download into `/private/tmp/soundings-030-published.AkWgMr` reproduces all three accepted SHA-256 hashes above.
+- `gh attestation verify` succeeded for each asset, enforcing `refs/tags/0.3.0`, source commit `8993112497938f0e75ce8d32f7f74aac7136bed8`, and signer workflow `Kormiloio/Soundings/.github/workflows/release.yml`.
+- Release notes contain only the dated 0.3.0 changelog section.
+- GitHub API snapshots before and after publication confirm all eight prior releases retain their target values, asset IDs, names, sizes, and SHA-256 digests. No previous release was modified.
+- Official Obsidian submission, plugin requirements, developer policies, and ownership documentation were rechecked immediately before publication.
+
+The owner's Community rescan against 0.3.0 and subsequent OpenSpec archival remain pending. The code and GitHub release are published; no claim of a new Community scorecard is made yet.
 
 ## Soundings 0.2.3 automated candidate
 
