@@ -99,7 +99,7 @@ Soundings SHALL validate the WebVTT signature, ignore header metadata lines that
 - **THEN** the source is classified as unsupported WebVTT and no Markdown content is produced for publication
 
 ### Requirement: Versioned Markdown contract
-Soundings SHALL render a generated note with valid YAML frontmatter, a title derived from a validated built-in pattern, validated static tags when configured, the enabled reserved enrichment sections, and a transcript section using a versioned schema. Source-derived text SHALL be encoded so it cannot escape its intended section, become active embedded HTML or Obsidian embed syntax, or activate Obsidian inline syntax (comments, math, highlights, strikethrough, or block references) in generated headings. Frontmatter strings SHALL escape C1 control characters and Unicode line and paragraph separators.
+Soundings SHALL render a generated note with valid YAML frontmatter, a title derived from a validated built-in pattern, validated static tags when configured, the enabled reserved enrichment sections, and a transcript section using a versioned schema. Source-derived text SHALL be encoded so it cannot escape its intended section, become active embedded HTML or Obsidian embed syntax, or activate Obsidian inline syntax (comments, math, highlights, strikethrough, or block references) in generated headings. Frontmatter strings SHALL escape C1 control characters and Unicode line and paragraph separators. When the transcript display is `folded-callout`, Soundings SHALL render the transcript body directly below the `## Transcript` heading as a single collapsed Obsidian callout introduced by `> [!quote]- Full Transcript`, with every line of the body, including blank lines, carrying the callout prefix, so that the callout contains the entire transcript and no source-derived text can end, escape, or nest inside it.
 
 #### Scenario: Generated note structure
 - **GIVEN** a supported transcript has been parsed successfully with the default output profile
@@ -143,6 +143,24 @@ Soundings SHALL render a generated note with valid YAML frontmatter, a title der
 - **GIVEN** a source filename contains a character in U+0080–U+009F, U+2028, or U+2029
 - **WHEN** Soundings renders frontmatter
 - **THEN** each such character is written as a `\uXXXX` escape inside a valid double-quoted YAML scalar
+
+#### Scenario: Transcript is rendered as a folded callout
+- **GIVEN** the transcript display is `folded-callout` and a WebVTT transcript has several speakers
+- **WHEN** Soundings renders the note
+- **THEN** `## Transcript` is followed by one callout whose first line is `> [!quote]- Full Transcript`
+- **AND** every speaker heading, retained timestamp line, and literal transcript fence appears inside that callout in source order
+- **AND** the frontmatter and reserved sections are unchanged
+
+#### Scenario: Source text tries to break out of the callout
+- **GIVEN** the transcript display is `folded-callout` and transcript text contains blank lines, lines starting with `>` or `> [!note]`, tilde or backtick runs, `---`, or headings
+- **WHEN** Soundings renders the note and the result is parsed as CommonMark
+- **THEN** exactly one blockquote follows `## Transcript`, it contains every transcript character, and no transcript text appears after it
+- **AND** the transcript text remains literal and visible inside its fence
+
+#### Scenario: Plain display is unchanged
+- **GIVEN** the transcript display is `plain`
+- **WHEN** Soundings renders any transcript
+- **THEN** the note is byte-identical to the output of release `0.2.3` for the same input and timestamp
 
 ### Requirement: Offline deterministic conversion
 Parsing and rendering SHALL make no network request, collect no telemetry, and produce the same semantic Markdown for the same source, settings, metadata, and schema version except for explicitly supplied conversion-time metadata.
