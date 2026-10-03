@@ -39,7 +39,7 @@ Owner-assisted packaged acceptance passed on Obsidian desktop 1.13.7, using the 
 - **Review exclusions/collisions: pass.** The owner's five-candidate review screenshot shows only the fresh stale-plan source eligible, four existing destinations blocked, and no hidden/config-directory fixtures offered.
 - **Stale plan: pass.** With the owner's folded-callout preview still open and the fresh source selected, the CLI invoked Soundings' validated `setSettings` method in the named disposable vault to change display to plain. The owner clicked Convert selected without refreshing; the results screenshot shows `stale: 1` and `Settings changed after preview.` Disk inspection confirms no `Meetings/Stale-plan.md` was created. The settings shortcut was blocked by the modal, so this check uses the real plugin settings method through the CLI rather than the dropdown.
 
-All named packaged desktop checks are complete. PR/CI, publication, Community rescan, and archival remain pending. This is an unreleased candidate.
+All named packaged desktop checks are complete. Pull request `Kormiloio/Soundings#8` was opened for the accepted candidate. Its required `Build, Audit & Test` check passed in 46 seconds in workflow run `37089996415` at candidate commit `8554f86`. Publication, Community rescan, and archival remain pending. This is an unreleased candidate.
 
 ## Soundings 0.2.3 automated candidate
 
