@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.3.0 published; 0.4.0 SRT candidate accepted and owner-approved for publication; release verification pending
+**Document status:** Soundings 0.4.0 published and release-verified; owner Community rescan and OpenSpec closure pending
 **Last updated:** 2026-10-03
 
 ## 1. Product summary
@@ -179,7 +179,7 @@ Each feature gets a separate OpenSpec change, focused automated tests, source/de
 
 Provider-specific JSON, document extraction, safe reconversion, local/provider-backed AI enrichment, and mobile evaluation remain separately approved future work rather than hidden additions to the 0.4.x series.
 
-The `add-srt-transcript-support` 0.4.0 candidate is implemented on 2026-10-03 with opt-in SRT settings, a conservative UTF-8 numbered-cue parser, shared caption timestamp controls, unchanged TXT/VTT rendered goldens, and existing reviewed publication/enrichment guards. Build, zero-warning lint, 523 tests across 41 files, runtime audit, production dependency audit, strict validation, and staging pass. Owner-assisted packaged acceptance and explicit publication approval are recorded, including custom configuration-folder verification on 2026-10-05. Release verification remains pending. See `docs/VERIFICATION.md` for measured bounds, accepted hashes, controlled-I/O lifecycle caveats, and development-only audit findings. Main capability specs remain unchanged until closure.
+The `add-srt-transcript-support` 0.4.0 release shipped on 2026-10-05 with opt-in SRT settings, a conservative UTF-8 numbered-cue parser, shared caption timestamp controls, unchanged TXT/VTT rendered goldens, and existing reviewed publication/enrichment guards. Build, zero-warning lint, 523 tests across 41 files, runtime audit, production dependency audit, strict validation, and staging pass. Owner-assisted packaged acceptance and explicit publication approval are recorded, including custom configuration-folder verification. PR #11 merged; the bare-tag release workflow passed. Downloaded assets match accepted hashes and provenance verification binds the exact tag, commit, and workflow; all nine prior releases remain unchanged. See `docs/VERIFICATION.md` for measured bounds, controlled-I/O lifecycle caveats, and development-only audit findings. Owner Community rescan and main-spec sync/archive remain pending.
 
 ## 11. Foundation acceptance gate
 
