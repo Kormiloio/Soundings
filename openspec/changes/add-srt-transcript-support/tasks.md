@@ -1,6 +1,6 @@
 # Tasks
 
-Implementation and automated/staging gates (sections 1-4) pass on 2026-10-03; packaged desktop acceptance (section 5) completed on 2026-10-04, with controlled-I/O lifecycle checks and later manual-edit caveats recorded in `docs/VERIFICATION.md`. Target 0.4.0 is staged but unreleased. Section 6 remains pending: explicit owner-approved publication/closure. Check items only after their named verification passes.
+Implementation and automated/staging gates (sections 1-4) pass on 2026-10-03; packaged desktop acceptance (section 5) completed with controlled-I/O lifecycle checks and later manual-edit caveats recorded in `docs/VERIFICATION.md`, including custom-folder confirmation on 2026-10-05. Owner-approved 0.4.0 was published and its downloaded assets/provenance verified on 2026-10-05. Tasks 6.2 and 6.3 remain pending because the owner-controlled Community rescan and subsequent spec sync/archive are not yet complete. Check items only after their named verification passes.
 
 ## 1. Pure SRT Parsing
 

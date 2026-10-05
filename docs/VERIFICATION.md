@@ -2,7 +2,13 @@
 
 **Last updated:** 2026-10-03
 
-## Soundings 0.4.0 SRT candidate
+## Soundings 0.4.0 SRT release
+
+Published on 2026-10-05 at [Soundings 0.4.0](https://github.com/Kormiloio/Soundings/releases/tag/0.4.0), neither draft nor prerelease. PR #11 merged as `1969aaaf3d78953f54d66d92cd27ea5eca6147dd`; required PR and merged-main CI passed. Bare tag `0.4.0` resolves to that accepted commit. Release workflow run `37312443088` passed both Build & Verify and Attest & Publish jobs. A fresh download into separate `release/0.4.0-downloaded/` contains exactly the three accepted assets and matches every hash below. `gh attestation verify` passed for all three with repository, signer workflow `.github/workflows/release.yml`, exact source digest, `refs/tags/0.4.0`, and hosted-runner restrictions enforced. Comparing pre/post-publication release IDs, targets, asset IDs/names/sizes/digests confirms all nine prior releases are unchanged.
+
+Git transport failed twice during local sync. The working GitHub API supplied the signed merge commit: its reconstructed Git object hash and tree were verified against GitHub's commit SHA and the accepted branch tree before importing it and fast-forwarding local main. The initial reconstruction failed closed on signature whitespace; the exact representation then matched. Tag creation through GitHub's API emitted the normal push event and ran the unmodified release workflow. No release gate, branch protection, tag identity, or existing release was bypassed or changed.
+
+Owner-controlled Community rescan is still pending. Tasks 6.2 (which includes that rescan) and 6.3 (sync/archive after closure) remain unchecked; the historical pre-publication checkpoints below do not imply those steps are complete.
 
 Pre-publication checkpoint, 2026-10-05: the owner confirmed Soundings remained loaded after changing the disposable vault to `.soundings-acceptance`. A guarded Obsidian CLI query verifies that exact active configuration directory, plugin version 0.4.0, and saved TXT/VTT/SRT enabled formats. Owner confirmed zero shown after correcting the exclusion search to exactly `Excluded` (the initial screenshot included an extra `>` and is not sufficient by itself). Custom-folder candidate assets match the accepted staging bytes. The release-checklist custom configuration requirement is satisfied. The owner's explicit 2026-10-04 publication approval applies to the accepted hashes below; release execution and post-publication verification are next.
 

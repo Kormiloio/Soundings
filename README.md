@@ -2,7 +2,7 @@
 
 Turn transcript files into safe, structured Markdown beside their originals in Obsidian.
 
-This checkout contains the accepted 0.4.0 candidate. Packaged desktop acceptance passed and the owner approved publication; release verification is pending.
+Soundings 0.4.0 adds opt-in SRT transcripts. Packaged desktop acceptance passed, and the published assets match the accepted build with verified provenance.
 
 Soundings recursively finds `.txt`, Zoom-style `.vtt`, and explicitly enabled `.srt` transcripts already stored in your vault. It shows a review plan, lets you choose eligible files, and creates Markdown notes without moving, renaming, deleting, or overwriting existing content.
 
