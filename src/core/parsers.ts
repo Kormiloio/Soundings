@@ -1,6 +1,6 @@
 import type { ParsedTranscript, Result, TranscriptBlock, TranscriptFormat } from "./types";
 
-export type ParseError = "unsupported-encoding" | "empty" | "malformed-vtt" | "unsupported-vtt";
+export type ParseError = "unsupported-encoding" | "empty" | "malformed-vtt" | "unsupported-vtt" | "malformed-srt";
 
 export function decodeUtf8(bytes: Uint8Array): Result<string, "unsupported-encoding"> {
   try {
@@ -186,8 +186,56 @@ export function parseVtt(text: string): Result<ParsedTranscript, "empty" | "malf
   return { ok: true, value: { format: "vtt", blocks: Object.freeze(blocks) } };
 }
 
+const SRT_TIMING = /^(\d{2,}:[0-5]\d:[0-5]\d,\d{3})[ \t]+-->[ \t]+(\d{2,}:[0-5]\d:[0-5]\d,\d{3})$/;
+
+function isSrtCounter(line: string): boolean {
+  return /^\d+$/.test(line) && /[1-9]/.test(line);
+}
+
+function srtTimeIsAfter(end: string, start: string): boolean {
+  // Compare decimal hours as strings so arbitrarily long hours never lose precision.
+  const startColon = start.indexOf(":");
+  const endColon = end.indexOf(":");
+  const startHours = start.slice(0, startColon).replace(/^0+/, "") || "0";
+  const endHours = end.slice(0, endColon).replace(/^0+/, "") || "0";
+  if (endHours.length !== startHours.length) return endHours.length > startHours.length;
+  if (endHours !== startHours) return endHours > startHours;
+  return end.slice(endColon) > start.slice(startColon);
+}
+
+export function parseSrt(text: string): Result<ParsedTranscript, "empty" | "malformed-srt"> {
+  if (text.trim().length === 0) return { ok: false, error: "empty" };
+  const lines = text.split("\n");
+  const blocks: TranscriptBlock[] = [];
+  let index = 0;
+  while (index < lines.length) {
+    if (/^[ \t]*$/.test(lines[index])) { index += 1; continue; }
+    if (!isSrtCounter(lines[index])) return { ok: false, error: "malformed-srt" };
+    const timing = SRT_TIMING.exec(lines[index + 1] ?? "");
+    if (!timing || !srtTimeIsAfter(timing[2], timing[1])) return { ok: false, error: "malformed-srt" };
+    index += 2;
+    const payloadStart = index;
+    while (index < lines.length && !/^[ \t]*$/.test(lines[index])) {
+      if (isSrtCounter(lines[index]) && SRT_TIMING.test(lines[index + 1] ?? "")) {
+        return { ok: false, error: "malformed-srt" };
+      }
+      index += 1;
+    }
+    if (index === payloadStart) return { ok: false, error: "malformed-srt" };
+    blocks.push({
+      text: lines.slice(payloadStart, index).join("\n"),
+      timing: Object.freeze({ start: timing[1].replace(",", "."), end: timing[2].replace(",", ".") })
+    });
+  }
+  return { ok: true, value: { format: "srt", blocks: Object.freeze(blocks) } };
+}
+
 export function parseTranscript(format: TranscriptFormat, bytes: Uint8Array): Result<ParsedTranscript, ParseError> {
   const decoded = decodeUtf8(bytes);
   if (!decoded.ok || decoded.value === undefined) return { ok: false, error: decoded.error ?? "unsupported-encoding" };
-  return format === "txt" ? parseTxt(decoded.value) : parseVtt(decoded.value);
+  switch (format) {
+    case "txt": return parseTxt(decoded.value);
+    case "vtt": return parseVtt(decoded.value);
+    case "srt": return parseSrt(decoded.value);
+  }
 }

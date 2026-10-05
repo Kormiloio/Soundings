@@ -21,10 +21,11 @@ describe("declarative Soundings settings", () => {
   it("indexes output controls and retains non-searchable explanations", () => {
     const { tab } = setup();
     const definitions = tab.getSettingDefinitions();
-    expect(controls(definitions)).toHaveLength(17);
+    expect(controls(definitions)).toHaveLength(18);
     expect(controls(definitions).map((item) => item.name)).toEqual([
       "Convert .txt transcripts",
       "Convert .vtt transcripts",
+      "Convert .srt transcripts",
       "Excluded folders",
       "Maximum transcript bytes",
       "Infer project from folder",
@@ -36,14 +37,14 @@ describe("declarative Soundings settings", () => {
       "Include Action Items section",
       "Include Follow-ups section",
       "Static tags",
-      "WebVTT timestamps",
+      "Caption timestamps",
       "Transcript display",
       "Observe new transcripts",
       "Observation roots"
     ]);
     expect(definitions[0]).toMatchObject({ name: "Soundings safety", searchable: false });
-    expect(definitions[7]).toMatchObject({ name: "Note output", searchable: false });
-    expect(definitions[17]).toMatchObject({ name: "Transcript observation", searchable: false });
+    expect(definitions[8]).toMatchObject({ name: "Note output", searchable: false });
+    expect(definitions[18]).toMatchObject({ name: "Transcript observation", searchable: false });
   });
 
   it("adapts individual controls through validated effective settings", async () => {
@@ -91,5 +92,18 @@ describe("declarative Soundings settings", () => {
     const display = definitions.find((item) => item.name === "Transcript display")!;
     expect(display.control).toMatchObject({ type: "dropdown", options: { plain: "Plain", "folded-callout": "Folded callout" } });
     expect(await display.control?.validate?.("unknown" as never)).toContain("Unsupported transcript display choice");
+  });
+
+  it("keeps SRT opt-in and persists an SRT-only selection", async () => {
+    const { tab, owner } = setup();
+    expect(tab.getControlValue("srt")).toBe(false);
+    const srt = controls(tab.getSettingDefinitions()).find((item) => item.name === "Convert .srt transcripts")!;
+    expect(srt.control).toMatchObject({ type: "toggle", key: "srt" });
+    await tab.setControlValue("srt", true);
+    await tab.setControlValue("txt", false);
+    await tab.setControlValue("vtt", false);
+    expect(tab.getControlValue("srt")).toBe(true);
+    expect(validateSettings(owner.settings, owner.settingsPolicy!.mandatoryExcludedPaths).settings?.enabledFormats).toEqual(["srt"]);
+    expect(owner.settings.observationEnabled).toBe(false);
   });
 });

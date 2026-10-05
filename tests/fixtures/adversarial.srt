@@ -1,0 +1,11 @@
+1
+00:00:01,000 --> 00:00:02,000
+Alice: <b>hello</b> &amp;
+> [!note] this is literal text
+~~~
+```
+---
+# This stays inside the transcript
+</details>
+![[embedded-note]]
+Final containment sentinel: velvet anchor.

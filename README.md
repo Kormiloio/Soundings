@@ -2,12 +2,14 @@
 
 Turn transcript files into safe, structured Markdown beside their originals in Obsidian.
 
-Soundings recursively finds `.txt` and Zoom-style `.vtt` transcripts already stored in your vault. It shows a review plan, lets you choose eligible files, and creates Markdown notes without moving, renaming, deleting, or overwriting existing content.
+This checkout contains the accepted 0.4.0 candidate. Packaged desktop acceptance passed and the owner approved publication; release verification is pending.
+
+Soundings recursively finds `.txt`, Zoom-style `.vtt`, and explicitly enabled `.srt` transcripts already stored in your vault. It shows a review plan, lets you choose eligible files, and creates Markdown notes without moving, renaming, deleting, or overwriting existing content.
 
 ## Requirements
 
 - Obsidian desktop 1.13.7 or later.
-- macOS, Windows, or Linux desktop. Soundings 0.2.0 does not support Android, iOS, or iPadOS.
+- macOS, Windows, or Linux desktop. Soundings does not support Android, iOS, or iPadOS.
 - No account, payment, API key, external program, or network service is required.
 
 ## Installation
@@ -40,6 +42,10 @@ Use a disposable vault with synthetic transcripts for your first rehearsal. Back
 
 Soundings creates each note beside its source. If the intended Markdown destination already exists, Soundings reports the collision and leaves that file untouched.
 
+### Optional SRT input
+
+Enable **Convert .srt transcripts** under **Settings → Soundings** before scanning SubRip files. SRT is off by default, and upgrading preserves your saved format choices. **Caption timestamps** applies to both VTT and SRT; **Transcript display** offers the same plain or folded output. SRT speaker labels and formatting tags remain literal text rather than inferred people or rendered HTML. See [Supported transcripts](docs/SUPPORTED_TRANSCRIPTS.md) for the exact subset and safe refusals.
+
 ### Optional transcript inbox
 
 In **Settings → Soundings**, you can opt in to **Observe new transcripts** and optionally list vault-relative **Observation roots**, one per line. Empty roots mean the whole otherwise-permitted vault. While Obsidian and Soundings are open, newly created supported files are checked after they stabilize and queued in memory. Soundings shows a coalesced local notice; run **Soundings: Review transcript inbox** to recheck the queued paths in the standard review plan. The plan starts with zero selected items and never converts automatically.
@@ -63,7 +69,7 @@ For the exact format and parsing rules, see [Supported transcripts](docs/SUPPORT
 - Discovery is non-mutating and conversion requires an explicit reviewed selection.
 - Transcript and note content remains on your device and inside the active vault.
 - Soundings accesses vault content through Obsidian's public vault APIs; it does not access files outside the active vault.
-- To find transcripts in nested folders, Soundings enumerates file paths throughout the active vault. It reads file content only for enabled `.txt` or `.vtt` candidates that remain after configuration-folder, hidden-folder, Soundings-state, user-exclusion, and size checks.
+- To find transcripts in nested folders, Soundings enumerates file paths throughout the active vault. It reads file content only for enabled `.txt`, `.vtt`, or `.srt` candidates that remain after configuration-folder, hidden-folder, Soundings-state, user-exclusion, and size checks.
 - Soundings makes no network requests, includes no client-side or server-side telemetry, and contains no advertising.
 - Soundings requires no credentials, account, payment, or external service.
 - The optional inbox retains only vault-relative paths, formats, sizes, and content hashes in memory. It does not persist transcript bodies or inbox state.
@@ -72,24 +78,25 @@ See [Privacy and data handling](docs/PRIVACY.md) for the complete disclosure.
 
 ## Settings
 
-Soundings can enable or disable `.txt` and `.vtt` candidates, exclude vault-relative folders, limit source size, optionally infer project metadata from a configured folder root, and opt in to observation with validated vault-relative roots. You can also configure the output profile for generated notes:
+Soundings can enable or disable `.txt`, `.vtt`, and `.srt` candidates (SRT defaults off), exclude vault-relative folders, limit source size, optionally infer project metadata from a configured folder root, and opt in to observation with validated vault-relative roots. You can also configure the output profile for generated notes:
 
 - **Title pattern:** Choose between the source name or the parent folder and source name.
 - **Destination pattern:** Choose between the source name or appending a "Note" suffix.
 - **Enabled sections:** Toggle the visibility of Summary, Decisions, Action Items, and Follow-ups sections.
 - **Static tags:** Add a list of validated YAML tags to every generated note.
-- **Timestamp policy:** Choose whether to omit or retain WebVTT cue timings.
+- **Caption timestamps:** Choose whether to omit or retain VTT/SRT cue timings. Timestamp-like text in TXT is not interpreted.
 - **Transcript display:** Keep the default plain transcript or choose a folded callout labeled **Full Transcript**. Click to expand it; its contents remain searchable. This affects new conversions only. Existing notes are never rewritten.
 
 Hidden folders, Soundings state, user exclusions, and the active vault's configured Obsidian configuration folder remain excluded from scans and observation, even when that folder is not named `.obsidian`.
 
 ## Known limitations
 
-- Version 0.3.0 is desktop-only.
+- Soundings is desktop-only; packaged 0.4.0 acceptance passed on Obsidian 1.13.7.
 - Existing `.md` destinations are always blocked, including previous Soundings output.
 - Updating a source does not update an existing generated note.
 - Plain-text transcripts are preserved without speaker inference.
 - WebVTT support is intentionally strict and may reject provider-specific extensions.
+- SRT supports a conservative numbered-cue UTF-8 subset; unsupported encodings/dialects and ambiguous cue boundaries are refused rather than repaired.
 - The default maximum source size is 5 MB.
 - Automatic conversion, durable/background inbox processing, AI-generated enrichment, audio transcription, external folders, and mobile platforms are not supported.
 

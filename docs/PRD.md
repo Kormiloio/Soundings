@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.3.0 published; Community Review Passed and Health Excellent; folded-transcript change complete
+**Document status:** Soundings 0.3.0 published; 0.4.0 SRT candidate accepted and owner-approved for publication; release verification pending
 **Last updated:** 2026-10-03
 
 ## 1. Product summary
@@ -157,9 +157,29 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 7a. **Post-release Hardening (0.2.2):** bounded linear-time parsing, startup-quiet observation, case-insensitive collision identity, lifecycle guards, note-structure escaping, and fail-closed release tooling, fixing the `0.2.1` code and security review findings.
 7b. **Community Scorecard Correction (0.2.3):** clear the `0.2.0` scorecard's type-safety warning, add a zero-warning type-aware lint gate, and confirm companion-note publication before rescanning the listing.
 8. **Ergonomic Transcript Display (0.3.0, complete and archived as `2026-10-03-add-folded-transcript-callouts`):** optional folded Obsidian callouts (`> [!quote]- Full Transcript`) to optimize note readability for long transcripts without sacrificing full-text search. Automated and owner-assisted packaged desktop acceptance pass. PR #8 merged and bare release tag 0.3.0 published with matching downloaded assets and verified attestations. The owner-reported Community rescan shows Review Passed and Health Excellent, with no actionable warning.
-9. **Expanded Offline Caption Formats:** `.srt` (SubRip) parsing support, followed by offline structured JSON transcript schemas (Whisper / Otter / Zoom).
-10. **Guarded Vault Entity Linking:** opt-in linking of verified speaker names to existing Person notes within configured folders, strictly without automatic note creation.
+9. **Expanded Offline Inputs (proposed 0.4.x series):** deliver SRT support, selected structured TXT layouts, and explicitly identified shared text as separate, independently verified changes. The breakdown below is a planning target, not a release-date commitment. Structured JSON transcript schemas remain later, separately scoped work.
+10. **Guarded Vault Entity Linking (proposed 0.5.0):** opt-in linking of verified speaker names to existing Person notes within configured folders, strictly without automatic note creation. Recognizing a speaker in source text is not the same capability as resolving that person to a vault note.
 11. **Mobile Evaluation:** separately approved Android, iOS, and iPadOS performance and vault-API acceptance.
+
+### Proposed incremental release plan
+
+The owner primarily receives Zoom transcripts, but also receives other people's transcripts, emails, meeting minutes, written notes, and chat text. These sources should retain their identity rather than all being labeled as meeting transcripts. Today, TXT conversion preserves arbitrary decoded text but does not extract speaker or timing structure; general shared-text metadata is not yet implemented.
+
+| Target | Scope | Explicit boundary |
+| --- | --- | --- |
+| 0.4.0 | SRT-only expansion: supported UTF-8 SubRip cues, faithful text and timing, reviewed create-only conversion, existing plain/folded display. Planning change: `add-srt-transcript-support`. | No TXT speaker inference, general-text categories, Person links, new document extraction, AI, or mobile support. |
+| 0.4.1 | Selected structured TXT transcript layouts, based on representative redacted samples, with reliable speaker/timestamp recognition and plain-text preservation for unfamiliar layouts. | No guessing identities or linking speakers to Person notes. Exact layouts and ambiguous-input behavior require their own proposal. |
+| 0.4.2 | Explicit user identification of shared TXT as notes, meeting minutes, correspondence, or chat, with appropriate metadata and sections. | TXT inputs initially; no automatic content classification. Source-kind/schema compatibility and enrichment eligibility require their own design. No direct DOCX, PDF, RTF, HTML, or email-file import. |
+| 0.4.3 | Evidence-driven fixes and review-workflow refinements after using the preceding releases. | Optional checkpoint, not an invented feature quota; skip if there is no justified change. |
+| 0.5.0 | Optional reviewed speaker-to-person linking to existing notes in configured folders, with explicit handling of ambiguous matches. | No automatic Person-note creation, source mutation, or rewriting existing generated notes. |
+
+The proposed 0.4.1 and 0.4.2 numbers describe small additive releases during pre-1.0 development; the usual patch-only convention would instead assign each feature a new minor version. Confirm final numbering in each release proposal. No future version or date is promised by this table.
+
+Each feature gets a separate OpenSpec change, focused automated tests, source/destination safety checks, and packaged disposable-vault desktop acceptance. Main capability specs describe verified behavior and are updated only when the corresponding change is completed. New input formats do not relax the local-only, reviewed, create-only boundaries or permit existing-note rewrites.
+
+Provider-specific JSON, document extraction, safe reconversion, local/provider-backed AI enrichment, and mobile evaluation remain separately approved future work rather than hidden additions to the 0.4.x series.
+
+The `add-srt-transcript-support` 0.4.0 candidate is implemented on 2026-10-03 with opt-in SRT settings, a conservative UTF-8 numbered-cue parser, shared caption timestamp controls, unchanged TXT/VTT rendered goldens, and existing reviewed publication/enrichment guards. Build, zero-warning lint, 523 tests across 41 files, runtime audit, production dependency audit, strict validation, and staging pass. Owner-assisted packaged acceptance and explicit publication approval are recorded, including custom configuration-folder verification on 2026-10-05. Release verification remains pending. See `docs/VERIFICATION.md` for measured bounds, accepted hashes, controlled-I/O lifecycle caveats, and development-only audit findings. Main capability specs remain unchanged until closure.
 
 ## 11. Foundation acceptance gate
 

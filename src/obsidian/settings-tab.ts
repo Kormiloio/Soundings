@@ -14,7 +14,7 @@ import {
 import type { TranscriptFormat } from "../core/types";
 
 type SoundingsSettingKey =
-  | "txt" | "vtt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot"
+  | "txt" | "vtt" | "srt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot"
   | "observationEnabled" | "observationRoots" | "titlePattern" | "destinationNamePattern"
   | "summary" | "decisions" | "action-items" | "follow-ups" | "staticTags" | "timestampPolicy" | "transcriptDisplay";
 
@@ -46,6 +46,7 @@ export class SoundingsSettingTab extends PluginSettingTab {
       },
       this.formatDefinition("txt"),
       this.formatDefinition("vtt"),
+      this.formatDefinition("srt"),
       {
         name: "Excluded folders",
         desc: `One vault-relative folder per line. Hidden folders and ${configDir} remain excluded.`,
@@ -124,8 +125,8 @@ export class SoundingsSettingTab extends PluginSettingTab {
         }
       },
       {
-        name: "WebVTT timestamps",
-        desc: "Omit cue times or retain normalized source start and end times.",
+        name: "Caption timestamps",
+        desc: "Omit VTT/SRT cue times or retain normalized source start and end times.",
         control: {
           type: "dropdown",
           key: "timestampPolicy",
@@ -173,7 +174,8 @@ export class SoundingsSettingTab extends PluginSettingTab {
     const settingKey = key as SoundingsSettingKey;
     switch (settingKey) {
       case "txt":
-      case "vtt": return this.owner.settings.enabledFormats.includes(settingKey);
+      case "vtt":
+      case "srt": return this.owner.settings.enabledFormats.includes(settingKey);
       case "excludedPaths": return this.editableExclusions().join("\n");
       case "maxSourceBytes": return this.owner.settings.maxSourceBytes;
       case "projectInferenceEnabled": return this.owner.settings.projectInferenceEnabled;
@@ -235,7 +237,8 @@ export class SoundingsSettingTab extends PluginSettingTab {
   private candidateFor(key: SoundingsSettingKey, value: unknown): Partial<SoundingsSettings> {
     switch (key) {
       case "txt":
-      case "vtt": {
+      case "vtt":
+      case "srt": {
         const formats = new Set(this.owner.settings.enabledFormats);
         if (value === true) formats.add(key);
         else formats.delete(key);

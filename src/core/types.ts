@@ -1,6 +1,6 @@
 import type { OutputProfile } from "./settings";
 
-export type TranscriptFormat = "txt" | "vtt";
+export type TranscriptFormat = "txt" | "vtt" | "srt";
 
 export type PlanClassification =
   | "eligible"

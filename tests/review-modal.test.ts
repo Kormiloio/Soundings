@@ -21,7 +21,7 @@ function plan(): ConversionPlan {
     settingsFingerprint: "settings",
     outputProfile: DEFAULT_OUTPUT_PROFILE,
     outputProfileFingerprint: "profile",
-    outputProfileSummary: "Title: Source name; destination: Source name.md; sections: Summary; tags: none; WebVTT timestamps: omit.",
+    outputProfileSummary: "Title: Source name; destination: Source name.md; sections: Summary; tags: none; Caption timestamps: omit.",
     items: [
       item("Meetings/Alpha.txt", "eligible", "Meetings/Alpha.md"),
       item("Meetings/Nested/Beta.vtt", "eligible", "Meetings/Nested/Beta.md"),
