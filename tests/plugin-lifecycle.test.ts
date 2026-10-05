@@ -22,6 +22,7 @@ class FakeVault {
   readonly creates: string[] = [];
   readonly listeners: Array<{ readonly name: string; readonly callback: (file: unknown) => void }> = [];
   createGate?: Promise<void>;
+  readGate?: Promise<void>;
   readonly adapter = { exists: async (path: string) => this.files.has(path) };
 
   getFiles(): FakeFile[] {
@@ -32,6 +33,7 @@ class FakeVault {
     return bytes ? fakeFile(path, bytes.byteLength) : null;
   }
   async readBinary(file: FakeFile): Promise<ArrayBuffer> {
+    await this.readGate;
     const bytes = this.files.get(file.path);
     if (!bytes) throw new Error("missing");
     return bytes.slice().buffer;
@@ -126,6 +128,29 @@ describe("plugin lifecycle", () => {
     vi.stubGlobal("activeWindow", globalThis);
   });
   afterEach(() => vi.unstubAllGlobals());
+
+  it.each(["cancel", "unload"])("prevents SRT publication on %s while source validation waits", async (mode) => {
+    const vault = new FakeVault();
+    const body = encoder.encode("1\n00:00:01,000 --> 00:00:02,000\nSilver lantern.");
+    vault.files.set("Meeting.srt", body);
+    const plugin = await loadedPlugin(vault, undefined, { enabledFormats: ["srt"] });
+    await command(plugin, "scan-vault-for-transcripts").callback?.();
+    await settle();
+    const review = modalOf(ReviewModal)!;
+    expect(review).toBeDefined();
+    let release!: () => void;
+    vault.readGate = new Promise<void>((resolve) => { release = resolve; });
+    const converting = (review as unknown as { actions: ReviewActions }).actions.convert(new Set(["Meeting.srt"]));
+    await settle();
+    if (mode === "cancel") modalOf(ProgressModal)!.close();
+    else plugin.onunload();
+    release();
+    await converting;
+    expect(vault.creates).toEqual([]);
+    expect(vault.files.get("Meeting.srt")).toEqual(body);
+    if (mode === "unload") expect(openModals).toEqual([]);
+    else plugin.onunload();
+  });
 
   it("closes an open review on unload and refuses its conversion afterwards", async () => {
     const vault = new FakeVault();

@@ -28,7 +28,7 @@ export function formatForPath(path: string): TranscriptFormat | undefined {
   const dot = path.lastIndexOf(".");
   if (dot < 0) return undefined;
   const extension = path.slice(dot + 1).toLowerCase();
-  return extension === "txt" || extension === "vtt" ? extension : undefined;
+  return extension === "txt" || extension === "vtt" || extension === "srt" ? extension : undefined;
 }
 
 export function isHiddenPath(path: string): boolean {
@@ -90,6 +90,7 @@ export async function discoverTranscriptFile(
       const error = parsed.error;
       if (error === "empty") return { sourcePath: file.path, format, classification: "empty", reason: "Source is empty." };
       if (error === "malformed-vtt") return { sourcePath: file.path, format, classification: "unreadable", reason: "VTT structure is malformed." };
+      if (error === "malformed-srt") return { sourcePath: file.path, format, classification: "unreadable", reason: "SRT structure is malformed or outside the supported numbered-cue subset." };
       if (error === "unsupported-vtt") return { sourcePath: file.path, format, classification: "unsupported", reason: "VTT format is not supported." };
       return { sourcePath: file.path, format, classification: "unreadable", reason: `Parsing failed: ${error}.` };
     }

@@ -248,7 +248,7 @@ export function validateSettings(
   const errors: string[] = [];
   const enabledFormatsRaw = stringListField(input.enabledFormats, DEFAULT_SETTINGS.enabledFormats, "Enabled formats", errors);
   const enabledFormats = [...new Set(enabledFormatsRaw)]
-    .filter((format): format is TranscriptFormat => format === "txt" || format === "vtt");
+    .filter((format): format is TranscriptFormat => format === "txt" || format === "vtt" || format === "srt");
   if (enabledFormats.length === 0) errors.push("Enable at least one transcript format.");
 
   const mandatoryExclusions: string[] = [];
@@ -360,5 +360,5 @@ export function outputProfileSummary(profile: OutputProfile): string {
   const tags = profile.staticTags.join(", ") || "none";
   const timestamps = profile.timestampPolicy === "omit" ? "omit" : "retain";
   const display = profile.transcriptDisplay === "plain" ? "plain" : "folded callout";
-  return `Title: ${title}; destination: ${destination}; sections: ${sections}; tags: ${tags}; WebVTT timestamps: ${timestamps}; transcript: ${display}.`;
+  return `Title: ${title}; destination: ${destination}; sections: ${sections}; tags: ${tags}; Caption timestamps: ${timestamps}; transcript: ${display}.`;
 }

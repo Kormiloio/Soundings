@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 - 2026-10-05
+
+- Add opt-in UTF-8 SubRip (`.srt`) conversion using the existing reviewed, local-only, create-only workflow.
+- Preserve multiline captions, repeated/overlapping cues, and literal payload markup without speaker or identity inference.
+- Reject malformed or ambiguous cue structures without partial output or TXT fallback.
+- Apply the shared **Caption timestamps** policy and plain/folded transcript display to VTT and SRT.
+- Preserve saved format choices and keep SRT disabled by default; existing TXT/VTT rendered output is unchanged.
+- Verify SRT parsing bounds, containment, collisions, stale plans, lifecycle cancellation, observation, and companion enrichment with automated tests and packaged desktop acceptance, including custom configuration-folder exclusions.
+
 ## 0.3.0 — 2026-10-02
 
 - Add an optional **Transcript display** setting: **Folded callout** places the full transcript in a collapsed **Full Transcript** quote callout beneath the Transcript heading, with speaker headings and retained timestamps inside.
