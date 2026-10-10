@@ -1,8 +1,8 @@
 import type { DigestFunction } from "./hash";
 import { sha256 } from "./hash";
 import { parseTranscript } from "./parsers";
-import type { SoundingsSettings } from "./settings";
-import type { PlanClassification, SourceEvidence, TranscriptFormat, VaultFileRef } from "./types";
+import type { SoundingsSettings, TxtLayout } from "./settings";
+import type { PlanClassification, SourceEvidence, TranscriptFormat, VaultFileRef, TxtInterpretation } from "./types";
 
 export interface DiscoveryAdapter {
   listFiles(): readonly VaultFileRef[];
@@ -12,6 +12,8 @@ export interface DiscoveryAdapter {
 }
 
 export interface DiscoveryItem {
+  readonly txtLayout?: TxtLayout;
+  readonly txtInterpretation?: TxtInterpretation;
   readonly sourcePath: string;
   readonly format?: TranscriptFormat;
   readonly classification: PlanClassification;
@@ -85,7 +87,8 @@ export async function discoverTranscriptFile(
       return { sourcePath: file.path, format, classification: "empty", reason: "Source is empty." };
     }
 
-    const parsed = parseTranscript(format, bytes);
+    const txtLayout = settings.txtLayout;
+    const parsed = parseTranscript(format, bytes, txtLayout);
     if (!parsed.ok || !parsed.value) {
       const error = parsed.error;
       if (error === "empty") return { sourcePath: file.path, format, classification: "empty", reason: "Source is empty." };
@@ -101,7 +104,10 @@ export async function discoverTranscriptFile(
       sourcePath: file.path,
       format,
       classification: "eligible",
-      reason: "Ready for review.",
+      reason: format === "txt"
+        ? `Ready for review. TXT interpretation: ${parsed.value.txtInterpretation === "plain-fallback" ? "plain text (layout not recognized; entire source preserved)" : parsed.value.txtInterpretation === "timestamped-speaker" ? "timestamped speaker" : "plain text"}.`
+        : "Ready for review.",
+      ...(format === "txt" ? { txtLayout, txtInterpretation: parsed.value.txtInterpretation } : {}),
       evidence: Object.freeze({ path: file.path, format, byteLength: bytes.byteLength, sha256: sourceHash })
     };
   } catch {

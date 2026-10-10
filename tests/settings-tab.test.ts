@@ -21,11 +21,12 @@ describe("declarative Soundings settings", () => {
   it("indexes output controls and retains non-searchable explanations", () => {
     const { tab } = setup();
     const definitions = tab.getSettingDefinitions();
-    expect(controls(definitions)).toHaveLength(18);
+    expect(controls(definitions)).toHaveLength(19);
     expect(controls(definitions).map((item) => item.name)).toEqual([
       "Convert .txt transcripts",
       "Convert .vtt transcripts",
       "Convert .srt transcripts",
+      "TXT layout",
       "Excluded folders",
       "Maximum transcript bytes",
       "Infer project from folder",
@@ -37,14 +38,14 @@ describe("declarative Soundings settings", () => {
       "Include Action Items section",
       "Include Follow-ups section",
       "Static tags",
-      "Caption timestamps",
+      "Transcript timestamps",
       "Transcript display",
       "Observe new transcripts",
       "Observation roots"
     ]);
     expect(definitions[0]).toMatchObject({ name: "Soundings safety", searchable: false });
-    expect(definitions[8]).toMatchObject({ name: "Note output", searchable: false });
-    expect(definitions[18]).toMatchObject({ name: "Transcript observation", searchable: false });
+    expect(definitions[9]).toMatchObject({ name: "Note output", searchable: false });
+    expect(definitions[19]).toMatchObject({ name: "Transcript observation", searchable: false });
   });
 
   it("adapts individual controls through validated effective settings", async () => {
@@ -104,6 +105,16 @@ describe("declarative Soundings settings", () => {
     await tab.setControlValue("vtt", false);
     expect(tab.getControlValue("srt")).toBe(true);
     expect(validateSettings(owner.settings, owner.settingsPolicy!.mandatoryExcludedPaths).settings?.enabledFormats).toEqual(["srt"]);
+    expect(owner.settings.observationEnabled).toBe(false);
+  });
+
+  it("opts into TXT layout without enabling TXT or observation", async () => {
+    const { tab, owner } = setup();
+    expect(tab.getControlValue("txtLayout")).toBe("plain");
+    await tab.setControlValue("txt", false);
+    await tab.setControlValue("txtLayout", "timestamped-speaker");
+    expect(tab.getControlValue("txtLayout")).toBe("timestamped-speaker");
+    expect(owner.settings.enabledFormats).toEqual(["vtt"]);
     expect(owner.settings.observationEnabled).toBe(false);
   });
 });

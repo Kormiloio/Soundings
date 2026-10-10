@@ -1,4 +1,6 @@
-import type { OutputProfile } from "./settings";
+import type { OutputProfile, TxtLayout } from "./settings";
+
+export type TxtInterpretation = "plain" | "timestamped-speaker" | "plain-fallback";
 
 export type TranscriptFormat = "txt" | "vtt" | "srt";
 
@@ -37,6 +39,8 @@ export interface SourceEvidence {
 }
 
 export interface PlanItem {
+  readonly txtInterpretation?: TxtInterpretation;
+  readonly txtLayout?: TxtLayout;
   readonly sourcePath: string;
   readonly destinationPath?: string;
   readonly format?: TranscriptFormat;
@@ -49,6 +53,7 @@ export interface PlanItem {
 }
 
 export interface ConversionPlan {
+  readonly txtLayout?: TxtLayout;
   readonly id: string;
   readonly settingsFingerprint: string;
   readonly outputProfile: OutputProfile;
@@ -68,6 +73,7 @@ export interface TranscriptBlock {
 }
 
 export interface ParsedTranscript {
+  readonly txtInterpretation?: TxtInterpretation;
   readonly format: TranscriptFormat;
   readonly blocks: readonly TranscriptBlock[];
 }

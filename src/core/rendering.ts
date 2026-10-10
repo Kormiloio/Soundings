@@ -76,7 +76,7 @@ export function renderMarkdown(
     `source: ${yamlScalar("transcript")}`,
     `source_file: ${yamlScalar(metadata.sourceFile)}`,
     `source_format: ${yamlScalar(metadata.sourceFormat)}`,
-    `soundings_version: ${noteSchemaVersion(profile)}`,
+    `soundings_version: ${transcript.txtInterpretation === "timestamped-speaker" ? 2 : noteSchemaVersion(profile)}`,
     `converted_at: ${yamlScalar(metadata.convertedAt)}`,
     ...(metadata.project ? [`project: ${yamlScalar(metadata.project)}`] : []),
     ...(profile.staticTags.length > 0 ? [`tags: ${JSON.stringify(profile.staticTags)}`] : []),

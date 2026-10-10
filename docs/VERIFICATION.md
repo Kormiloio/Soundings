@@ -8,7 +8,7 @@ Published on 2026-10-05 at [Soundings 0.4.0](https://github.com/Kormiloio/Soundi
 
 Git transport failed twice during local sync. The working GitHub API supplied the signed merge commit: its reconstructed Git object hash and tree were verified against GitHub's commit SHA and the accepted branch tree before importing it and fast-forwarding local main. The initial reconstruction failed closed on signature whitespace; the exact representation then matched. Tag creation through GitHub's API emitted the normal push event and ran the unmodified release workflow. No release gate, branch protection, tag identity, or existing release was bypassed or changed.
 
-Owner-controlled Community rescan is still pending. Tasks 6.2 (which includes that rescan) and 6.3 (sync/archive after closure) remain unchecked; the historical pre-publication checkpoints below do not imply those steps are complete.
+Owner-controlled Community review was confirmed on 2026-10-09: the owner supplied the current public Soundings listing showing Review: Passed, alongside a 0.4.0 description and current-version details. The owner explicitly authorized SRT spec synchronization and archival. Tasks 6.2 and 6.3 are now complete; historical pending statements below describe their original checkpoints.
 
 Pre-publication checkpoint, 2026-10-05: the owner confirmed Soundings remained loaded after changing the disposable vault to `.soundings-acceptance`. A guarded Obsidian CLI query verifies that exact active configuration directory, plugin version 0.4.0, and saved TXT/VTT/SRT enabled formats. Owner confirmed zero shown after correcting the exclusion search to exactly `Excluded` (the initial screenshot included an extra `>` and is not sufficient by itself). Custom-folder candidate assets match the accepted staging bytes. The release-checklist custom configuration requirement is satisfied. The owner's explicit 2026-10-04 publication approval applies to the accepted hashes below; release execution and post-publication verification are next.
 
@@ -463,3 +463,69 @@ The minimum supported Obsidian desktop version is therefore pinned to 1.13.7. Th
 ## Deferred platform acceptance
 
 The first release is desktop-only. Android, iOS, and iPadOS performance, source-size, create-existing, and read-back acceptance are deferred to a separately approved future change.
+
+## Structured TXT 0.4.1 Development Checkpoint (2026-10-06)
+
+Change: `add-timestamped-speaker-txt`. This is an uncommitted development candidate, not a published release or a completed desktop acceptance claim. Runtime version metadata remains 0.4.0 intentionally until release preparation is authorized.
+
+- `npm run check`: build, zero-warning lint, and 560 tests across 42 files pass.
+- `npx openspec validate --all --strict`: all 10 changes/specs pass; long-requirement informational notices remain.
+- `npm run audit:runtime`: passes without new runtime dependencies, network, telemetry, destructive vault APIs, or source-warning patterns.
+- `npm audit --omit=dev`: zero vulnerabilities.
+- `git diff --check`: passes.
+- `npx vitest run tests/txt-layout.test.ts --reporter=verbose`: near-4.9 MB recognition/rendering plus two approximately 1 MB adversarial fallback inputs took 64.6 ms in the recorded desktop run, preserving every block. Timing is a local observation, not a cross-device guarantee.
+- Coverage includes migration defaults, Unicode/multiline recognition, overlaps and repetition, whole-file fallback, encoding refusal, four display/timing combinations, literal containment, schema-2 companion publication, observation/inbox policy consistency, source/settings/captured-policy staleness, cancellation during read, destination races, read-back mismatch, and failure isolation. Existing TXT/VTT/SRT goldens and plugin unload tests remain green.
+- The TXT delta carries the complete existing Versioned Markdown contract, with only its legacy plain-display compatibility scenario scoped to interpretations supported by 0.2.3. Main specs and active SRT deltas are unchanged; no predecessor review or closure is implied.
+
+### Isolated Desktop Rehearsal
+
+Staged vault: `test-vault/txt-layout-041`, separate from the previously installed acceptance/work vaults. It has only synthetic Recognized/Fallback TXT sources. Observation is off; TXT layout is opted in, with retain/folded output. Assets are copied from the checked build; the manifest still says 0.4.0, so it must not be mistaken for the published package.
+
+| Staged file | SHA-256 |
+| --- | --- |
+| `.obsidian/plugins/soundings/main.js` | `9c08a3e44e3617577c97dd0a027722a9bba7af391a9ca35154de19260642d6b3` |
+| `.obsidian/plugins/soundings/manifest.json` | `0b61765611876bb97fe558fac777c7c93eae20613c7d8283f978db58a5756cfa` |
+| `.obsidian/plugins/soundings/styles.css` | `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9` |
+| `Meetings/Recognized.txt` | `25b62913377c9ab26bec50d570a92797eb96031572476b4d0f081513619b594e` |
+| `Meetings/Fallback.txt` | `f090be3a51b87d7792bcc38ef69aea8f5bdabe3323ba6981af4385436463588a` |
+
+### Owner-Assisted Desktop Acceptance (2026-10-08 through 2026-10-09)
+
+The named desktop checks passed in the isolated vault. Screenshots supplied by the owner are preserved locally in `test-vault/txt-layout-041-evidence/` (Git-ignored, not release assets). No existing installed work-vault plugin was replaced.
+
+- Unselected review distinguished timestamped-speaker recognition from whole-file plain fallback (`recognized-fallback-plan.png`). Explicit conversion reported creation and read-back verification.
+- Reading-view screenshots cover all four output combinations: `folded-retain.png`, `folded-omit.png`, `plain-retain.png`, and `plain-omit.png`. Speaker labels, multiline text, source order, overlapping times when retained, and both repeated captions remained visible.
+- `collapsed-search.png` shows the transcript callout collapsed while vault search still finds its synthetic phrase.
+- `fallback-render.png` shows the unfamiliar preamble, blank separator, timing syntax, and speaker label retained as one literal block. `default-plain.png` independently confirms the opt-out layout preserves the entire source as literal text rather than interpreting times or speakers.
+- Schema-2 companion publication and its backlink were exercised (`companion.png`, `backlink.png`). These screenshots verify the published companion and navigation; they are not a historical before/after hash comparison of the transcript note.
+- Repeat discovery refused existing destinations (`existing-destinations.png`). A marker note deliberately created after preview caused `blocked: 1`, with `Destination already exists` (`destination-race.png`). Its SHA-256 was identical before and after execution: `cd9d37fb731bc451d0f52a74033a5a64760984b49a364847da17b3cd89c5d513`.
+- Deliberately changing only the synthetic `Stale-source.txt` after preview produced `stale: 1`, `skipped: 6`; the owner confirmed `Source changed after preview`. No `Stale-source.md` was created. This result was owner-reported, not screenshot-captured.
+- Changing TXT layout through the macOS Obsidian Preferences menu while the reviewed plan remained open produced `stale: 1`, `Settings changed after preview` (`stale-layout.png`). No `Stale-layout.md` was created. The keyboard shortcut had not opened settings while the plan was active; the menu route worked.
+- Controlled cancellation passed with three fresh `Cancel-pause-*.txt` fixtures (`cancel-click.png`, `cancel-results.png`): `canceled: 3`, `skipped: 15`, and no three corresponding destinations. With the owner's approval, a Console harness temporarily wrapped the public vault `readBinary` method for these exact paths in this named disposable vault. It restored the original method on the first matching read, before a 60-second delay, and had an idle restoration timeout. The owner clicked Cancel remaining during the delayed read. This is an assisted delayed-I/O check, not an unmodified-speed measurement; saved plugin assets were untouched.
+- Earlier cancellation attempts are not passes: a 15-second delay expired before cancellation took effect and created three notes; another three-file batch was converted before the longer harness was installed. Those notes were left intact, and fresh names were used for the passing attempt.
+- Final asset hashes match the staging table above. `Recognized.txt` and `Fallback.txt` still match their original hashes. `Folded-omit.txt`, `Plain-omit.txt`, `Plain-retain.txt`, and `Default-plain.txt` all match the original recognized fixture hash. The deliberately edited stale-source fixture is excluded from this unchanged-source claim.
+
+The canceled sources matched their pre-run SHA-256 values exactly:
+
+| Source | Before and after SHA-256 |
+| --- | --- |
+| `Meetings/Cancel-pause-1.txt` | `01d39444774dc1770e51d16cce4fdb60faa48d7a667321248a974bc5fe71ee0a` |
+| `Meetings/Cancel-pause-2.txt` | `4890cdad7a31e9d230ed8efaab9e1b00ff64fef86b0c549b4972af1be50f653e` |
+| `Meetings/Cancel-pause-3.txt` | `88669fba0a1508d2ef99aeb26d82c77fe0580da9dcaa002d6a798b2d66d0f4e8` |
+
+Task 5.3 is complete with these recorded evidence limitations and controlled-I/O caveats. On 2026-10-09, the owner supplied the public Soundings listing showing Review: Passed and separately showing current version 0.4.0; the review screenshot is preserved as `predecessor-review-passed.png`. The owner explicitly approved preparing and publishing 0.4.1, and separately approved synchronization and archival of the completed SRT change. The eight main specs validate strictly after the SRT merge. The four official Obsidian release/policy pages linked in `docs/RELEASING.md` were rechecked on 2026-10-09. GitHub confirms default branch main. All ten existing release inventories were captured before release preparation; 0.4.0 assets still have their previously verified digests.
+
+Release preparation is authorized, not publication proof. Version metadata and release notes are being prepared for 0.4.1. The final versioned package still requires the repository's custom-configuration-folder desktop check before tagging. No 0.4.1 tag, push, release, or network-backed enrichment has occurred at this checkpoint.
+
+### Versioned Release Preparation (2026-10-09)
+
+The SRT change was synchronized into all three main capabilities, strictly validated, and archived at `openspec/changes/archive/2026-10-09-add-srt-transcript-support/` with owner authorization. The 0.4.1 prerequisite task 5.4 is complete; publication itself remains a separate release-checklist gate.
+
+- Package, lockfile, manifest, and compatibility map now agree on 0.4.1, retaining every prior compatibility entry and Obsidian 1.13.7 minimum.
+- Fresh `npm ci`, `npm run check` (560 tests, 42 files), `npm run audit:runtime`, `npm audit --omit=dev` (zero vulnerabilities), `npx openspec validate --all --strict` (10 items), and `git diff --check` pass. Installation reports the existing development ESLint deprecation and fsevents install-script allow-list notice; no runtime dependency was added.
+- `npm run release:prepare -- --tag 0.4.1` stages exactly three assets: main.js `9c08a3e44e3617577c97dd0a027722a9bba7af391a9ca35154de19260642d6b3`, manifest.json `80d4e9bfe5f7a0d2854b299c681c22f48c2fcb278c13269184325bb749824777`, styles.css `84ce64b426a6fac9eaf0f91010e1995fb52bcd97cf4c8235f47e7449f8a713e9`. Runtime JavaScript/styles match the accepted development candidate; only manifest version metadata changed.
+- Those exact staged assets were copied into the disposable vault's fresh `.soundings-config-041/plugins/soundings/`. This custom configuration path contains a synthetic `Private-config.txt` exclusion sentinel; the public `Meetings/Package-check.txt` is a fresh structured candidate. Observation remains disabled.
+
+Final versioned package acceptance passed on 2026-10-09. Obsidian's UI requires a dot-prefixed override folder, so the newly prepared test configuration was renamed to `.soundings-config-041` before use. The owner entered that exact override and relaunched (`custom-config-setting.png`), confirmed installed version 0.4.1, and reported no matches for Private-config. The latter two observations were owner-reported rather than screenshot-captured. Fresh review showed one Package-check candidate, zero selected, recognized TXT, retained times, and folded display (`package-plan.png`). Explicit conversion reported one created and 18 skipped (`package-results.png`); the rendered note shows its exact retained range, speaker heading, and literal dialogue (`package-render.png`). Disk inspection confirms TXT schema 2, complete fenced content, and both fixture hashes unchanged: Package-check.txt `0ab918ba733fbdf397a1bde5ad1c9a8c2a2db095c0653f9b128efb6cf8bc0571`, private sentinel `94851a7e2906092af6d0b8d2d2e8cac52e514d8e942dfa5af3ea8eb3381d331e`. Installed assets match the staged hashes above. No private-sentinel destination was created. No work-vault configuration or prior release was modified. The unrelated `document-provider-compatibility` planning change remains outside this release's intended commit scope.
+
+The final package is accepted for the already-authorized 0.4.1 publication. A protected-main PR, passing CI, bare tag, workflow success, downloaded asset hash comparison, attestation verification, and prior-release inventory comparison remain required before claiming publication verified.

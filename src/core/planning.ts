@@ -153,6 +153,7 @@ export function buildPlan(
       : item
   ));
   return Object.freeze({
+    txtLayout: settings.txtLayout,
     id: idFactory?.() ?? (() => { throw new Error("secure-id-unavailable"); })(),
     settingsFingerprint: settingsFingerprint(settings),
     outputProfile: settings.outputProfile,
