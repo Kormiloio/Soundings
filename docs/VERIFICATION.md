@@ -541,3 +541,11 @@ The final package is accepted for the already-authorized 0.4.1 publication. A pr
 - Pre/post publication API inventories confirm all ten prior release IDs, asset IDs, names, and digests remain unchanged. No prior release or asset was modified.
 
 GitHub publication is verified. The owner-controlled Community rescan for 0.4.1 is still pending; the earlier Review: Passed screenshot covers 0.4.0 only. The completed TXT change remains active until its spec synchronization/archive is explicitly authorized. No Community account or policy action was automated.
+
+### Community Review and Change Closure (2026-10-09)
+
+The owner supplied a new public Soundings listing screenshot showing current version 0.4.1, an Updates entry for 0.4.1, Health Excellent, and Review Passed. It is preserved locally as `test-vault/txt-layout-041-evidence/community-041-passed.png`. This confirms the public listing's release version and review status; it is not a claim about private administrative review details. The Updates date is Oct 10, consistent with the release's UTC publication date, while the local release date is Oct 9.
+
+The owner explicitly authorized recording this result, synchronizing the completed TXT delta, and archiving the change. Conversion-planning gains one review-bound TXT interpretation requirement. Transcript-conversion gains two structured TXT requirements and updates faithful plain-text conversion and the legacy plain-display compatibility scenario. All five delta requirement blocks match the synchronized main specs, and every unrelated requirement remains unchanged, including VTT/SRT behavior. All eight main specs pass strict validation.
+
+All 15 tasks and planning artifacts were complete before archival. The change, including its `.openspec.yaml`, is archived at `openspec/changes/archive/2026-10-09-add-timestamped-speaker-txt/`. The earlier pending statements above are historical checkpoints, now resolved. No runtime code, immutable release, Community account action, or unrelated document-provider planning was changed during closure.
