@@ -15,6 +15,7 @@ import type { TranscriptFormat } from "../core/types";
 
 type SoundingsSettingKey =
   | "txt" | "vtt" | "srt" | "excludedPaths" | "maxSourceBytes" | "projectInferenceEnabled" | "projectRoot"
+  | "txtLayout"
   | "observationEnabled" | "observationRoots" | "titlePattern" | "destinationNamePattern"
   | "summary" | "decisions" | "action-items" | "follow-ups" | "staticTags" | "timestampPolicy" | "transcriptDisplay";
 
@@ -47,6 +48,14 @@ export class SoundingsSettingTab extends PluginSettingTab {
       this.formatDefinition("txt"),
       this.formatDefinition("vtt"),
       this.formatDefinition("srt"),
+      {
+        name: "TXT layout",
+        desc: "Unrecognized timestamped-speaker files remain intact as plain text.",
+        control: {
+          type: "dropdown", key: "txtLayout",
+          options: { plain: "Plain text", "timestamped-speaker": "Timestamped speaker" }
+        }
+      },
       {
         name: "Excluded folders",
         desc: `One vault-relative folder per line. Hidden folders and ${configDir} remain excluded.`,
@@ -125,8 +134,8 @@ export class SoundingsSettingTab extends PluginSettingTab {
         }
       },
       {
-        name: "Caption timestamps",
-        desc: "Omit VTT/SRT cue times or retain normalized source start and end times.",
+        name: "Transcript timestamps",
+        desc: "Omit or retain source start and end times in VTT, SRT, and recognized TXT.",
         control: {
           type: "dropdown",
           key: "timestampPolicy",
@@ -173,6 +182,7 @@ export class SoundingsSettingTab extends PluginSettingTab {
   getControlValue(key: string): unknown {
     const settingKey = key as SoundingsSettingKey;
     switch (settingKey) {
+      case "txtLayout": return this.owner.settings.txtLayout;
       case "txt":
       case "vtt":
       case "srt": return this.owner.settings.enabledFormats.includes(settingKey);
@@ -236,6 +246,7 @@ export class SoundingsSettingTab extends PluginSettingTab {
 
   private candidateFor(key: SoundingsSettingKey, value: unknown): Partial<SoundingsSettings> {
     switch (key) {
+      case "txtLayout": return { ...this.owner.settings, txtLayout: value === "timestamped-speaker" ? "timestamped-speaker" : "plain" };
       case "txt":
       case "vtt":
       case "srt": {

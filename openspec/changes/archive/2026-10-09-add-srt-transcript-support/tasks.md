@@ -1,6 +1,6 @@
 # Tasks
 
-Implementation and automated/staging gates (sections 1-4) pass on 2026-10-03; packaged desktop acceptance (section 5) completed with controlled-I/O lifecycle checks and later manual-edit caveats recorded in `docs/VERIFICATION.md`, including custom-folder confirmation on 2026-10-05. Owner-approved 0.4.0 was published and its downloaded assets/provenance verified on 2026-10-05. Tasks 6.2 and 6.3 remain pending because the owner-controlled Community rescan and subsequent spec sync/archive are not yet complete. Check items only after their named verification passes.
+Implementation, automated gates, packaged desktop acceptance, and owner-approved publication passed as recorded in docs/VERIFICATION.md. On 2026-10-09 the owner supplied the public Soundings listing showing Review: Passed alongside the 0.4.0 description and version details, and explicitly authorized specification synchronization and archival. All three SRT capability deltas are synchronized and strictly validated; closure is complete.
 
 ## 1. Pure SRT Parsing
 
@@ -40,5 +40,5 @@ Implementation and automated/staging gates (sections 1-4) pass on 2026-10-03; pa
 ## 6. Owner-Approved Release and Closure
 
 - [x] 6.1 Obtain explicit owner publication approval only after automated and packaged acceptance pass; verify the approval and accepted asset hashes are recorded before any tag/release mutation.
-- [ ] 6.2 Publish through the existing bare-tag attested release workflow; verify downloaded runtime assets match accepted hashes, attestations bind the approved source/tag, prior releases are unchanged, and the owner-controlled Community rescan has no actionable warnings.
-- [ ] 6.3 Update PRD/project/verification records with actual shipped scope and results, sync the verified delta specs, and archive this change; verify strict main-spec validation passes and every task has genuine supporting evidence.
+- [x] 6.2 Publish through the existing bare-tag attested release workflow; verify downloaded runtime assets match accepted hashes, attestations bind the approved source/tag, prior releases are unchanged, and the owner-controlled Community rescan has no actionable warnings.
+- [x] 6.3 Update PRD/project/verification records with actual shipped scope and results, sync the verified delta specs, and archive this change; verify strict main-spec validation passes and every task has genuine supporting evidence.

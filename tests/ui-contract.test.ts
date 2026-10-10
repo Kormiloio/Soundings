@@ -26,7 +26,7 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(settings).toContain("getControlValue(key: string)");
     expect(settings).toContain("setControlValue(key: string, value: unknown)");
     expect(settings).not.toContain("display(): void");
-    expect(settings.match(/type: "(?:toggle|textarea|number|text|dropdown)"/g)).toHaveLength(13);
+    expect(settings.match(/type: "(?:toggle|textarea|number|text|dropdown)"/g)).toHaveLength(14);
     expect(settings).toContain('this.formatDefinition("txt")');
     expect(settings).toContain('this.formatDefinition("vtt")');
     expect(settings).toContain("validate: (value)");

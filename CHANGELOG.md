@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1 - 2026-10-09
+
+- Add an opt-in **TXT layout: Timestamped speaker** choice for blank-separated `HH:MM:SS --> HH:MM:SS` ranges followed by `Speaker: dialogue`.
+- Preserve multiline dialogue, Unicode speaker labels, overlapping ranges, repeated captions, and source order without identity inference.
+- Keep **Plain text** as the default. Unrecognized or mixed layouts preserve the entire source as one literal block rather than partially interpreting it.
+- Show the selected layout and actual TXT interpretation before conversion; changing layout or source evidence after preview invalidates publication.
+- Apply plain/folded display and omit/retain timing choices to recognized TXT using schema 2, compatible with manual companion enrichment.
+- Rename the shared timing control to **Transcript timestamps**; unchanged plain TXT, VTT, and SRT output remains compatible.
+- Retain local-only, reviewed, create-only conversion. Existing transcripts and notes are never rewritten.
+
 ## 0.4.0 - 2026-10-05
 
 - Add opt-in UTF-8 SubRip (`.srt`) conversion using the existing reviewed, local-only, create-only workflow.

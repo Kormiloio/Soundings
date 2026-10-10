@@ -1,4 +1,5 @@
 import type { ParsedTranscript, Result, TranscriptBlock, TranscriptFormat } from "./types";
+import type { TxtLayout } from "./settings";
 
 export type ParseError = "unsupported-encoding" | "empty" | "malformed-vtt" | "unsupported-vtt" | "malformed-srt";
 
@@ -12,9 +13,42 @@ export function decodeUtf8(bytes: Uint8Array): Result<string, "unsupported-encod
   }
 }
 
-export function parseTxt(text: string): Result<ParsedTranscript, "empty"> {
+export function parseTxt(text: string, layout: TxtLayout = "plain"): Result<ParsedTranscript, "empty"> {
   if (text.length === 0) return { ok: false, error: "empty" };
-  return { ok: true, value: { format: "txt", blocks: Object.freeze([{ text }]) } };
+  const fallback = (): Result<ParsedTranscript, "empty"> => ({
+    ok: true, value: { format: "txt", txtInterpretation: layout === "plain" ? "plain" : "plain-fallback", blocks: Object.freeze([{ text }]) }
+  });
+  if (layout !== "timestamped-speaker") return fallback();
+  const lines = text.split("\n");
+  const blocks: TranscriptBlock[] = [];
+  let index = 0;
+  while (index < lines.length) {
+    if (/^[ \t]*$/.test(lines[index])) { index += 1; continue; }
+    const timing = /^[ \t]*(\d{2}:[0-5]\d:[0-5]\d)[ \t]*-->[ \t]*(\d{2}:[0-5]\d:[0-5]\d)[ \t]*$/.exec(lines[index]);
+    if (!timing || timing[2] <= timing[1]) return fallback();
+    const first = lines[index + 1] ?? "";
+    let delimiter = -1;
+    for (let cursor = 0; cursor < first.length - 1; cursor += 1) {
+      if (first[cursor] === ":" && (first[cursor + 1] === " " || first[cursor + 1] === "\t")) { delimiter = cursor; break; }
+    }
+    if (delimiter < 0) return fallback();
+    const speaker = first.slice(0, delimiter).trim();
+    let dialogueStart = delimiter + 1;
+    while (first[dialogueStart] === " " || first[dialogueStart] === "\t") dialogueStart += 1;
+    const dialogue = first.slice(dialogueStart);
+    if (!speaker || !dialogue.trim()) return fallback();
+    index += 2;
+    const payload = [dialogue];
+    while (index < lines.length && !/^[ \t]*$/.test(lines[index])) {
+      // A possible missing cue separator must not silently turn a time range into dialogue.
+      if (/^[ \t]*\d+:/.test(lines[index]) && lines[index].includes("-->")) return fallback();
+      payload.push(lines[index]);
+      index += 1;
+    }
+    blocks.push(Object.freeze({ speaker, text: payload.join("\n"), timing: Object.freeze({ start: timing[1], end: timing[2] }) }));
+  }
+  if (blocks.length === 0) return fallback();
+  return { ok: true, value: { format: "txt", txtInterpretation: "timestamped-speaker", blocks: Object.freeze(blocks) } };
 }
 
 const TIMING = /^(\d{2,}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})\s+-->\s+(\d{2,}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})(?:\s+.*)?$/;
@@ -230,11 +264,11 @@ export function parseSrt(text: string): Result<ParsedTranscript, "empty" | "malf
   return { ok: true, value: { format: "srt", blocks: Object.freeze(blocks) } };
 }
 
-export function parseTranscript(format: TranscriptFormat, bytes: Uint8Array): Result<ParsedTranscript, ParseError> {
+export function parseTranscript(format: TranscriptFormat, bytes: Uint8Array, txtLayout: TxtLayout = "plain"): Result<ParsedTranscript, ParseError> {
   const decoded = decodeUtf8(bytes);
   if (!decoded.ok || decoded.value === undefined) return { ok: false, error: decoded.error ?? "unsupported-encoding" };
   switch (format) {
-    case "txt": return parseTxt(decoded.value);
+    case "txt": return parseTxt(decoded.value, txtLayout);
     case "vtt": return parseVtt(decoded.value);
     case "srt": return parseSrt(decoded.value);
   }

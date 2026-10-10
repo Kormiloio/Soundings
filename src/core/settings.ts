@@ -6,6 +6,7 @@ export type TitlePattern = "source-name" | "parent-folder-source-name";
 export type DestinationNamePattern = "source-name" | "source-name-note";
 export type TimestampPolicy = "omit" | "retain";
 export type TranscriptDisplay = "plain" | "folded-callout";
+export type TxtLayout = "plain" | "timestamped-speaker";
 
 export interface OutputProfile {
   readonly titlePattern: TitlePattern;
@@ -17,6 +18,7 @@ export interface OutputProfile {
 }
 
 export interface SoundingsSettings {
+  readonly txtLayout: TxtLayout;
   readonly enabledFormats: readonly TranscriptFormat[];
   readonly excludedPaths: readonly string[];
   readonly maxSourceBytes: number;
@@ -40,6 +42,7 @@ export const DEFAULT_OUTPUT_PROFILE: OutputProfile = Object.freeze({
 });
 
 export const DEFAULT_SETTINGS: SoundingsSettings = Object.freeze({
+  txtLayout: "plain",
   enabledFormats: Object.freeze<TranscriptFormat[]>(["txt", "vtt"]),
   excludedPaths: Object.freeze([SOUNDINGS_STATE_PATH]),
   maxSourceBytes: DEFAULT_MAX_SOURCE_BYTES,
@@ -206,6 +209,7 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 const SAVED_FIELD_TYPES: Readonly<Record<keyof SoundingsSettings, (value: unknown) => boolean>> = Object.freeze({
+  txtLayout: (value) => value === "plain" || value === "timestamped-speaker",
   enabledFormats: isStringArray,
   excludedPaths: isStringArray,
   maxSourceBytes: (value) => typeof value === "number",
@@ -294,6 +298,7 @@ export function validateSettings(
   if (errors.length > 0) return { errors };
   return {
     settings: Object.freeze({
+      txtLayout: input.txtLayout === "timestamped-speaker" ? "timestamped-speaker" : "plain",
       enabledFormats: Object.freeze(enabledFormats),
       excludedPaths: Object.freeze([...new Set([...mandatoryExclusions, ...exclusions])]),
       maxSourceBytes,
@@ -325,6 +330,7 @@ export function migrateSavedSettings(
 
 export function settingsFingerprint(settings: SoundingsSettings): string {
   return JSON.stringify({
+    txtLayout: settings.txtLayout,
     enabledFormats: [...settings.enabledFormats].sort(),
     excludedPaths: [...settings.excludedPaths].sort(),
     maxSourceBytes: settings.maxSourceBytes,
@@ -360,5 +366,5 @@ export function outputProfileSummary(profile: OutputProfile): string {
   const tags = profile.staticTags.join(", ") || "none";
   const timestamps = profile.timestampPolicy === "omit" ? "omit" : "retain";
   const display = profile.transcriptDisplay === "plain" ? "plain" : "folded callout";
-  return `Title: ${title}; destination: ${destination}; sections: ${sections}; tags: ${tags}; Caption timestamps: ${timestamps}; transcript: ${display}.`;
+  return `Title: ${title}; destination: ${destination}; sections: ${sections}; tags: ${tags}; Transcript timestamps: ${timestamps}; transcript: ${display}.`;
 }

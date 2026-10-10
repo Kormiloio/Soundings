@@ -2,7 +2,7 @@
 
 Turn transcript files into safe, structured Markdown beside their originals in Obsidian.
 
-Soundings 0.4.0 adds opt-in SRT transcripts. Packaged desktop acceptance passed, and the published assets match the accepted build with verified provenance.
+Soundings 0.4.1 adds opt-in timestamped-speaker TXT conversion, with whole-file plain fallback and reviewed, create-only publication. Release-candidate desktop acceptance passed; publication verification is pending.
 
 Soundings recursively finds `.txt`, Zoom-style `.vtt`, and explicitly enabled `.srt` transcripts already stored in your vault. It shows a review plan, lets you choose eligible files, and creates Markdown notes without moving, renaming, deleting, or overwriting existing content.
 
@@ -44,7 +44,11 @@ Soundings creates each note beside its source. If the intended Markdown destinat
 
 ### Optional SRT input
 
-Enable **Convert .srt transcripts** under **Settings → Soundings** before scanning SubRip files. SRT is off by default, and upgrading preserves your saved format choices. **Caption timestamps** applies to both VTT and SRT; **Transcript display** offers the same plain or folded output. SRT speaker labels and formatting tags remain literal text rather than inferred people or rendered HTML. See [Supported transcripts](docs/SUPPORTED_TRANSCRIPTS.md) for the exact subset and safe refusals.
+Enable **Convert .srt transcripts** under **Settings → Soundings** before scanning SubRip files. SRT is off by default, and upgrading preserves your saved format choices. **Transcript timestamps** applies to VTT, SRT, and recognized structured TXT; **Transcript display** offers the same plain or folded output. SRT speaker labels and formatting tags remain literal text rather than inferred people or rendered HTML. See [Supported transcripts](docs/SUPPORTED_TRANSCRIPTS.md) for the exact subset and safe refusals.
+
+### Structured TXT (0.4.1)
+
+**TXT layout** defaults to **Plain text**. Opt in to **Timestamped speaker** for blank-separated blocks consisting of an `HH:MM:SS --> HH:MM:SS` range followed by `Speaker: dialogue`. Recognized files become speaker blocks with optional retained times. If any block is unfamiliar, the entire file stays intact as plain text; review shows the actual interpretation before selection. Speaker labels do not link to Person notes. This candidate is not yet desktop-accepted or released.
 
 ### Optional transcript inbox
 
@@ -84,7 +88,8 @@ Soundings can enable or disable `.txt`, `.vtt`, and `.srt` candidates (SRT defau
 - **Destination pattern:** Choose between the source name or appending a "Note" suffix.
 - **Enabled sections:** Toggle the visibility of Summary, Decisions, Action Items, and Follow-ups sections.
 - **Static tags:** Add a list of validated YAML tags to every generated note.
-- **Caption timestamps:** Choose whether to omit or retain VTT/SRT cue timings. Timestamp-like text in TXT is not interpreted.
+- **TXT layout:** Plain text by default, or opt-in Timestamped speaker recognition with whole-file plain fallback.
+- **Transcript timestamps:** Choose whether to omit or retain VTT/SRT timings and recognized TXT time ranges. Plain TXT and fallback keep timestamp-like text literal.
 - **Transcript display:** Keep the default plain transcript or choose a folded callout labeled **Full Transcript**. Click to expand it; its contents remain searchable. This affects new conversions only. Existing notes are never rewritten.
 
 Hidden folders, Soundings state, user exclusions, and the active vault's configured Obsidian configuration folder remain excluded from scans and observation, even when that folder is not named `.obsidian`.

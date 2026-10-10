@@ -2,7 +2,7 @@ import { equalBytes, sha256, type DigestFunction } from "./hash";
 import { parseTranscript } from "./parsers";
 import { isPlanCurrent } from "./planning";
 import { renderMarkdown } from "./rendering";
-import { outputProfileFingerprint, type OutputProfile, type SoundingsSettings } from "./settings";
+import { outputProfileFingerprint, type OutputProfile, type SoundingsSettings, type TxtLayout } from "./settings";
 import type { ConversionPlan, ExecutionOutcome, PlanItem } from "./types";
 
 export interface PublicationAdapter {
@@ -42,7 +42,8 @@ async function executeItem(
   item: PlanItem,
   adapter: PublicationAdapter,
   options: ExecuteOptions,
-  outputProfile: OutputProfile
+  outputProfile: OutputProfile,
+  txtLayout: TxtLayout
 ): Promise<ExecutionOutcome> {
   if (item.classification !== "eligible" || !item.destinationPath || !item.evidence || !item.format || !item.title) {
     return outcome(item, "blocked", item.reason);
@@ -53,6 +54,9 @@ async function executeItem(
   // settings fingerprint can still match while rendering would use an unreviewed profile.
   if (item.outputProfileFingerprint !== outputProfileFingerprint(outputProfile)) {
     return outcome(item, "stale", "Output profile changed after preview.");
+  }
+  if (item.format === "txt" && (item.txtLayout ?? "plain") !== txtLayout) {
+    return outcome(item, "stale", "TXT layout changed after preview.");
   }
 
   let source: Uint8Array;
@@ -79,8 +83,11 @@ async function executeItem(
 
   let bytes: Uint8Array;
   try {
-    const parsed = parseTranscript(item.format, source);
+    const parsed = parseTranscript(item.format, source, txtLayout);
     if (!parsed.ok || !parsed.value) return outcome(item, "failed", `Transcript parsing failed: ${parsed.error ?? "unknown"}.`);
+    if (item.format === "txt" && (item.txtInterpretation ?? "plain") !== parsed.value.txtInterpretation) {
+      return outcome(item, "stale", "TXT interpretation changed after preview.");
+    }
     const rendered = renderMarkdown(parsed.value, {
       sourceFile: item.sourcePath.slice(item.sourcePath.lastIndexOf("/") + 1),
       sourceFormat: item.format,
@@ -93,6 +100,10 @@ async function executeItem(
     return outcome(item, "failed", "Transcript could not be rendered (render-failed).");
   }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
+
+  if (item.format === "txt" && (item.txtLayout ?? "plain") !== options.settings.txtLayout) {
+    return outcome(item, "stale", "TXT layout changed after preview.");
+  }
 
   try {
     await adapter.createBinary(item.destinationPath, bytes);
@@ -133,7 +144,7 @@ export async function executePlan(
       continue;
     }
     try {
-      outcomes.push(await executeItem(item, adapter, options, plan.outputProfile));
+      outcomes.push(await executeItem(item, adapter, options, plan.outputProfile, plan.txtLayout ?? "plain"));
     } catch {
       // An unexpected error may occur after creation, so the destination must be inspected.
       outcomes.push(outcome(item, "needs-attention", "Unexpected error; inspect the destination before retrying."));

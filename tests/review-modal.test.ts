@@ -58,6 +58,7 @@ describe("review modal", () => {
     expect(modal.contentEl.textContent).toContain("destination-exists: 1");
     expect(modal.contentEl.textContent).toContain("0 selected");
     expect(modal.contentEl.textContent).toContain("Title: Source name");
+    expect(modal.contentEl.textContent).toContain("TXT layout: Plain text");
     expect(runtimeControls.texts[0].inputEl.attributes.get("aria-label")).toBe("Search transcript paths");
     expect(runtimeControls.dropdowns[0].selectEl.attributes.get("aria-label")).toBe("Filter by classification");
     expect(button("Convert selected").buttonEl.disabled).toBe(true);
@@ -69,6 +70,18 @@ describe("review modal", () => {
 
     modal.close();
     expect((modal.modalEl as unknown as FakeElement).classes.has("soundings-review-modal")).toBe(false);
+  });
+
+  it("shows opted-in TXT layout and actual fallback without automatically converting", () => {
+    const convert = vi.fn();
+    const candidate = { ...plan(), txtLayout: "timestamped-speaker" as const,
+      items: [{ ...item("one.txt", "eligible", "one.md"), reason: "TXT interpretation: plain text (layout not recognized; entire source preserved)." }] };
+    const modal = new ReviewModal({} as never, candidate, { refresh: vi.fn(), convert });
+    modal.open();
+    expect(modal.contentEl.textContent).toContain("TXT layout: Timestamped speaker");
+    expect(modal.contentEl.textContent).toContain("entire source preserved");
+    expect(button("Convert selected").buttonEl.disabled).toBe(true);
+    expect(convert).not.toHaveBeenCalled();
   });
 
   it("preserves hidden selection and converts exactly selected current-plan paths", async () => {

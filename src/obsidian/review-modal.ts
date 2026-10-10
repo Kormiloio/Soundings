@@ -33,7 +33,7 @@ export class ReviewModal extends Modal {
     this.classification = "all";
     contentEl.createEl("h2", { text: "Soundings conversion plan" });
     contentEl.createEl("p", {
-      text: this.plan.outputProfileSummary,
+      text: `${this.plan.outputProfileSummary} TXT layout: ${this.plan.txtLayout === "timestamped-speaker" ? "Timestamped speaker" : "Plain text"}.`,
       cls: "soundings-review__profile"
     });
     const summaryEl = contentEl.createEl("p", {

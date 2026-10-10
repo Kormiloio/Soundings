@@ -2,8 +2,8 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.4.0 published and release-verified; owner Community rescan and OpenSpec closure pending
-**Last updated:** 2026-10-03
+**Document status:** Soundings 0.4.0 published, reviewed, and closed; owner-approved 0.4.1 release preparation in progress
+**Last updated:** 2026-10-07
 
 ## 1. Product summary
 
@@ -30,6 +30,7 @@ Without automation, the user must repeatedly rename, copy, clean, structure, and
 - Work through Obsidian's public APIs while shipping the first release as desktop-only.
 - Make privacy and safe-write behavior understandable and verifiable.
 - Publish a reproducible desktop package whose GitHub release assets and Community listing metadata match the accepted source revision.
+- Make compatibility understandable through provider-oriented export guidance backed by representative fixtures and complete conversion evidence.
 
 ## 4. Foundation non-goals
 
@@ -168,7 +169,7 @@ The owner primarily receives Zoom transcripts, but also receives other people's 
 | Target | Scope | Explicit boundary |
 | --- | --- | --- |
 | 0.4.0 | SRT-only expansion: supported UTF-8 SubRip cues, faithful text and timing, reviewed create-only conversion, existing plain/folded display. Planning change: `add-srt-transcript-support`. | No TXT speaker inference, general-text categories, Person links, new document extraction, AI, or mobile support. |
-| 0.4.1 | Selected structured TXT transcript layouts, based on representative redacted samples, with reliable speaker/timestamp recognition and plain-text preservation for unfamiliar layouts. | No guessing identities or linking speakers to Person notes. Exact layouts and ambiguous-input behavior require their own proposal. |
+| 0.4.1 | Approved change `add-timestamped-speaker-txt`: one opt-in blank-separated `HH:MM:SS --> HH:MM:SS` / `Speaker: dialogue` layout, with whole-file plain fallback and per-item interpretation review. Development candidate implemented; desktop acceptance passed and release preparation authorized. | Plain text remains default. No guessing identities, Person-note links, additional TXT dialects, or rewriting existing notes. |
 | 0.4.2 | Explicit user identification of shared TXT as notes, meeting minutes, correspondence, or chat, with appropriate metadata and sections. | TXT inputs initially; no automatic content classification. Source-kind/schema compatibility and enrichment eligibility require their own design. No direct DOCX, PDF, RTF, HTML, or email-file import. |
 | 0.4.3 | Evidence-driven fixes and review-workflow refinements after using the preceding releases. | Optional checkpoint, not an invented feature quota; skip if there is no justified change. |
 | 0.5.0 | Optional reviewed speaker-to-person linking to existing notes in configured folders, with explicit handling of ambiguous matches. | No automatic Person-note creation, source mutation, or rewriting existing generated notes. |
@@ -179,7 +180,7 @@ Each feature gets a separate OpenSpec change, focused automated tests, source/de
 
 Provider-specific JSON, document extraction, safe reconversion, local/provider-backed AI enrichment, and mobile evaluation remain separately approved future work rather than hidden additions to the 0.4.x series.
 
-The `add-srt-transcript-support` 0.4.0 release shipped on 2026-10-05 with opt-in SRT settings, a conservative UTF-8 numbered-cue parser, shared caption timestamp controls, unchanged TXT/VTT rendered goldens, and existing reviewed publication/enrichment guards. Build, zero-warning lint, 523 tests across 41 files, runtime audit, production dependency audit, strict validation, and staging pass. Owner-assisted packaged acceptance and explicit publication approval are recorded, including custom configuration-folder verification. PR #11 merged; the bare-tag release workflow passed. Downloaded assets match accepted hashes and provenance verification binds the exact tag, commit, and workflow; all nine prior releases remain unchanged. See `docs/VERIFICATION.md` for measured bounds, controlled-I/O lifecycle caveats, and development-only audit findings. Owner Community rescan and main-spec sync/archive remain pending.
+The `add-srt-transcript-support` 0.4.0 release shipped on 2026-10-05 with opt-in SRT settings, a conservative UTF-8 numbered-cue parser, shared caption timestamp controls, unchanged TXT/VTT rendered goldens, and existing reviewed publication/enrichment guards. Build, zero-warning lint, 523 tests across 41 files, runtime audit, production dependency audit, strict validation, and staging pass. Owner-assisted packaged acceptance and explicit publication approval are recorded, including custom configuration-folder verification. PR #11 merged; the bare-tag release workflow passed. Downloaded assets match accepted hashes and provenance verification binds the exact tag, commit, and workflow; all nine prior releases remain unchanged. See `docs/VERIFICATION.md` for measured bounds, controlled-I/O lifecycle caveats, and development-only audit findings. On 2026-10-09, the owner supplied the public listing showing Review: Passed for the current 0.4.0 listing and authorized main-spec synchronization and archival. The SRT change is closed; no prior published assets were changed.
 
 ## 11. Foundation acceptance gate
 
@@ -194,6 +195,23 @@ Soundings may not be enabled in a personal or work vault until a disposable-vaul
 - content-free diagnostics.
 
 ## 12. Open product decisions
+
+### Compatibility priorities learned from Obsidian Importer
+
+The immediate priority is provider guidance and fixture evidence, planned in `document-provider-compatibility`. [Obsidian Importer](https://github.com/obsidianmd/obsidian-importer) provides useful examples of source-specific guides, fixture-to-output comparisons, and contribution guidance. Soundings will adapt those practices to its existing in-vault transcript workflow.
+
+| Priority | Planned work | Acceptance boundary |
+| --- | --- | --- |
+| Next | A provider-oriented compatibility index and an initial Zoom guide covering export steps, settings, supported dialects, limitations, and example output. | Verify export instructions against current primary documentation and record the check date. Distinguish released support, development candidates, synthetic examples, and provider-verified samples. Other providers get supported entries only after equivalent evidence exists. |
+| Next | Representative provider fixtures with provenance and expected complete Markdown output. | Use consented sanitized exports or clearly labeled synthetic reproductions; never commit confidential transcripts. Exercise parsing through reviewed planning and publication, including refusal/fallback, collisions, stale evidence, cancellation, and isolated failures. A synthetic format example alone does not prove provider compatibility. |
+| Next | A transcript contribution checklist in `CONTRIBUTING.md`. | Document the parser/model boundary, faithful text handling, strict refusals or documented whole-file fallback, encoding cases, golden output, safety checks, user guidance, and packaged desktop evidence. Use existing parser dispatch until a separate change justifies a registry. |
+| Ongoing | Bounded processing and responsive large-vault review. | Retain the existing 5,000-file acceptance baseline and source-size limit; record fixture sizes and cancellation behavior. Any higher scale target or concurrency change requires profiling and separate scope. |
+| Later | Centralized UI strings and possible localization. | A separate change must define scope, fallback, and translation maintenance; generated transcript content remains independent of UI translation. |
+| Investigate | Hiding and reopening a long-running conversion. | Define hiding versus cancelling, selection/result retention, and plugin-unload behavior before proposing runtime changes. The current dialog-dismissal cancellation requirement remains in force. |
+
+This documentation/test change adds no parser dialect, provider integration, new vault mutation, runtime dependency, network request, or release-version commitment. Parser fixes discovered by fixtures require separate behavior changes. Main capability specs remain unchanged until applicable behavior is implemented and verified.
+
+### Remaining decisions
 
 - The exact supported Zoom `.txt` layouts and how reliably speakers can be inferred from them.
 - Whether timestamps should be retained, removed, or offered as a conversion option.
