@@ -2,8 +2,8 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.4.0 published, reviewed, and closed; owner-approved 0.4.1 release preparation in progress
-**Last updated:** 2026-10-07
+**Document status:** Soundings 0.4.1 published and provenance verified; owner Community rescan pending
+**Last updated:** 2026-10-09
 
 ## 1. Product summary
 
@@ -164,12 +164,12 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 
 ### Proposed incremental release plan
 
-The owner primarily receives Zoom transcripts, but also receives other people's transcripts, emails, meeting minutes, written notes, and chat text. These sources should retain their identity rather than all being labeled as meeting transcripts. Today, TXT conversion preserves arbitrary decoded text but does not extract speaker or timing structure; general shared-text metadata is not yet implemented.
+The owner primarily receives Zoom transcripts, but also receives other people's transcripts, emails, meeting minutes, written notes, and chat text. These sources should retain their identity rather than all being labeled as meeting transcripts. TXT conversion preserves arbitrary decoded text by default; 0.4.1 optionally recognizes one timestamped-speaker layout. General shared-text metadata is not yet implemented.
 
 | Target | Scope | Explicit boundary |
 | --- | --- | --- |
 | 0.4.0 | SRT-only expansion: supported UTF-8 SubRip cues, faithful text and timing, reviewed create-only conversion, existing plain/folded display. Planning change: `add-srt-transcript-support`. | No TXT speaker inference, general-text categories, Person links, new document extraction, AI, or mobile support. |
-| 0.4.1 | Approved change `add-timestamped-speaker-txt`: one opt-in blank-separated `HH:MM:SS --> HH:MM:SS` / `Speaker: dialogue` layout, with whole-file plain fallback and per-item interpretation review. Development candidate implemented; desktop acceptance passed and release preparation authorized. | Plain text remains default. No guessing identities, Person-note links, additional TXT dialects, or rewriting existing notes. |
+| 0.4.1 | Published change `add-timestamped-speaker-txt`: one opt-in blank-separated `HH:MM:SS --> HH:MM:SS` / `Speaker: dialogue` layout, with whole-file plain fallback and per-item interpretation review. Packaged desktop acceptance, downloaded asset hashes, and exact-tag provenance verification pass; owner Community rescan remains pending. | Plain text remains default. No guessing identities, Person-note links, additional TXT dialects, or rewriting existing notes. |
 | 0.4.2 | Explicit user identification of shared TXT as notes, meeting minutes, correspondence, or chat, with appropriate metadata and sections. | TXT inputs initially; no automatic content classification. Source-kind/schema compatibility and enrichment eligibility require their own design. No direct DOCX, PDF, RTF, HTML, or email-file import. |
 | 0.4.3 | Evidence-driven fixes and review-workflow refinements after using the preceding releases. | Optional checkpoint, not an invented feature quota; skip if there is no justified change. |
 | 0.5.0 | Optional reviewed speaker-to-person linking to existing notes in configured folders, with explicit handling of ambiguous matches. | No automatic Person-note creation, source mutation, or rewriting existing generated notes. |
