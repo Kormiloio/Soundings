@@ -29,3 +29,7 @@
 - [x] 5.2 Run repository quality gates and strict OpenSpec validation; record exact commands/results and confirm only intended changes appear in the diff, without an early release-version bump.
 - [x] 5.3 Stage the candidate in a disposable desktop vault and verify recognized/fallback review, four output combinations, collapsed-callout search, companion enrichment, stale layout/source guards, collisions, and controlled cancellation; record screenshots and before/after hashes proving source/existing-note preservation.
 - [x] 5.4 Before preparing the 0.4.1 release, verify the 0.4.0 Community review and predecessor closure from authoritative evidence; record remaining blockers and obtain explicit release authorization before versioning, publishing, or archiving this change.
+
+## Closure
+
+Published as 0.4.1 with verified downloaded assets and exact-tag provenance. The owner supplied the public listing showing current version 0.4.1, Health Excellent, and Review Passed, then authorized spec synchronization and archival. Both affected main specs were synchronized and validated before this completed change was archived on 2026-10-09. See `docs/VERIFICATION.md` for the release and Community evidence.
