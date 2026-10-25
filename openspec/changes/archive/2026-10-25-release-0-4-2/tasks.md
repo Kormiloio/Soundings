@@ -30,7 +30,7 @@
 
 ## 6. Publication and Closure (Separately Authorized)
 
-- [ ] 6.1 After approval, commit only the shared-text and 0.4.2 release scope, open a protected-main pull request, and verify required CI passes on the final candidate commit.
-- [ ] 6.2 After approval, merge through protected main, create the bare `0.4.2` tag, and verify the workflow publishes exactly three assets whose fresh-download hashes and attestations match the accepted candidate while all earlier releases remain unchanged.
-- [ ] 6.3 After approval, obtain and record the public Community listing's 0.4.2 review/version evidence; do not claim administrative state not visible in the supplied evidence.
-- [ ] 6.4 After approval, synchronize the shared-text delta into main specs, validate them strictly, archive completed changes, and verify no runtime or immutable release asset changes during closure.
+- [x] 6.1 After approval, commit only the shared-text and 0.4.2 release scope, open a protected-main pull request, and verify required CI passes on the final candidate commit.
+- [x] 6.2 After approval, merge through protected main, create the bare `0.4.2` tag, and verify the workflow publishes exactly three assets whose fresh-download hashes and attestations match the accepted candidate while all earlier releases remain unchanged.
+- [x] 6.3 After approval, obtain and record the public Community listing's 0.4.2 review/version evidence; do not claim administrative state not visible in the supplied evidence.
+- [x] 6.4 After approval, synchronize the shared-text delta into main specs, validate them strictly, archive completed changes, and verify no runtime or immutable release asset changes during closure.
