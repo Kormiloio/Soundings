@@ -231,7 +231,7 @@ describe("SRT rendering and guarded execution", () => {
     const plan = buildEnrichmentPlan(path, evidence, draft, new Set(vault.files.keys()), new Date(0), "enrichment");
     const options = { digest: testDigest, maxSourceBytes: 5_000_000 };
     expect((await executeEnrichmentPlan(plan, vault, options)).status).toBe("created");
-    expect(decoder.decode(vault.files.get(plan.destinationPath))).toContain("[[Meetings/source|Back to Transcript Note]]");
+    expect(decoder.decode(vault.files.get(plan.destinationPath))).toContain("[[Meetings/source|Back to Source Note]]");
     expect(vault.files.get(path)).toEqual(bytes);
     expect(vault.files.get("Meetings/source.srt")).toEqual(encoder.encode(body));
     expect((await executeEnrichmentPlan(plan, vault, options)).status).toBe("blocked");

@@ -50,6 +50,14 @@ Enable **Convert .srt transcripts** under **Settings → Soundings** before scan
 
 **TXT layout** defaults to **Plain text**. Opt in to **Timestamped speaker** for blank-separated blocks consisting of an `HH:MM:SS --> HH:MM:SS` range followed by `Speaker: dialogue`. Recognized files become speaker blocks with optional retained times. If any block is unfamiliar, the entire file stays intact as plain text; review shows the actual interpretation before selection. Speaker labels do not link to Person notes.
 
+### Shared TXT content types (0.4.2)
+
+Soundings 0.4.2 adds a **Content type** menu to eligible TXT rows: **Transcript** (default), **Notes**, **Meeting Minutes**, **Correspondence**, or **Chat**. Changing a row's type clears its selection; select it again after review. Filtering retains choices, but refreshing or reopening resets types to Transcript and clears all selections. Choices are not inferred or saved for future scans. VTT/SRT stay transcripts.
+
+Non-transcript types preserve the complete decoded TXT literally under **Source Text**, including email headers and timestamp-like lines. They do not apply timestamped-speaker parsing or extract summaries, participants, or decisions. The existing section, tag, title, and plain/folded display options still apply; folded content uses **Full Source Text**. These notes use schema 3 with explicit `content_kind` metadata and can receive manual enrichment companions. Newly created companions use **Back to Source Note**; existing notes and companions are never rewritten. Downgrading to 0.4.1 leaves schema-3 Markdown readable but disables its manual enrichment support.
+
+The 0.4.2 release candidate has passed implementation-level desktop acceptance; final acceptance of the versioned package remains part of release preparation.
+
 ### Optional transcript inbox
 
 In **Settings → Soundings**, you can opt in to **Observe new transcripts** and optionally list vault-relative **Observation roots**, one per line. Empty roots mean the whole otherwise-permitted vault. While Obsidian and Soundings are open, newly created supported files are checked after they stabilize and queued in memory. Soundings shows a coalesced local notice; run **Soundings: Review transcript inbox** to recheck the queued paths in the standard review plan. The plan starts with zero selected items and never converts automatically.

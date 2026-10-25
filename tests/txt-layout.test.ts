@@ -143,6 +143,8 @@ describe("TXT output and reviewed publication", () => {
     const plan = await planTranscriptInbox(processor.inbox, discoveryAdapter, config, testDigest, new Date(0), () => "inbox");
     expect(plan?.txtLayout).toBe("timestamped-speaker");
     expect(plan?.items[0].txtInterpretation).toBe("timestamped-speaker");
+    expect(plan?.items[0].contentKind).toBe("transcript");
+    expect(plan?.revision).toBe(0);
     expect(files.size).toBe(1);
     processor.stop(true);
   });

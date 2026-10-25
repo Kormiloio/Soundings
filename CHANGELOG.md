@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2 - 2026-10-25
+
+- Add a per-file **Content type** choice for eligible TXT files: **Transcript** (default), **Notes**, **Meeting Minutes**, **Correspondence**, or **Chat**. Choices are explicit, reviewed, and reset on refresh; Soundings does not infer or remember them.
+- Create schema-3 shared-text notes for the four new kinds with complete literal content under **Source Text**. Timing-like lines, mail headers, indentation, repeated messages, Unicode, and source order remain unchanged.
+- Keep existing TXT, VTT, and SRT Transcript output compatible with 0.4.1, including schema selection, timestamp behavior, and plain/folded display.
+- Allow verified shared-text notes to use the existing local manual companion workflow with the neutral **Back to Source Note** link. Existing companions and source notes are never rewritten.
+- Revalidate reviewed kind, parsing policy, source evidence, and destination absence before create; stale reviews, destination races, cancellation, unload, and read-back failures stop safely.
+- Improve narrow desktop review layout and keyboard operation so content-type, selection, and footer controls remain reachable without overlap.
+- Preserve local-only, reviewed, create-only behavior. This release adds no automatic summarization, content inference, network access, mobile support, or overwrite path.
+
 ## 0.4.1 - 2026-10-09
 
 - Add an opt-in **TXT layout: Timestamped speaker** choice for blank-separated `HH:MM:SS --> HH:MM:SS` ranges followed by `Speaker: dialogue`.

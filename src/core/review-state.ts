@@ -1,4 +1,14 @@
 import type { ConversionPlan, PlanClassification, PlanItem } from "./types";
+import { reviseContentKind } from "./planning";
+
+export function changeReviewContentKind(
+  plan: ConversionPlan, selected: ReadonlySet<string>, path: string, kind: unknown
+): { readonly plan: ConversionPlan; readonly selected: Set<string> } {
+  const revised = reviseContentKind(plan, path, kind);
+  const next = new Set(selected);
+  if (revised.value && revised.value !== plan) next.delete(path);
+  return { plan: revised.value ?? plan, selected: next };
+}
 
 export const PLAN_CLASSIFICATIONS = Object.freeze<readonly PlanClassification[]>([
   "eligible",

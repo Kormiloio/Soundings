@@ -45,6 +45,16 @@ async function openWithDraft(actions: Partial<EnrichmentModalActions>) {
 describe("enrichment modal draft retention", () => {
   beforeEach(() => resetRuntimeControls());
 
+  it.each(["stale", "blocked", "failed", "canceled", "needs-attention"] as const)("retains schema-3 manual input after %s", async (status) => {
+    const { modal } = await openWithDraft({
+      sourceEvidence: { ...evidence("shared"), soundingsVersion: 3 },
+      publish: vi.fn(async () => outcome(status, "Not created."))
+    });
+    expect(modal.contentEl.textContent).toContain("Back to Source Note");
+    await latestButton("Publish companion note").click();
+    expect(latestField("Enrichment summary").value).toBe("Private summary text");
+  });
+
   it("keeps the draft and refreshes evidence after a stale outcome", async () => {
     const publish = vi.fn(async () => outcome("stale", "Source note changed after preview."));
     const { modal, actions } = await openWithDraft({ publish });

@@ -1,5 +1,6 @@
 import type { NoteMetadata, ParsedTranscript, TranscriptBlock } from "./types";
 import { DEFAULT_OUTPUT_PROFILE, type OutputProfile, type ReservedSection } from "./settings";
+import { isContentKind } from "./content-kind";
 
 // JSON.stringify leaves C1 controls and Unicode line/paragraph separators raw; YAML parsers may reject
 // or split on them, so they are written as \uXXXX escapes inside the double-quoted scalar.
@@ -70,24 +71,31 @@ export function renderMarkdown(
   metadata: NoteMetadata,
   profile: OutputProfile = DEFAULT_OUTPUT_PROFILE
 ): string {
+  const kind = metadata.contentKind ?? "transcript";
+  if (!isContentKind(kind) || (kind !== "transcript" && (transcript.format !== "txt" || metadata.sourceFormat !== "txt"
+    || transcript.txtInterpretation !== "plain" || transcript.blocks.length !== 1))) {
+    throw new Error("invalid-content-kind");
+  }
+  const shared = kind !== "transcript";
   const frontmatter = [
     "---",
-    `type: ${yamlScalar("meeting-transcript")}`,
-    `source: ${yamlScalar("transcript")}`,
+    `type: ${yamlScalar(shared ? "shared-text" : "meeting-transcript")}`,
+    `source: ${yamlScalar(shared ? "shared-text" : "transcript")}`,
     `source_file: ${yamlScalar(metadata.sourceFile)}`,
     `source_format: ${yamlScalar(metadata.sourceFormat)}`,
-    `soundings_version: ${transcript.txtInterpretation === "timestamped-speaker" ? 2 : noteSchemaVersion(profile)}`,
+    ...(shared ? [`content_kind: ${yamlScalar(kind)}`] : []),
+    `soundings_version: ${shared ? 3 : transcript.txtInterpretation === "timestamped-speaker" ? 2 : noteSchemaVersion(profile)}`,
     `converted_at: ${yamlScalar(metadata.convertedAt)}`,
     ...(metadata.project ? [`project: ${yamlScalar(metadata.project)}`] : []),
     ...(profile.staticTags.length > 0 ? [`tags: ${JSON.stringify(profile.staticTags)}`] : []),
     "---"
   ].join("\n");
-  const blocks = transcript.blocks.map((block) => renderBlock(block, profile)).join("\n\n");
+  const blocks = transcript.blocks.map((block) => shared ? literalBlock(block.text) : renderBlock(block, profile)).join("\n\n");
   const transcriptBody = profile.transcriptDisplay === "folded-callout"
-    ? `> [!quote]- Full Transcript\n${foldTranscript(blocks)}`
+    ? `> [!quote]- Full ${shared ? "Source Text" : "Transcript"}\n${foldTranscript(blocks)}`
     : blocks;
   const sections = profile.enabledSections.map((section) => SECTION_CONTENT[section]);
   const header = `\n\n# ${safeHeading(metadata.title)}\n\n`;
-  const body = [...sections, `## Transcript\n\n${transcriptBody}`].join("\n\n");
+  const body = [...sections, `## ${shared ? "Source Text" : "Transcript"}\n\n${transcriptBody}`].join("\n\n");
   return `${frontmatter}${header}${body}\n`;
 }

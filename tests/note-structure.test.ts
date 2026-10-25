@@ -103,7 +103,7 @@ describe("enrichment prose structure", () => {
       "## Follow-ups",
       "setext-or-break:---"
     ]);
-    expect(markdown).toContain("[[folder/note|Back to Transcript Note]]");
+    expect(markdown).toContain("[[folder/note|Back to Source Note]]");
     expect(markdown.replaceAll("\\", "")).toContain(line.trimStart());
   });
 

@@ -55,7 +55,7 @@ function safeListItem(item: string): string {
 export function sourceLinkForEnrichment(sourcePath: string): string {
   const dot = sourcePath.lastIndexOf(".");
   const target = dot > sourcePath.lastIndexOf("/") ? sourcePath.slice(0, dot) : sourcePath;
-  return `[[${target}|Back to Transcript Note]]`;
+  return `[[${target}|Back to Source Note]]`;
 }
 
 export function renderCompanionMarkdown(

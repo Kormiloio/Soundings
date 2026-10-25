@@ -43,11 +43,14 @@ describe("Obsidian UI and lifecycle contracts", () => {
 
   it("uses labeled native review controls and textual live status for large plans", async () => {
     const review = await source("src/obsidian/review-modal.ts");
-    expect(review).toContain('"Search transcript paths"');
+    expect(review).toContain('"Search source paths"');
     expect(review).toContain('"Filter by classification"');
     expect(review).toContain('"Select all eligible shown"');
     expect(review).toContain('"Clear selection"');
     expect(review).toContain('"Convert selected"');
+    expect(review).toContain('text: "Creating notes"');
+    expect(review).toContain("selected source");
+    expect(review).not.toContain("Converting transcripts");
     expect(review).toContain('event.key !== "Enter"');
     expect(review).toContain("event.preventDefault()");
     expect(review).toContain("event.stopPropagation()");
@@ -64,6 +67,8 @@ describe("Obsidian UI and lifecycle contracts", () => {
     expect(styles).toContain("overflow-wrap: anywhere");
     expect(styles).toContain("@media (max-width: 640px)");
     expect(styles).toContain("width: min(54rem, calc(100vw - 2rem))");
+    expect(styles).toContain("overflow-y: visible");
+    expect(styles).toContain("flex: 1 1 auto");
   });
 
   it("registers one ribbon control plus guarded scan and inbox commands", async () => {

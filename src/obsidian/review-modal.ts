@@ -1,6 +1,7 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal, Setting, type ToggleComponent } from "obsidian";
 import {
   clearReviewSelection,
+  changeReviewContentKind,
   createReviewSelection,
   PLAN_CLASSIFICATIONS,
   projectReviewPlan,
@@ -8,19 +9,22 @@ import {
   type ReviewClassificationFilter
 } from "../core/review-state";
 import type { ConversionPlan, ExecutionOutcome } from "../core/types";
+import { CONTENT_KINDS, contentKindDescription, contentKindFor } from "../core/content-kind";
 
 export interface ReviewActions {
   refresh(): Promise<void>;
-  convert(selectedSourcePaths: ReadonlySet<string>): Promise<void>;
+  convert(selectedSourcePaths: ReadonlySet<string>, reviewedPlan?: ConversionPlan): Promise<void>;
 }
 
 export class ReviewModal extends Modal {
   private selected = createReviewSelection();
   private query = "";
   private classification: ReviewClassificationFilter = "all";
+  private plan: ConversionPlan;
 
-  constructor(app: App, private readonly plan: ConversionPlan, private readonly actions: ReviewActions) {
+  constructor(app: App, private readonly initialPlan: ConversionPlan, private readonly actions: ReviewActions) {
     super(app);
+    this.plan = initialPlan;
   }
 
   onOpen(): void {
@@ -29,6 +33,7 @@ export class ReviewModal extends Modal {
     contentEl.empty();
     contentEl.addClass("soundings-review");
     this.selected = createReviewSelection();
+    this.plan = this.initialPlan;
     this.query = "";
     this.classification = "all";
     contentEl.createEl("h2", { text: "Soundings conversion plan" });
@@ -49,7 +54,7 @@ export class ReviewModal extends Modal {
       .setClass("soundings-review__filters")
       .addText((text) => {
         text.setPlaceholder("Search source or destination paths");
-        text.inputEl.setAttr("aria-label", "Search transcript paths");
+        text.inputEl.setAttr("aria-label", "Search source paths");
         text.inputEl.addEventListener("keydown", (event) => {
           if (event.key !== "Enter") return;
           event.preventDefault();
@@ -89,7 +94,7 @@ export class ReviewModal extends Modal {
         .map((classification) => `${classification}: ${projection.counts[classification]}`)
         .join(" · ");
       summaryEl.setText(
-        `${this.plan.items.length} transcript candidate${this.plan.items.length === 1 ? "" : "s"}. `
+        `${this.plan.items.length} source candidate${this.plan.items.length === 1 ? "" : "s"}. `
         + `${projection.visibleItems.length} shown${counts ? ` · ${counts}` : ""}.`
       );
       selectedEl.setText(`${projection.selectedCount} selected. Select eligible notes to create.`);
@@ -103,16 +108,33 @@ export class ReviewModal extends Modal {
       const projection = updateState();
       itemsEl.empty();
       if (projection.visibleItems.length === 0) {
-        itemsEl.createEl("p", { text: "No transcript candidates match the current filters." });
+        itemsEl.createEl("p", { text: "No source candidates match the current filters." });
         return;
       }
       for (const item of projection.visibleItems) {
         const row = new Setting(itemsEl)
           .setClass("soundings-review__item")
           .setName(item.sourcePath)
-          .setDesc(`${item.destinationPath ?? "No safe destination"} — ${item.classification}: ${item.reason}`);
+          .setDesc(`${item.destinationPath ?? "No safe destination"} — ${item.classification}: ${contentKindDescription(item)}`);
         if (item.classification === "eligible") {
+          let selectionToggle: ToggleComponent | undefined;
+          if (item.format === "txt") {
+            row.addDropdown((dropdown) => {
+              dropdown.selectEl.setAttr("aria-label", `Content type for ${item.sourcePath}`);
+              for (const [kind, label] of Object.entries(CONTENT_KINDS)) dropdown.addOption(kind, label);
+              dropdown.setValue(contentKindFor(item) ?? "transcript").onChange((kind) => {
+                const revised = changeReviewContentKind(this.plan, this.selected, item.sourcePath, kind);
+                this.plan = revised.plan;
+                this.selected = revised.selected;
+                selectionToggle?.setValue(this.selected.has(item.sourcePath));
+                const current = this.plan.items.find((entry) => entry.sourcePath === item.sourcePath)!;
+                row.setDesc(`${current.destinationPath ?? "No safe destination"} — ${current.classification}: ${contentKindDescription(current)}`);
+                updateState();
+              });
+            });
+          }
           row.addToggle((toggle) => {
+            selectionToggle = toggle;
             toggle.toggleEl.setAttr("aria-label", `Select ${item.sourcePath} for conversion`);
             toggle.setValue(this.selected.has(item.sourcePath)).onChange((selected) => {
               if (selected) this.selected.add(item.sourcePath);
@@ -162,7 +184,7 @@ export class ReviewModal extends Modal {
           if (this.selected.size === 0) return;
           const selection = new Set(this.selected);
           this.close();
-          await this.actions.convert(selection);
+          await this.actions.convert(selection, this.plan);
         });
       });
     renderRows();
@@ -183,7 +205,7 @@ export class ProgressModal extends Modal {
   }
 
   onOpen(): void {
-    this.contentEl.createEl("h2", { text: "Converting transcripts" });
+    this.contentEl.createEl("h2", { text: "Creating notes" });
     this.progressEl = this.contentEl.createEl("p", { text: "Preparing…", attr: { "aria-live": "polite" } });
     new Setting(this.contentEl).addButton((button) => button
       .setDestructive()
@@ -196,7 +218,7 @@ export class ProgressModal extends Modal {
   }
 
   update(complete: number, total: number): void {
-    this.progressEl?.setText(`Processed ${complete} of ${total} selected transcript${total === 1 ? "" : "s"}.`);
+    this.progressEl?.setText(`Processed ${complete} of ${total} selected source${total === 1 ? "" : "s"}.`);
   }
 
   /** Closes after the run settles, without canceling it. */
