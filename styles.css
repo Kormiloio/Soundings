@@ -57,19 +57,51 @@
 
 .soundings-review__item .setting-item-control {
   flex: 0 0 auto;
+  gap: 0.5rem;
+}
+
+.soundings-review__item select {
+  width: 11rem;
+  max-width: 100%;
 }
 
 @media (max-width: 640px) {
-  .soundings-review {
-    max-height: calc(100vh - 2rem);
+  .soundings-review__item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
-  .soundings-review__filters .setting-item-control,
-  .soundings-review__selection-actions .setting-item-control,
-  .soundings-review__footer .setting-item-control {
+  .soundings-review__item .setting-item-control {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .soundings-review {
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .soundings-review__items {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow-y: visible;
+  }
+
+  .soundings-review__filters .setting-item-control {
     align-items: stretch;
     flex-direction: column;
     width: 100%;
+  }
+
+  .soundings-review__selection-actions .setting-item-control,
+  .soundings-review__footer .setting-item-control {
+    width: 100%;
+  }
+
+  .soundings-review__selection-actions button,
+  .soundings-review__footer button {
+    flex: 1 1 auto;
   }
 }
 

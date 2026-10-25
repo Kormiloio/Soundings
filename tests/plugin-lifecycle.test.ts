@@ -5,7 +5,7 @@ import type { EnrichmentModalActions } from "../src/obsidian/enrichment-modal";
 import { EnrichmentModal } from "../src/obsidian/enrichment-modal";
 import { ProgressModal, ResultsModal, ReviewModal, type ReviewActions } from "../src/obsidian/review-modal";
 import type { ExecutionOutcome } from "../src/core/types";
-import { notices, openModals, resetRuntimeControls, TFile, type Plugin } from "./obsidian-runtime-stub";
+import { notices, openModals, resetRuntimeControls, runtimeControls, TFile, type Plugin } from "./obsidian-runtime-stub";
 
 const encoder = new TextEncoder();
 
@@ -129,6 +129,44 @@ describe("plugin lifecycle", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
+  it("publishes the modal's revised shared-text plan through the real controller", async () => {
+    const vault = new FakeVault();
+    const source = encoder.encode("11:01:03 --> 11:01:05\nAlex: Silver lantern.");
+    vault.files.set("One.txt", source);
+    const plugin = await loadedPlugin(vault, undefined, { txtLayout: "timestamped-speaker" });
+    await command(plugin, "scan-vault-for-transcripts").callback?.();
+    await settle();
+    const menu = runtimeControls.dropdowns.find((entry) => entry.selectEl.attributes.get("aria-label") === "Content type for One.txt")!;
+    await menu.change("correspondence");
+    await runtimeControls.toggles.at(-1)!.change(true);
+    await runtimeControls.buttons.find((entry) => entry.buttonEl.text === "Convert selected")!.click();
+    const markdown = new TextDecoder().decode(vault.files.get("One.md"));
+    expect(markdown).toContain('content_kind: "correspondence"');
+    expect(markdown).toContain("11:01:03 --> 11:01:05\nAlex: Silver lantern.");
+    expect(vault.files.get("One.txt")).toEqual(source);
+    plugin.onunload();
+  });
+
+  it.each(["cancel", "unload"])("prevents shared-text publication on %s during validation", async (mode) => {
+    const vault = new FakeVault();
+    vault.files.set("One.txt", encoder.encode("From: Alex\nLiteral message"));
+    const plugin = await loadedPlugin(vault);
+    await command(plugin, "scan-vault-for-transcripts").callback?.();
+    await settle();
+    await runtimeControls.dropdowns.find((entry) => entry.selectEl.attributes.get("aria-label") === "Content type for One.txt")!.change("chat");
+    await runtimeControls.toggles.at(-1)!.change(true);
+    let release!: () => void;
+    vault.readGate = new Promise<void>((resolve) => { release = resolve; });
+    const converting = runtimeControls.buttons.find((entry) => entry.buttonEl.text === "Convert selected")!.click();
+    await settle();
+    if (mode === "cancel") modalOf(ProgressModal)!.close();
+    else plugin.onunload();
+    release();
+    await converting;
+    expect(vault.creates).toEqual([]);
+    plugin.onunload();
+  });
+
   it.each(["cancel", "unload"])("prevents SRT publication on %s while source validation waits", async (mode) => {
     const vault = new FakeVault();
     const body = encoder.encode("1\n00:00:01,000 --> 00:00:02,000\nSilver lantern.");
@@ -191,6 +229,29 @@ describe("plugin lifecycle", () => {
     const plan: EnrichmentPlan = buildEnrichmentPlan("Meeting.md", actions.sourceEvidence, draft, new Set(), new Date(0), "e1");
     await expect(actions.publish(plan)).resolves.toBeUndefined();
     expect(vault.creates).toEqual([]);
+  });
+
+  it("refuses schema-3 companion publication after unload during source validation", async () => {
+    const vault = new FakeVault();
+    const body = encoder.encode('---\ntype: "shared-text"\nsource: "shared-text"\nsource_format: "txt"\ncontent_kind: "notes"\nsoundings_version: 3\n---\n# Notes\n');
+    vault.files.set("Notes.md", body);
+    const plugin = await loadedPlugin(vault, "Notes.md");
+    command(plugin, "add-manual-enrichment").checkCallback?.(false);
+    await settle();
+    const enrichment = modalOf(EnrichmentModal)!;
+    const actions = (enrichment as unknown as { actions: EnrichmentModalActions }).actions;
+    const plan = buildEnrichmentPlan("Notes.md", actions.sourceEvidence,
+      { summary: "Reviewed", decisions: [], actionItems: [], followUps: [] }, new Set(), new Date(0), "shared");
+    let release!: () => void;
+    vault.readGate = new Promise<void>((resolve) => { release = resolve; });
+    const publication = actions.publish(plan);
+    await settle();
+    plugin.onunload();
+    release();
+    await publication;
+    expect(vault.creates).toEqual([]);
+    expect(vault.files.get("Notes.md")).toEqual(body);
+    expect(openModals).toEqual([]);
   });
 
   it("does not start scans or inbox reviews after unload", async () => {

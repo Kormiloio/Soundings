@@ -4,6 +4,7 @@ import { isPlanCurrent } from "./planning";
 import { renderMarkdown } from "./rendering";
 import { outputProfileFingerprint, type OutputProfile, type SoundingsSettings, type TxtLayout } from "./settings";
 import type { ConversionPlan, ExecutionOutcome, PlanItem } from "./types";
+import { contentKindFor, contentPolicyFingerprint, effectiveTxtLayout, isContentPolicyCurrent } from "./content-kind";
 
 export interface PublicationAdapter {
   readBinary(path: string): Promise<Uint8Array>;
@@ -15,6 +16,7 @@ export interface PublicationAdapter {
 }
 
 export interface ExecuteOptions {
+  readonly selectedPlanRevision?: number;
   readonly selectedSourcePaths: ReadonlySet<string>;
   readonly settings: SoundingsSettings;
   readonly signal?: AbortSignal;
@@ -43,12 +45,16 @@ async function executeItem(
   adapter: PublicationAdapter,
   options: ExecuteOptions,
   outputProfile: OutputProfile,
-  txtLayout: TxtLayout
+  txtLayout: TxtLayout,
+  isReviewedPlanCurrent: () => boolean
 ): Promise<ExecutionOutcome> {
   if (item.classification !== "eligible" || !item.destinationPath || !item.evidence || !item.format || !item.title) {
     return outcome(item, "blocked", item.reason);
   }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
+  if (!isContentPolicyCurrent(item)) return outcome(item, "stale", "Content type changed after preview.");
+  const kind = contentKindFor(item)!;
+  const policy = contentPolicyFingerprint(item);
 
   // The plan holds the caller's profile by reference. If that object is mutated after preview, the
   // settings fingerprint can still match while rendering would use an unreviewed profile.
@@ -83,12 +89,13 @@ async function executeItem(
 
   let bytes: Uint8Array;
   try {
-    const parsed = parseTranscript(item.format, source, txtLayout);
+    const parsed = parseTranscript(item.format, source, effectiveTxtLayout(item, txtLayout));
     if (!parsed.ok || !parsed.value) return outcome(item, "failed", `Transcript parsing failed: ${parsed.error ?? "unknown"}.`);
-    if (item.format === "txt" && (item.txtInterpretation ?? "plain") !== parsed.value.txtInterpretation) {
+    if (item.format === "txt" && (kind === "transcript" ? item.txtInterpretation ?? "plain" : "plain") !== parsed.value.txtInterpretation) {
       return outcome(item, "stale", "TXT interpretation changed after preview.");
     }
     const rendered = renderMarkdown(parsed.value, {
+      contentKind: kind,
       sourceFile: item.sourcePath.slice(item.sourcePath.lastIndexOf("/") + 1),
       sourceFormat: item.format,
       title: item.title,
@@ -100,6 +107,11 @@ async function executeItem(
     return outcome(item, "failed", "Transcript could not be rendered (render-failed).");
   }
   if (options.signal?.aborted) return outcome(item, "canceled", "Conversion was canceled.");
+
+  if (!isReviewedPlanCurrent() || !isContentPolicyCurrent(item) || policy !== contentPolicyFingerprint(item)
+    || item.outputProfileFingerprint !== outputProfileFingerprint(outputProfile)) {
+    return outcome(item, "stale", "Reviewed policy changed before publication.");
+  }
 
   if (item.format === "txt" && (item.txtLayout ?? "plain") !== options.settings.txtLayout) {
     return outcome(item, "stale", "TXT layout changed after preview.");
@@ -129,9 +141,19 @@ export async function executePlan(
 ): Promise<readonly ExecutionOutcome[]> {
   const outcomes: ExecutionOutcome[] = [];
   const selected = plan.items.filter((item) => options.selectedSourcePaths.has(item.sourcePath));
+  const revision = plan.revision ?? 0;
+  const reviewedLayout = plan.txtLayout;
+  const reviewedId = plan.id;
+  const isReviewedPlanCurrent = () => isPlanCurrent(plan, options.settings)
+    && plan.txtLayout === reviewedLayout && plan.id === reviewedId
+    && (plan.revision ?? 0) === revision
+    && (options.selectedPlanRevision ?? 0) === revision;
 
   if (!isPlanCurrent(plan, options.settings)) {
     return Object.freeze(selected.map((item) => outcome(item, "stale", "Settings changed after preview.")));
+  }
+  if (!isReviewedPlanCurrent()) {
+    return Object.freeze(selected.map((item) => outcome(item, "stale", "Review revision changed after selection.")));
   }
 
   for (const item of plan.items) {
@@ -144,7 +166,7 @@ export async function executePlan(
       continue;
     }
     try {
-      outcomes.push(await executeItem(item, adapter, options, plan.outputProfile, plan.txtLayout ?? "plain"));
+      outcomes.push(await executeItem(item, adapter, options, plan.outputProfile, plan.txtLayout ?? "plain", isReviewedPlanCurrent));
     } catch {
       // An unexpected error may occur after creation, so the destination must be inspected.
       outcomes.push(outcome(item, "needs-attention", "Unexpected error; inspect the destination before retrying."));

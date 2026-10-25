@@ -11,7 +11,8 @@ import {
 } from "./obsidian-runtime-stub";
 
 function item(sourcePath: string, classification: PlanClassification, destinationPath?: string): PlanItem {
-  return { sourcePath, destinationPath, classification, reason: classification };
+  return { sourcePath, destinationPath, classification, reason: classification,
+    format: sourcePath.endsWith(".txt") ? "txt" : "vtt" };
 }
 
 function plan(): ConversionPlan {
@@ -47,19 +48,47 @@ function latestToggle(label: string): FakeToggleComponent {
 describe("review modal", () => {
   beforeEach(() => resetRuntimeControls());
 
+  it("revises kind without replacing the focused control and passes the displayed plan", async () => {
+    const convert = vi.fn<(selected: ReadonlySet<string>, reviewed?: ConversionPlan) => Promise<void>>().mockResolvedValue();
+    const modal = new ReviewModal({} as never, plan(), { refresh: vi.fn(), convert });
+    modal.open();
+    const typeMenus = () => runtimeControls.dropdowns.filter((entry) => entry.selectEl.attributes.get("aria-label")?.startsWith("Content type"));
+    expect(typeMenus()).toHaveLength(1);
+    const menu = typeMenus()[0];
+    expect([...menu.options.values()]).toEqual(["Transcript", "Notes", "Meeting Minutes", "Correspondence", "Chat"]);
+    await button("Select all eligible shown").click();
+    const currentMenu = typeMenus().at(-1)!;
+    const count = runtimeControls.dropdowns.length;
+    await currentMenu.change("notes");
+    expect(runtimeControls.dropdowns).toHaveLength(count);
+    expect(latestToggle("Select Meetings/Alpha.txt for conversion").value).toBe(false);
+    expect(modal.contentEl.textContent).toContain("1 selected");
+    expect(modal.contentEl.textContent).toContain("literal plain text");
+    await runtimeControls.texts[0].change("beta");
+    await runtimeControls.texts[0].change("alpha");
+    expect(typeMenus().at(-1)!.value).toBe("notes");
+    await latestToggle("Select Meetings/Alpha.txt for conversion").change(true);
+    await button("Convert selected").click();
+    expect(convert.mock.calls[0][1]?.items[0].contentKind).toBe("notes");
+    expect(convert.mock.calls[0][1]?.revision).toBe(1);
+    modal.open();
+    expect(typeMenus().at(-1)!.value).toBe("transcript");
+    expect(modal.contentEl.textContent).toContain("0 selected");
+  });
+
   it("exposes accessible counts, search, filters, and disabled conversion by default", () => {
     const modal = new ReviewModal({} as never, plan(), { refresh: vi.fn(), convert: vi.fn() });
     modal.open();
 
     expect((modal.modalEl as unknown as FakeElement).classes.has("soundings-review-modal")).toBe(true);
-    expect(modal.contentEl.textContent).toContain("4 transcript candidates");
+    expect(modal.contentEl.textContent).toContain("4 source candidates");
     expect(modal.contentEl.textContent).toContain("eligible: 2");
     expect(modal.contentEl.textContent).toContain("excluded: 1");
     expect(modal.contentEl.textContent).toContain("destination-exists: 1");
     expect(modal.contentEl.textContent).toContain("0 selected");
     expect(modal.contentEl.textContent).toContain("Title: Source name");
     expect(modal.contentEl.textContent).toContain("TXT layout: Plain text");
-    expect(runtimeControls.texts[0].inputEl.attributes.get("aria-label")).toBe("Search transcript paths");
+    expect(runtimeControls.texts[0].inputEl.attributes.get("aria-label")).toBe("Search source paths");
     expect(runtimeControls.dropdowns[0].selectEl.attributes.get("aria-label")).toBe("Filter by classification");
     expect(button("Convert selected").buttonEl.disabled).toBe(true);
 

@@ -187,7 +187,7 @@ export default class SoundingsPlugin extends Plugin {
     const evidence = await this.identifyEnrichmentSource(adapter, sourcePath);
     if (this.unloaded) return;
     if (!evidence) {
-      new Notice("Manual enrichment requires an active Soundings transcript note.");
+      new Notice("Manual enrichment requires an active Soundings source note.");
       return;
     }
     this.own(new EnrichmentModal(this.app, sourcePath, {
@@ -267,7 +267,7 @@ export default class SoundingsPlugin extends Plugin {
       }
       this.own(new ReviewModal(this.app, plan, {
         refresh: () => this.reviewInbox(),
-        convert: (selected) => this.convertPlan(plan, selected)
+        convert: (selected, reviewed) => this.convertPlan(reviewed ?? plan, selected)
       })).open();
     } catch {
       new Notice("Soundings could not review the transcript inbox. No files were changed.");
@@ -322,7 +322,7 @@ export default class SoundingsPlugin extends Plugin {
       const plan = buildPlan(discovery.items, existing, this.settings, new Date(), () => activeWindow.crypto.randomUUID());
       this.own(new ReviewModal(this.app, plan, {
         refresh: () => this.scanAndReview(),
-        convert: (selected) => this.convertPlan(plan, selected)
+        convert: (selected, reviewed) => this.convertPlan(reviewed ?? plan, selected)
       })).open();
     } catch {
       new Notice("Soundings could not complete the scan. No files were changed.");
@@ -343,6 +343,7 @@ export default class SoundingsPlugin extends Plugin {
     try {
       const outcomes = await executePlan(plan, new ObsidianVaultAdapter(this.app.vault), {
         selectedSourcePaths: selected,
+        selectedPlanRevision: plan.revision ?? 0,
         settings: this.settings,
         signal,
         digest: this.digest,

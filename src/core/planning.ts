@@ -8,6 +8,7 @@ import {
   type TitlePattern
 } from "./settings";
 import type { ConversionPlan, PlanItem, Result } from "./types";
+import { contentKindFor, contentPolicyFingerprint, isContentKind, isContentPolicyCurrent } from "./content-kind";
 
 export type DestinationError = "source-has-no-extension" | "destination-basename-invalid" | "destination-basename-hidden";
 
@@ -147,12 +148,15 @@ export function buildPlan(
       destinationCounts.set(key, (destinationCounts.get(key) ?? 0) + 1);
     }
   }
-  const items = draft.map((item): PlanItem => Object.freeze(
-    item.classification === "eligible" && item.destinationPath && (destinationCounts.get(collisionKey(item.destinationPath)) ?? 0) > 1
+  const items = draft.map((item): PlanItem => {
+    const classified: PlanItem = item.classification === "eligible" && item.destinationPath && (destinationCounts.get(collisionKey(item.destinationPath)) ?? 0) > 1
       ? { ...item, classification: "destination-ambiguous", reason: "Multiple sources resolve to this destination." }
-      : item
-  ));
+      : item;
+    const reviewed: PlanItem = { ...classified, contentKind: "transcript" };
+    return Object.freeze({ ...reviewed, contentPolicyFingerprint: contentPolicyFingerprint(reviewed) });
+  });
   return Object.freeze({
+    revision: 0,
     txtLayout: settings.txtLayout,
     id: idFactory?.() ?? (() => { throw new Error("secure-id-unavailable"); })(),
     settingsFingerprint: settingsFingerprint(settings),
@@ -166,4 +170,22 @@ export function buildPlan(
 
 export function isPlanCurrent(plan: ConversionPlan, settings: SoundingsSettings): boolean {
   return plan.settingsFingerprint === settingsFingerprint(settings);
+}
+
+export function reviseContentKind(
+  plan: ConversionPlan,
+  sourcePath: string,
+  kind: unknown
+): Result<ConversionPlan, "invalid-content-kind" | "content-kind-unavailable" | "stale-content-policy"> {
+  if (!isContentKind(kind)) return { ok: false, error: "invalid-content-kind" };
+  const item = plan.items.find((entry) => entry.sourcePath === sourcePath);
+  if (!item || item.format !== "txt" || item.classification !== "eligible") {
+    return { ok: false, error: "content-kind-unavailable" };
+  }
+  if (!isContentPolicyCurrent(item)) return { ok: false, error: "stale-content-policy" };
+  if (contentKindFor(item) === kind) return { ok: true, value: plan };
+  const revised: PlanItem = { ...item, contentKind: kind };
+  const items = plan.items.map((entry) => entry === item
+    ? Object.freeze({ ...revised, contentPolicyFingerprint: contentPolicyFingerprint(revised) }) : entry);
+  return { ok: true, value: Object.freeze({ ...plan, revision: (plan.revision ?? 0) + 1, items: Object.freeze(items) }) };
 }

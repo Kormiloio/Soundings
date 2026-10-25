@@ -1,5 +1,6 @@
 import { isLinkableVaultPath } from "./enrichment-rendering";
 import type { Result } from "./types";
+import { CONTENT_KINDS } from "./content-kind";
 
 export interface SourceNoteEvidence {
   readonly path: string;
@@ -51,19 +52,21 @@ export async function identifySourceNote(
   const frontmatter = frontmatterBlock(content);
   if (frontmatter === undefined) return { ok: false, error: "invalid-soundings-note" };
 
-  if (!isScalar(frontmatterValue(frontmatter, "type"), "meeting-transcript")) {
-    return { ok: false, error: "invalid-soundings-note" };
-  }
-  if (!isScalar(frontmatterValue(frontmatter, "source"), "transcript")) {
-    return { ok: false, error: "invalid-soundings-note" };
-  }
-
   const rawVersion = frontmatterValue(frontmatter, "soundings_version");
   if (!rawVersion || !/^[0-9]+$/u.test(rawVersion)) {
     return { ok: false, error: "invalid-soundings-note" };
   }
   const version = Number(rawVersion);
-  if (!SUPPORTED_SOUNDINGS_VERSIONS.has(version)) {
+  const legacy = SUPPORTED_SOUNDINGS_VERSIONS.has(version)
+    && isScalar(frontmatterValue(frontmatter, "type"), "meeting-transcript")
+    && isScalar(frontmatterValue(frontmatter, "source"), "transcript");
+  const shared = version === 3
+    && isScalar(frontmatterValue(frontmatter, "type"), "shared-text")
+    && isScalar(frontmatterValue(frontmatter, "source"), "shared-text")
+    && isScalar(frontmatterValue(frontmatter, "source_format"), "txt")
+    && Object.keys(CONTENT_KINDS).some((kind) => kind !== "transcript"
+      && isScalar(frontmatterValue(frontmatter, "content_kind"), kind));
+  if (!legacy && !shared) {
     return { ok: false, error: "invalid-soundings-note" };
   }
 

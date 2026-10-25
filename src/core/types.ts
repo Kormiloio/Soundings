@@ -3,6 +3,7 @@ import type { OutputProfile, TxtLayout } from "./settings";
 export type TxtInterpretation = "plain" | "timestamped-speaker" | "plain-fallback";
 
 export type TranscriptFormat = "txt" | "vtt" | "srt";
+export type ContentKind = "transcript" | "notes" | "meeting-minutes" | "correspondence" | "chat";
 
 export type PlanClassification =
   | "eligible"
@@ -39,6 +40,8 @@ export interface SourceEvidence {
 }
 
 export interface PlanItem {
+  readonly contentKind?: ContentKind;
+  readonly contentPolicyFingerprint?: string;
   readonly txtInterpretation?: TxtInterpretation;
   readonly txtLayout?: TxtLayout;
   readonly sourcePath: string;
@@ -53,6 +56,7 @@ export interface PlanItem {
 }
 
 export interface ConversionPlan {
+  readonly revision?: number;
   readonly txtLayout?: TxtLayout;
   readonly id: string;
   readonly settingsFingerprint: string;
@@ -79,6 +83,7 @@ export interface ParsedTranscript {
 }
 
 export interface NoteMetadata {
+  readonly contentKind?: ContentKind;
   readonly sourceFile: string;
   readonly sourceFormat: TranscriptFormat;
   readonly title: string;
