@@ -2,7 +2,7 @@
 
 Turn transcript files into safe, structured Markdown beside their originals in Obsidian.
 
-Soundings 0.4.1 adds opt-in timestamped-speaker TXT conversion, with whole-file plain fallback and reviewed, create-only publication. Packaged desktop acceptance passed, and the published assets match the accepted build with verified provenance.
+Soundings 0.4.2 adds reviewed TXT content types for transcripts, notes, meeting minutes, correspondence, and chat. Non-transcript choices preserve the complete source literally, while existing transcript conversion remains compatible. Packaged desktop acceptance, published-asset verification, and provenance checks pass.
 
 Soundings recursively finds `.txt`, Zoom-style `.vtt`, and explicitly enabled `.srt` transcripts already stored in your vault. It shows a review plan, lets you choose eligible files, and creates Markdown notes without moving, renaming, deleting, or overwriting existing content.
 
@@ -56,7 +56,7 @@ Soundings 0.4.2 adds a **Content type** menu to eligible TXT rows: **Transcript*
 
 Non-transcript types preserve the complete decoded TXT literally under **Source Text**, including email headers and timestamp-like lines. They do not apply timestamped-speaker parsing or extract summaries, participants, or decisions. The existing section, tag, title, and plain/folded display options still apply; folded content uses **Full Source Text**. These notes use schema 3 with explicit `content_kind` metadata and can receive manual enrichment companions. Newly created companions use **Back to Source Note**; existing notes and companions are never rewritten. Downgrading to 0.4.1 leaves schema-3 Markdown readable but disables its manual enrichment support.
 
-The 0.4.2 release candidate has passed implementation-level desktop acceptance; final acceptance of the versioned package remains part of release preparation.
+The published 0.4.2 package passed versioned custom-configuration desktop acceptance. Its downloaded assets match the accepted build and have verified provenance.
 
 ### Optional transcript inbox
 
@@ -104,7 +104,7 @@ Hidden folders, Soundings state, user exclusions, and the active vault's configu
 
 ## Known limitations
 
-- Soundings is desktop-only; packaged 0.4.1 acceptance passed on Obsidian 1.13.7.
+- Soundings is desktop-only; packaged 0.4.2 acceptance passed on Obsidian 1.13.7.
 - Existing `.md` destinations are always blocked, including previous Soundings output.
 - Updating a source does not update an existing generated note.
 - Plain-text transcripts are preserved without speaker inference.

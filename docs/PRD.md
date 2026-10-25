@@ -2,7 +2,7 @@
 
 **Repository codename:** Soundings
 **Product type:** Obsidian community plugin
-**Document status:** Soundings 0.4.1 published, provenance verified, Community review passed, and change closed
+**Document status:** Soundings 0.4.2 published, provenance verified, Community review passed, and release closure complete
 **Last updated:** 2026-10-25
 
 ## 1. Product summary
@@ -164,13 +164,13 @@ The exact metadata schema is versioned. A missing or ambiguous project value is 
 
 ### Proposed incremental release plan
 
-The owner primarily receives Zoom transcripts, but also receives other people's transcripts, emails, meeting minutes, written notes, and chat text. These sources should retain their identity rather than all being labeled as meeting transcripts. TXT conversion preserves arbitrary decoded text by default; 0.4.1 optionally recognizes one timestamped-speaker layout, and the accepted 0.4.2 release candidate adds explicit reviewed shared-text kinds without inference.
+The owner primarily receives Zoom transcripts, but also receives other people's transcripts, emails, meeting minutes, written notes, and chat text. These sources should retain their identity rather than all being labeled as meeting transcripts. TXT conversion preserves arbitrary decoded text by default; 0.4.1 optionally recognizes one timestamped-speaker layout, and published 0.4.2 adds explicit reviewed shared-text kinds without inference.
 
 | Target | Scope | Explicit boundary |
 | --- | --- | --- |
 | 0.4.0 | SRT-only expansion: supported UTF-8 SubRip cues, faithful text and timing, reviewed create-only conversion, existing plain/folded display. Planning change: `add-srt-transcript-support`. | No TXT speaker inference, general-text categories, Person links, new document extraction, AI, or mobile support. |
 | 0.4.1 | Completed change `2026-10-09-add-timestamped-speaker-txt`: one opt-in blank-separated `HH:MM:SS --> HH:MM:SS` / `Speaker: dialogue` layout, with whole-file plain fallback and per-item interpretation review. Packaged desktop acceptance, downloaded asset hashes, exact-tag provenance, and Community review pass; main specs are synchronized and the change is archived. | Plain text remains default. No guessing identities, Person-note links, additional TXT dialects, or rewriting existing notes. |
-| 0.4.2 | Completed implementation change `add-shared-text-kinds`: per-file Transcript (default), Notes, Meeting Minutes, Correspondence, or Chat during TXT review, schema-3 literal Source Text output, and guarded manual enrichment with neutral backlinks. Automated and owner-assisted implementation acceptance pass; local release preparation and final versioned custom-configuration acceptance are authorized and in progress. | TXT inputs initially; no automatic classification or extraction. Existing transcript output stays compatible; review choices are ephemeral. No direct DOCX, PDF, RTF, HTML, or email-file import. Publication remains separately authorized. |
+| 0.4.2 | Completed implementation change `add-shared-text-kinds`: per-file Transcript (default), Notes, Meeting Minutes, Correspondence, or Chat during TXT review, schema-3 literal Source Text output, and guarded manual enrichment with neutral backlinks. Automated and owner-assisted acceptance pass; protected-main publication, downloaded-asset hashes, exact-tag provenance, and Community review are verified. | TXT inputs initially; no automatic classification or extraction. Existing transcript output stays compatible; review choices are ephemeral. No direct DOCX, PDF, RTF, HTML, or email-file import. |
 | 0.4.3 | Evidence-driven fixes and review-workflow refinements after using the preceding releases. | Optional checkpoint, not an invented feature quota; skip if there is no justified change. |
 | 0.5.0 | Optional reviewed speaker-to-person linking to existing notes in configured folders, with explicit handling of ambiguous matches. | No automatic Person-note creation, source mutation, or rewriting existing generated notes. |
 
